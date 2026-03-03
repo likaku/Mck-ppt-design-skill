@@ -114,8 +114,7 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
   <tr>
     <td align="center" width="50%">
       <strong>微信交流群</strong><br/><br/>
-      <!-- 替换 docs/wechat-qr.png 为实际二维码 -->
-      <sub>二维码即将上线 · 加群请提 <a href="https://github.com/likaku/Mck-ppt-design-skill/issues">Issue</a></sub>
+      <img width="600" height="600" alt="Clipboard_Screenshot_1772519369" src="https://github.com/user-attachments/assets/7c60a36d-9752-4321-aa7b-8cd93580086e" />
     </td>
     <td align="center" width="50%">
       <strong>Discord</strong><br/><br/>
