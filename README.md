@@ -58,21 +58,14 @@
 
 ## 色彩体系
 
-```
-  NAVY        BLACK       DARK_GRAY   MED_GRAY    LINE_GRAY   BG_GRAY
-  #051C2C     #000000     #333333     #666666     #CCCCCC     #F2F2F2
-  ██████      ██████      ██████      ██████      ██████      ██████
-  主色调       分隔线       正文文本     次要文本     表格行线     背景面板
-```
-
-| 名称 | Hex 值 | 用途 |
-|:-----|:------:|:-----|
-| **NAVY** | `#051C2C` | 标题、圆形指标、TOC 高亮、封面装饰线 |
-| **BLACK** | `#000000` | 分隔线、标题下划线、表头线 |
-| **DARK_GRAY** | `#333333` | 正文文本、主要描述内容 |
-| **MED_GRAY** | `#666666` | 次要文本、标签、来源注释 |
-| **LINE_GRAY** | `#CCCCCC` | 表格行分隔线、时间轴线 |
-| **BG_GRAY** | `#F2F2F2` | 背景面板、Key Takeaway 区域 |
+| 名称 | 色块 | Hex 值 | RGB | 用途 |
+|:-----|:----:|:------:|:----|:-----|
+| **NAVY** | ![#051C2C](https://via.placeholder.com/80x30/051C2C/051C2C.png) | `#051C2C` | (5, 28, 44) | 主色调：标题、圆形指标、TOC 高亮 |
+| **BLACK** | ![#000000](https://via.placeholder.com/80x30/000000/000000.png) | `#000000` | (0, 0, 0) | 分隔线、标题下划线、表头线 |
+| **DARK_GRAY** | ![#333333](https://via.placeholder.com/80x30/333333/333333.png) | `#333333` | (51, 51, 51) | 正文文本、主要描述内容 |
+| **MED_GRAY** | ![#666666](https://via.placeholder.com/80x30/666666/666666.png) | `#666666` | (102, 102, 102) | 次要文本、标签、来源注释 |
+| **LINE_GRAY** | ![#CCCCCC](https://via.placeholder.com/80x30/CCCCCC/CCCCCC.png) | `#CCCCCC` | (204, 204, 204) | 表格行分隔线、时间轴线 |
+| **BG_GRAY** | ![#F2F2F2](https://via.placeholder.com/80x30/F2F2F2/F2F2F2.png) | `#F2F2F2` | (242, 242, 242) | 背景面板、Key Takeaway 区域 |
 
 <br/>
 
