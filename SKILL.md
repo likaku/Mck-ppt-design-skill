@@ -2,7 +2,7 @@
 name: workbuddy-ppt-design
 description: "McKinsey-style PowerPoint presentation design for Tencent WorkBuddy product introductions. This skill provides comprehensive design guidelines, typography standards, color palettes, layout principles, and Python code patterns for creating professional, consistent presentations using python-pptx from scratch. Includes all refinements and user feedback from iterative design process."
 license: Apache-2.0
-version: "1.0.0"
+version: "1.1.0"
 user-invocable: true
 allowed-tools:
   - Read
@@ -160,60 +160,60 @@ Every paragraph with Chinese text MUST apply `set_ea_font()` to all runs.
 | **Cover accent line** | 2.0pt | NAVY | Decorative bottom-left on cover |
 | **Column internal divider** | 0.5pt | BLACK | Between "是什么" and "独到之处" |
 
-#### Code Implementation
+#### Code Implementation (v1.1 — Rectangle-based Lines)
+
+**CRITICAL**: Do NOT use `slide.shapes.add_connector()` for lines. Connectors carry `<p:style>` elements that reference theme effects and cause file corruption. Instead, draw lines as ultra-thin rectangles:
 
 ```python
-def add_line(slide, x1, y1, x2, y2, color=BLACK, width=Pt(0.5)):
-    """Add a simple flat line with NO theme effects/shadows."""
-    c = slide.shapes.add_connector(1, x1, y1, x2, y2)
-    c.line.color.rgb = color
-    c.line.width = width
-    # CRITICAL: Remove the theme style reference that causes shadow
-    sp = c._element
-    style = sp.find(qn('p:style'))
-    if style is not None:
-        sp.remove(style)
-    return c
+def add_hline(slide, x, y, length, color=BLACK, thickness=Pt(0.5)):
+    """Draw a horizontal line using a thin rectangle (no connector, no p:style)."""
+    from pptx.util import Emu
+    h = max(int(thickness), Emu(6350))  # minimum ~0.5pt
+    return add_rect(slide, x, y, length, h, color)
 ```
 
-**Why this matters**: python-pptx automatically attaches `<p:style>` to connectors, which references theme effects. The theme by default includes `outerShdw` (outer shadow). We must remove this to prevent:
-- File corruption when saving/reopening in PowerPoint
-- Unwanted shadows appearing on lines
-- "File needs repair" errors in Microsoft Office
+**Why rectangle lines**: python-pptx `add_connector()` automatically attaches `<p:style>` with `effectRef idx="2"`, which references theme effects including `outerShdw` (outer shadow). Even after removing `<p:style>` at creation time, PowerPoint may re-apply effects on open. Using thin rectangles eliminates this class of bugs entirely.
 
-#### Post-Save Theme Cleanup
+**Old approach (DEPRECATED — do NOT use)**:
+```python
+# DEPRECATED: causes file corruption in some PowerPoint versions
+# c = slide.shapes.add_connector(1, x1, y1, x2, y2)
+```
 
-After `prs.save(outpath)`, ALWAYS clean the theme XML:
+#### Post-Save Full Cleanup (v1.1 — Nuclear Sanitization)
+
+After `prs.save(outpath)`, ALWAYS run full cleanup that sanitizes **both** theme XML **and** all slide XML:
 
 ```python
 import zipfile, os
 from lxml import etree
 
-tmppath = outpath + '.tmp'
-with zipfile.ZipFile(outpath, 'r') as zin:
-    with zipfile.ZipFile(tmppath, 'w', zipfile.ZIP_DEFLATED) as zout:
-        for item in zin.infolist():
-            data = zin.read(item.filename)
-            if 'theme' in item.filename.lower() and item.filename.endswith('.xml'):
-                root = etree.fromstring(data)
-                ns = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
-                # Remove all shadow effects from effectStyleLst
-                for eff_list in root.findall('.//a:effectStyleLst/a:effectStyle/a:effectLst', ns):
-                    for shadow in eff_list.findall('a:outerShdw', ns):
-                        eff_list.remove(shadow)
-                    for shadow in eff_list.findall('a:innerShdw', ns):
-                        eff_list.remove(shadow)
-                # Remove 3D effects
-                for eff_style in root.findall('.//a:effectStyleLst/a:effectStyle', ns):
-                    for scene3d in eff_style.findall('a:scene3d', ns):
-                        eff_style.remove(scene3d)
-                    for sp3d in eff_style.findall('a:sp3d', ns):
-                        eff_style.remove(sp3d)
-                data = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
-            zout.writestr(item, data)
-
-os.replace(tmppath, outpath)
+def full_cleanup(outpath):
+    """Remove ALL p:style from every slide + theme shadows/3D."""
+    tmppath = outpath + '.tmp'
+    with zipfile.ZipFile(outpath, 'r') as zin:
+        with zipfile.ZipFile(tmppath, 'w', zipfile.ZIP_DEFLATED) as zout:
+            for item in zin.infolist():
+                data = zin.read(item.filename)
+                if item.filename.endswith('.xml'):
+                    root = etree.fromstring(data)
+                    ns_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+                    ns_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+                    # Remove ALL p:style elements from all shapes/connectors
+                    for style in root.findall(f'.//{{{ns_p}}}style'):
+                        style.getparent().remove(style)
+                    # Remove shadows and 3D from theme
+                    if 'theme' in item.filename.lower():
+                        for tag in ['outerShdw', 'innerShdw', 'scene3d', 'sp3d']:
+                            for el in root.findall(f'.//{{{ns_a}}}{tag}'):
+                                el.getparent().remove(el)
+                    data = etree.tostring(root, xml_declaration=True,
+                                          encoding='UTF-8', standalone=True)
+                zout.writestr(item, data)
+    os.replace(tmppath, outpath)
 ```
+
+**v1.1 improvement**: The old cleanup only handled theme XML. The new `full_cleanup()` also removes `<p:style>` from every shape in every slide, preventing `effectRef idx="2"` references that cause "File needs repair" errors.
 
 ---
 
@@ -254,13 +254,22 @@ bodyPr.set('anchor', anchor_map.get(anchor, 't'))
 All shapes (rectangles, circles) must have:
 - Solid fill color (no gradients)
 - NO border/line (`shape.line.fill.background()`)
-- No shadow effects (automatically removed by theme cleanup)
+- **p:style removed** immediately after creation (`_clean_shape()`)
+- No shadow effects (enforced by both inline cleanup and post-save full_cleanup)
 
 ```python
+def _clean_shape(shape):
+    """Remove p:style from any shape to prevent effect references."""
+    sp = shape._element
+    style = sp.find(qn('p:style'))
+    if style is not None:
+        sp.remove(style)
+
 shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
 shape.fill.solid()
 shape.fill.fore_color.rgb = BG_GRAY
 shape.line.fill.background()  # CRITICAL: removes border
+_clean_shape(shape)            # CRITICAL: removes p:style
 ```
 
 ---
@@ -413,11 +422,20 @@ add_multiline(s5, takeaway_left + Inches(0.15), Inches(1.9), takeaway_width - In
 
 ```python
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
+
+
+def _clean_shape(shape):
+    """Remove p:style from any shape to prevent effect references."""
+    sp = shape._element
+    style = sp.find(qn('p:style'))
+    if style is not None:
+        sp.remove(style)
+
 
 def set_ea_font(run, typeface='KaiTi'):
     """Set East Asian font for Chinese text"""
@@ -427,6 +445,7 @@ def set_ea_font(run, typeface='KaiTi'):
         ea = rPr.makeelement(qn('a:ea'), {})
         rPr.append(ea)
     ea.set('typeface', typeface)
+
 
 def add_text(slide, left, top, width, height, text, font_size=Pt(14),
              font_name='Arial', font_color=RGBColor(0x33, 0x33, 0x33), bold=False,
@@ -453,9 +472,10 @@ def add_text(slide, left, top, width, height, text, font_size=Pt(14),
         set_ea_font(run, ea_font)
     return txBox
 
+
 def add_multiline(slide, left, top, width, height, lines, font_size=Pt(14),
                   font_name='Arial', font_color=RGBColor(0x33, 0x33, 0x33), bold=False,
-                  alignment=PP_ALIGN.LEFT, ea_font='KaiTi', bullet=False, line_spacing_pt=6):
+                  alignment=PP_ALIGN.LEFT, ea_font='KaiTi', line_spacing_pt=6):
     txBox = slide.shapes.add_textbox(left, top, width, height)
     tf = txBox.text_frame
     tf.word_wrap = True
@@ -465,7 +485,7 @@ def add_multiline(slide, left, top, width, height, lines, font_size=Pt(14),
         bodyPr.set(attr, '45720')
     for i, line in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        p.text = ('• ' if bullet else '') + line
+        p.text = line
         p.font.size = font_size
         p.font.name = font_name
         p.font.color.rgb = font_color
@@ -477,49 +497,49 @@ def add_multiline(slide, left, top, width, height, lines, font_size=Pt(14),
             set_ea_font(run, ea_font)
     return txBox
 
+
 def add_rect(slide, left, top, width, height, fill_color):
     shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill_color
     shape.line.fill.background()
+    _clean_shape(shape)  # CRITICAL: remove p:style
     return shape
 
-def add_line(slide, x1, y1, x2, y2, color=RGBColor(0, 0, 0), width=Pt(0.5)):
-    """Add a simple flat line with NO theme effects/shadows."""
-    c = slide.shapes.add_connector(1, x1, y1, x2, y2)
-    c.line.color.rgb = color
-    c.line.width = width
-    sp = c._element
-    style = sp.find(qn('p:style'))
-    if style is not None:
-        sp.remove(style)
-    return c
 
-def add_circle_label(slide, x, y, letter, size=Inches(0.5), 
-                     color=RGBColor(0x05, 0x1C, 0x2C)):
+def add_hline(slide, x, y, length, color=RGBColor(0, 0, 0), thickness=Pt(0.5)):
+    """Draw a horizontal line using a thin rectangle (no connector)."""
+    h = max(int(thickness), Emu(6350))  # minimum ~0.5pt
+    return add_rect(slide, x, y, length, h, color)
+
+
+def add_oval(slide, x, y, letter, size=Inches(0.45),
+             bg=RGBColor(0x05, 0x1C, 0x2C), fg=RGBColor(0xFF, 0xFF, 0xFF)):
+    """Add a circle label with a letter (e.g. 'A', '1')."""
     c = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
     c.fill.solid()
-    c.fill.fore_color.rgb = color
+    c.fill.fore_color.rgb = bg
     c.line.fill.background()
     tf = c.text_frame
     tf.paragraphs[0].text = letter
     tf.paragraphs[0].font.size = Pt(14)
-    tf.paragraphs[0].font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    tf.paragraphs[0].font.color.rgb = fg
     tf.paragraphs[0].font.bold = True
     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-    sp = c._element
-    style = sp.find(qn('p:style'))
-    if style is not None:
-        sp.remove(style)
+    bodyPr = tf._txBody.find(qn('a:bodyPr'))
+    bodyPr.set('anchor', 'ctr')
+    _clean_shape(c)  # CRITICAL: remove p:style
     return c
 
+
 def add_action_title(slide, text, title_size=Pt(22)):
-    """White bg, black text, thin black line below — NO shadow."""
+    """White bg, black text, thin line below."""
     add_text(slide, Inches(0.8), Inches(0.15), Inches(11.7), Inches(0.9),
              text, font_size=title_size, font_color=RGBColor(0, 0, 0), bold=True,
              font_name='Georgia', ea_font='KaiTi', anchor=MSO_ANCHOR.MIDDLE)
-    add_line(slide, Inches(0.8), Inches(1.05), Inches(12.5), Inches(1.05),
-             color=RGBColor(0, 0, 0), width=Pt(0.5))
+    add_hline(slide, Inches(0.8), Inches(1.05), Inches(11.7),
+             color=RGBColor(0, 0, 0), thickness=Pt(0.5))
+
 
 def add_source(slide, text, y=Inches(7.05)):
     add_text(slide, Inches(0.8), y, Inches(11), Inches(0.3),
@@ -532,21 +552,24 @@ def add_source(slide, text, y=Inches(7.05)):
 
 ### Problem 1: PPT Won't Open / "File Needs Repair"
 
-**Cause**: Connectors have `<p:style>` referencing theme effects with shadows
+**Cause**: Shapes or connectors carry `<p:style>` with `effectRef idx="2"`, referencing theme effects (shadows/3D)
 
-**Solution**:
-1. Ensure all `add_line()` calls use the provided function (which removes `p:style`)
-2. After `prs.save()`, run theme cleanup code (see "Post-Save Theme Cleanup" section)
-3. Verify with:
+**Solution** (v1.1 — three-layer defense):
+1. **Never use connectors** — use `add_hline()` (thin rectangle) instead of `add_connector()`
+2. **Inline cleanup** — every `add_rect()` and `add_oval()` calls `_clean_shape()` to remove `p:style`
+3. **Post-save nuclear cleanup** — `full_cleanup()` removes ALL `<p:style>` from every slide XML + theme effects
+4. Verify with:
    ```python
-   from pptx import Presentation
-   from pptx.oxml.ns import qn
-   prs = Presentation('file.pptx')
-   for slide in prs.slides:
-       for shape in slide.shapes:
-           if shape._element.tag.endswith('}cxnSp'):
-               if shape._element.find(qn('p:style')) is not None:
-                   print(f"ERROR: {shape.name} still has p:style!")
+   import zipfile
+   from lxml import etree
+   zf = zipfile.ZipFile('file.pptx', 'r')
+   for name in zf.namelist():
+       if name.endswith('.xml'):
+           root = etree.fromstring(zf.read(name))
+           ns_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+           styles = root.findall(f'.//{{{ns_p}}}style')
+           if styles:
+               print(f"ERROR: {name} has {len(styles)} p:style elements!")
    ```
 
 ### Problem 2: Text Not Displaying Correctly in PowerPoint
@@ -563,12 +586,12 @@ def add_source(slide, text, y=Inches(7.05)):
 
 ### Problem 3: Lines Appearing With Shadows
 
-**Cause**: Theme's default effects being applied
+**Cause**: Connectors inherently carry theme effect references
 
-**Solution**:
-1. Ensure `add_line()` removes `p:style` immediately after creating connector
-2. Run post-save theme cleanup (see section above)
-3. Do NOT rely on PowerPoint to "fix" shadows - they indicate underlying corruption
+**Solution** (v1.1):
+1. **Do NOT use connectors at all** — use `add_hline()` which draws lines as thin rectangles
+2. Run `full_cleanup()` after save to remove any residual `p:style`
+3. Verify zero `p:style` and zero shadow elements in the final file
 
 ### Problem 4: Font Sizes Inconsistent Across Slides
 
@@ -607,7 +630,7 @@ When users provide feedback, follow this checklist:
 
 - [ ] **Font size changes** → Update `TITLE_SIZE`, `BODY_SIZE`, etc. constants and regenerate
 - [ ] **Color changes** → Update RGB tuples in color palette section
-- [ ] **Line width changes** → Update calls to `add_line()` with new `width=Pt(X)`
+- [ ] **Line width changes** → Update calls to `add_hline()` with new `thickness=Pt(X)`
 - [ ] **Layout spacing changes** → Adjust `Inches(X)` values in coordinate calculations
 - [ ] **Circle color changes** → Update `CIRCLE_COLOR` constant and regenerate all circles
 - [ ] **Shadow/effect issues** → Run theme cleanup immediately after save
@@ -629,8 +652,9 @@ When users provide feedback, follow this checklist:
 1. **Always start from scratch** - Don't try to edit existing .pptx files with python-pptx; regenerate
 2. **Test early** - Save and open in PowerPoint after every 2-3 slides to catch issues
 3. **Use constants** - Define all colors, sizes, positions as named constants at the top
-4. **Keep code DRY** - Use helper functions like `add_text()`, `add_line()`, etc.
-5. **Validate XML** - After adding theme cleanup, verify no shadows remain
+4. **Keep code DRY** - Use helper functions like `add_text()`, `add_hline()`, `add_oval()`, etc.
+5. **Never use connectors** - Always draw lines as thin rectangles via `add_hline()`
+6. **Validate XML** - After `full_cleanup()`, verify zero `p:style` and zero shadows remain
 6. **Document decisions** - Comment code explaining why specific colors/sizes are chosen
 7. **Version control** - Save Python generation script alongside .pptx output
 
@@ -676,6 +700,13 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.1.0 | 2026-03-03 | **Breaking**: Replaced connector-based lines with rectangle-based `add_hline()` |
+| | | - `add_line()` deprecated, use `add_hline()` instead |
+| | | - `add_circle_label()` renamed to `add_oval()` with bg/fg params |
+| | | - `add_rect()` now auto-removes `p:style` via `_clean_shape()` |
+| | | - `cleanup_theme()` upgraded to `full_cleanup()` (sanitizes all slide XML) |
+| | | - Three-layer defense against file corruption |
+| | | - `add_multiline()` bullet param removed; use `'\u2022 '` prefix in text |
 | 1.0.0 | 2026-03-02 | Initial complete specification, all refinements documented |
 | | | - Color palette finalized (NAVY primary) |
 | | | - Typography hierarchy locked (22pt title, 14pt body) |

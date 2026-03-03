@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-03-03
+
+### Breaking Changes
+- `add_line()` **deprecated** — replaced by `add_hline()` (thin rectangle, no connector)
+- `add_circle_label()` **renamed** to `add_oval()` with `bg`/`fg` color parameters
+- `cleanup_theme()` **replaced** by `full_cleanup()` (sanitizes all slide + theme XML)
+- `add_multiline()` removed `bullet` parameter; use `'• '` prefix in text directly
+
+### Added
+- `_clean_shape()` — inline p:style removal, called automatically by `add_rect()` and `add_oval()`
+- `add_hline()` — draws horizontal lines as thin rectangles (zero connector usage)
+- `full_cleanup()` — nuclear XML sanitization: removes ALL `<p:style>` from every slide + theme effects
+- Three-layer defense against file corruption documented
+
+### Fixed
+- **Critical**: 62+ shapes carrying `effectRef idx="2"` caused "File needs repair" in PowerPoint
+- Connectors' `<p:style>` could not be reliably removed; eliminated connectors entirely
+
 ## [1.0.0] - 2026-03-02
 
 ### Added

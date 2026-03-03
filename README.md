@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.1.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -26,11 +26,11 @@
 ### 它解决什么问题
 
 - 手动排版 PPT 耗时耗力，团队间设计风格难以统一
-- `python-pptx` 默认生成的文件带阴影 / 3D 瑕疵，PowerPoint 打开报错
+- `python-pptx` 默认生成的文件带阴影 / 3D / `p:style` 引用，PowerPoint 打开报错或提示修复
 - 中文字体渲染需要特殊处理，否则显示异常
 - AI 生成的 PPT 缺乏专业设计感，每次产出质量不一致
 
-**本 Skill 将完整的麦肯锡设计规范编码为一份 685 行的文档**，AI 读取后即可持续输出风格统一的专业 PPT。
+**本 Skill 将完整的麦肯锡设计规范编码为一份文档**，AI 读取后即可持续输出风格统一的专业 PPT。
 
 ---
 
@@ -60,12 +60,13 @@
 
 ### 核心技术
 
-**阴影消除（双重防御）**
+**文件兼容性保障（v1.1 三层防御）**
 
-python-pptx 自动为连接器附加 `<p:style>`，引用主题中的 `outerShdw` 效果，导致线条出现阴影甚至文件损坏。本 Skill 通过两道防线彻底解决：
+python-pptx 自动为形状附加 `<p:style>` 元素，引用主题中的 `outerShdw`、`effectRef` 等效果，导致文件在 PowerPoint 中无法打开或提示修复。本 Skill 通过三道防线彻底解决：
 
-1. **内联移除** — 创建连接器后立即删除 `<p:style>`，从源头阻断
-2. **主题清理** — 保存后用 `zipfile` + `lxml` 处理 theme XML，移除全部阴影和 3D 节点
+1. **不使用 connector** — 所有线条用极细矩形（`add_hline()`）绘制，从源头杜绝 connector 的 `p:style`
+2. **内联清理** — 每个 `add_rect()` 和 `add_oval()` 创建后立即调用 `_clean_shape()` 移除 `p:style`
+3. **保存后全量清洗** — `full_cleanup()` 遍历所有 slide XML + theme XML，移除全部 `p:style`、阴影和 3D 节点
 
 **中文字体处理**
 
@@ -130,7 +131,7 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 
 欢迎提交 Issue 和 Pull Request。贡献方向：
 
-- 新增布局模式（时间轴页、数据图表页）
+- 新增布局模式（时间轴页、数据图表页、2x2矩阵等）
 - 扩展色彩主题（深色模式、品牌定制）
 - 补充示例代码与文档翻译
 
