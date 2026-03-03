@@ -416,6 +416,1296 @@ add_multiline(s5, takeaway_left + Inches(0.15), Inches(1.9), takeaway_width - In
 
 ---
 
+### 类别 A：结构导航
+
+#### 5. Section Divider (章节分隔页)
+
+**适用场景**: 多章节演示文稿的章节过渡页，用于视觉上分隔不同主题模块。
+
+```
+┌──┬──────────────────────────────────────┐
+│N │                                      │
+│A │  第一部分                             │
+│V │  章节标题（28pt, NAVY, bold）          │
+│Y │  副标题说明文字                        │
+│  │                                      │
+└──┴──────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_rect(s, 0, 0, Inches(0.6), SH, NAVY)
+add_text(s, Inches(1.2), Inches(2.0), Inches(10), Inches(0.8),
+         '第一部分', font_size=SUB_HEADER_SIZE, font_color=MED_GRAY, font_name='Georgia')
+add_text(s, Inches(1.2), Inches(2.8), Inches(10), Inches(1.2),
+         '章节标题', font_size=HEADER_SIZE, font_color=NAVY, bold=True, font_name='Georgia')
+add_text(s, Inches(1.2), Inches(4.2), Inches(10), Inches(0.6),
+         '副标题说明文字', font_size=BODY_SIZE, font_color=DARK_GRAY)
+```
+
+#### 6. Table of Contents / Agenda (目录/议程页)
+
+**适用场景**: 演示文稿开头的目录或会议议程，列出各章节及说明。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ 目录                                  │
+├─────────────────────────────────────────┤
+│                                         │
+│  (1)  章节一标题     简要描述            │
+│  ─────────────────────────────────────  │
+│  (2)  章节二标题     简要描述            │
+│  ─────────────────────────────────────  │
+│  (3)  章节三标题     简要描述            │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '目录')
+items = [('01', '引言与背景', '项目起源与核心问题'),
+         ('02', '市场分析', '竞争格局与机会识别'),
+         ('03', '战略建议', '三大核心行动方案')]
+iy = Inches(1.6)
+for num, title, desc in items:
+    add_oval(s, LM, iy, num, size=Inches(0.5))
+    add_text(s, LM + Inches(0.7), iy, Inches(4.0), Inches(0.4),
+             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+    add_text(s, Inches(5.5), iy + Inches(0.05), Inches(6.5), Inches(0.4),
+             desc, font_size=BODY_SIZE, font_color=MED_GRAY)
+    iy += Inches(0.7)
+    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
+    iy += Inches(0.3)
+```
+
+#### 7. Appendix Title (附录标题页)
+
+**适用场景**: 正文结束后的附录/备用材料分隔页。
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│                                         │
+│           附录                           │
+│           Appendix                      │
+│           ────────                      │
+│           补充数据与参考资料              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
+add_text(s, Inches(1), Inches(2.5), Inches(11.3), Inches(1.0),
+         '附录', font_size=Pt(36), font_color=NAVY, bold=True,
+         font_name='Georgia', alignment=PP_ALIGN.CENTER)
+add_hline(s, Inches(5.5), Inches(3.8), Inches(2.3), NAVY, Pt(1.5))
+add_text(s, Inches(1), Inches(4.2), Inches(11.3), Inches(0.5),
+         '补充数据与参考资料', font_size=BODY_SIZE, font_color=MED_GRAY,
+         alignment=PP_ALIGN.CENTER)
+```
+
+---
+
+### 类别 B：数据统计
+
+#### 8. Big Number / Factoid (大数据展示页)
+
+**适用场景**: 用一个醒目的大数字引出核心发现或关键数据点。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌─NAVY─────────┐                       │
+│  │    95%        │   右侧上下文说明      │
+│  │  子标题       │   详细解释数据含义     │
+│  └──────────────┘                       │
+│                                         │
+│  ┌─BG_GRAY──────────────────────────┐   │
+│  │  关键洞见：详细分析文字            │   │
+│  └──────────────────────────────────┘   │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '关键发现标题')
+add_rect(s, LM, Inches(1.4), Inches(3.5), Inches(1.8), NAVY)
+add_text(s, LM + Inches(0.2), Inches(1.5), Inches(3.1), Inches(0.8),
+         '95%', font_size=Pt(44), font_color=WHITE, bold=True,
+         font_name='Georgia', alignment=PP_ALIGN.CENTER)
+add_text(s, LM + Inches(0.2), Inches(2.3), Inches(3.1), Inches(0.7),
+         '描述数据含义', font_size=Pt(12), font_color=WHITE, alignment=PP_ALIGN.CENTER)
+add_text(s, Inches(5.0), Inches(1.5), Inches(7.5), Inches(2.0),
+         '上下文说明与详细解释', font_size=BODY_SIZE)
+add_rect(s, LM, Inches(4.5), CONTENT_W, Inches(2.2), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(4.6), Inches(1.5), Inches(0.4),
+         '关键洞见', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+add_multiline(s, LM + Inches(0.3), Inches(5.1), CONTENT_W - Inches(0.6), Inches(1.4),
+              ['洞见要点一', '洞见要点二', '洞见要点三'], line_spacing_pt=8)
+add_source(s, 'Source: ...')
+```
+
+#### 9. Two-Stat Comparison (双数据对比页)
+
+**适用场景**: 并排展示两个关键指标的对比（如同比、环比、A vs B）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌──NAVY───────┐    ┌──BG_GRAY────┐     │
+│  │   $2.4B     │    │   $1.8B     │     │
+│  │  2026年目标  │    │  2025年实际  │     │
+│  └─────────────┘    └─────────────┘     │
+│                                         │
+│  分析说明文字                            │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '对比标题')
+stats = [('$2.4B', '2026年目标', True), ('$1.8B', '2025年实际', False)]
+sw = Inches(5.5)
+sg = Inches(0.733)
+for i, (big, small, is_navy) in enumerate(stats):
+    sx = LM + (sw + sg) * i
+    fill = NAVY if is_navy else BG_GRAY
+    bc = WHITE if is_navy else NAVY
+    sc = WHITE if is_navy else DARK_GRAY
+    add_rect(s, sx, Inches(1.8), sw, Inches(2.5), fill)
+    add_text(s, sx + Inches(0.3), Inches(2.0), sw - Inches(0.6), Inches(1.0),
+             big, font_size=Pt(44), font_color=bc, bold=True,
+             font_name='Georgia', alignment=PP_ALIGN.CENTER)
+    add_text(s, sx + Inches(0.3), Inches(3.2), sw - Inches(0.6), Inches(0.5),
+             small, font_size=BODY_SIZE, font_color=sc, alignment=PP_ALIGN.CENTER)
+add_text(s, LM, Inches(5.0), CONTENT_W, Inches(1.5),
+         '分析说明文字', font_size=BODY_SIZE)
+add_source(s, 'Source: ...')
+```
+
+#### 10. Three-Stat Dashboard (三指标仪表盘)
+
+**适用场景**: 同时展示三个关键业务指标（如 KPI、季度数据）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌──NAVY──┐   ┌──BG_GRAY─┐  ┌──BG_GRAY─┐│
+│  │  数字1  │   │  数字2   │  │  数字3   ││
+│  │ 小标题  │   │  小标题  │  │  小标题  ││
+│  └────────┘   └─────────┘  └─────────┘│
+│                                         │
+│  详细说明文字                            │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '三大关键指标')
+stats = [('87%', '客户满意度', True),
+         ('+23%', '同比增长', False),
+         ('4.2x', '投资回报率', False)]
+sw = Inches(3.5)
+sg = (CONTENT_W - sw * 3) / 2
+for i, (big, small, is_navy) in enumerate(stats):
+    sx = LM + (sw + sg) * i
+    fill = NAVY if is_navy else BG_GRAY
+    bc = WHITE if is_navy else NAVY
+    sc = WHITE if is_navy else DARK_GRAY
+    add_rect(s, sx, Inches(1.4), sw, Inches(1.8), fill)
+    add_text(s, sx + Inches(0.2), Inches(1.5), sw - Inches(0.4), Inches(0.7),
+             big, font_size=Pt(28), font_color=bc, bold=True,
+             font_name='Georgia', alignment=PP_ALIGN.CENTER)
+    add_text(s, sx + Inches(0.2), Inches(2.25), sw - Inches(0.4), Inches(0.6),
+             small, font_size=Pt(12), font_color=sc, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+#### 11. Data Table with Headers (数据表格页)
+
+**适用场景**: 结构化数据展示，如财务数据、功能对比矩阵、项目清单。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  列1         列2         列3     列4    │
+│  ═══════════════════════════════════    │
+│  数据1-1     数据1-2     ...     ...    │
+│  ───────────────────────────────────    │
+│  数据2-1     数据2-2     ...     ...    │
+│  ───────────────────────────────────    │
+│  数据3-1     数据3-2     ...     ...    │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '数据概览')
+headers = ['模块', '功能', '状态', '负责人']
+col_widths = [Inches(2.5), Inches(4.0), Inches(2.5), Inches(2.7)]
+hdr_y = Inches(1.5)
+cx = LM
+for hdr, cw in zip(headers, col_widths):
+    add_text(s, cx, hdr_y, cw, Inches(0.4), hdr,
+             font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
+    cx += cw
+add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
+# Data rows
+rows = [['模块A', '核心功能描述', '已上线', '张三'], ...]
+row_h = Inches(0.8)
+for ri, row in enumerate(rows):
+    ry = Inches(2.1) + row_h * ri
+    cx = LM
+    for val, cw in zip(row, col_widths):
+        add_text(s, cx, ry, cw, row_h, val, font_size=BODY_SIZE)
+        cx += cw
+    add_hline(s, LM, ry + row_h, CONTENT_W, LINE_GRAY)
+add_source(s, 'Source: ...')
+```
+
+#### 12. Metric Cards Row (指标卡片行)
+
+**适用场景**: 3-4个并排卡片展示独立指标，每个卡片含标题+描述。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│ ┌─BG_GRAY─┐ ┌─BG_GRAY─┐ ┌─BG_GRAY─┐   │
+│ │ (A)     │ │ (B)     │ │ (C)     │   │
+│ │ 标题    │ │ 标题    │ │ 标题    │   │
+│ │ ───     │ │ ───     │ │ ───     │   │
+│ │ 描述    │ │ 描述    │ │ 描述    │   │
+│ └─────────┘ └─────────┘ └─────────┘   │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '核心指标概览')
+cards = [('A', '用户增长', '月活用户达到 120 万\n同比增长 35%'),
+         ('B', '营收表现', '季度营收 ¥8,500 万\n超出预期 12%'),
+         ('C', '运营效率', '客诉响应时间 < 2h\n满意度 94%')]
+cw = Inches(3.5)
+cg = (CONTENT_W - cw * 3) / 2
+for i, (letter, title, desc) in enumerate(cards):
+    cx = LM + (cw + cg) * i
+    cy = Inches(1.5)
+    add_rect(s, cx, cy, cw, Inches(4.5), BG_GRAY)
+    add_oval(s, cx + Inches(1.5), cy + Inches(0.2), letter)
+    add_text(s, cx + Inches(0.2), cy + Inches(0.8), cw - Inches(0.4), Inches(0.4),
+             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_hline(s, cx + Inches(0.4), cy + Inches(1.3), cw - Inches(0.8), LINE_GRAY)
+    add_multiline(s, cx + Inches(0.2), cy + Inches(1.5), cw - Inches(0.4), Inches(2.5),
+                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+---
+
+### 类别 C：框架矩阵
+
+#### 13. 2x2 Matrix (四象限矩阵)
+
+**适用场景**: 战略分析（如 BCG 矩阵、优先级排序、风险评估）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│         高 Y轴                           │
+│  ┌─NAVY──────┐  ┌─BG_GRAY───┐          │
+│  │ 左上象限   │  │ 右上象限   │          │
+│  └───────────┘  └───────────┘          │
+│  ┌─BG_GRAY───┐  ┌─BG_GRAY───┐          │
+│  │ 左下象限   │  │ 右下象限   │          │
+│  └───────────┘  └───────────┘          │
+│         低           高 X轴              │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '战略优先级矩阵')
+mx = LM + Inches(1.5)
+my = Inches(1.8)
+cw = Inches(4.5)
+ch = Inches(2.5)
+# Axis labels
+add_text(s, mx - Inches(1.3), my + Inches(0.8), Inches(1.1), Inches(0.4),
+         '高影响', font_size=BODY_SIZE, font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
+add_text(s, mx + Inches(0.8), my - Inches(0.5), Inches(3.0), Inches(0.4),
+         '高可行性', font_size=BODY_SIZE, font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
+# Quadrants
+add_rect(s, mx, my, cw, ch, NAVY)  # best quadrant
+add_rect(s, mx + cw + Inches(0.15), my, cw, ch, BG_GRAY)
+add_rect(s, mx, my + ch + Inches(0.15), cw, ch, BG_GRAY)
+add_rect(s, mx + cw + Inches(0.15), my + ch + Inches(0.15), cw, ch, BG_GRAY)
+# Quadrant titles + descriptions
+add_text(s, mx + Inches(0.3), my + Inches(0.3), cw - Inches(0.6), Inches(0.5),
+         '立即执行', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
+# ... repeat for other 3 quadrants with DARK_GRAY text
+add_source(s, 'Source: ...')
+```
+
+#### 14. Three-Pillar Framework (三支柱框架)
+
+**适用场景**: 展示三个并列的核心策略、能力或主题模块。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│ ┌──NAVY──┐   ┌──NAVY──┐   ┌──NAVY──┐   │
+│ │ 标题1  │   │ 标题2  │   │ 标题3  │   │
+│ ├────────┤   ├────────┤   ├────────┤   │
+│ │ 要点   │   │ 要点   │   │ 要点   │   │
+│ │ 要点   │   │ 要点   │   │ 要点   │   │
+│ │ 要点   │   │ 要点   │   │ 要点   │   │
+│ └────────┘   └────────┘   └────────┘   │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '三大核心战略')
+pillars = [('数字化转型', ['建设数据中台', '打通全渠道', '自动化运营']),
+           ('组织升级', ['扁平化管理', '敏捷团队', '人才梯队']),
+           ('客户深耕', ['精细化运营', '会员体系', 'LTV 提升'])]
+pw = Inches(3.5)
+pg = (CONTENT_W - pw * 3) / 2
+for i, (title, points) in enumerate(pillars):
+    px = LM + (pw + pg) * i
+    add_rect(s, px, Inches(1.5), pw, Inches(0.6), NAVY)
+    add_text(s, px + Inches(0.15), Inches(1.5), pw - Inches(0.3), Inches(0.6),
+             title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+    add_rect(s, px, Inches(2.1), pw, Inches(4.0), BG_GRAY)
+    add_multiline(s, px + Inches(0.2), Inches(2.3), pw - Inches(0.4), Inches(3.5),
+                  [f'• {p}' for p in points], line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 15. Pyramid / Hierarchy (金字塔/层级图)
+
+**适用场景**: 展示层级关系（如 Maslow 需求层次、战略-战术-执行分层）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│           ┌──NAVY──┐                    │
+│           │ 愿景   │    右侧说明        │
+│         ┌─┴────────┴─┐                  │
+│         │  战略目标   │  右侧说明        │
+│       ┌─┴────────────┴─┐                │
+│       │   执行措施      │  右侧说明      │
+│       └────────────────┘                │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '战略层级框架')
+levels = [('愿景', '成为行业第一', Inches(3.5)),
+          ('战略目标', '三年收入翻倍', Inches(5.0)),
+          ('执行措施', '渠道+产品+组织', Inches(6.5))]
+for i, (label, desc, w) in enumerate(levels):
+    lx = Inches(6.666) - w / 2  # centered
+    ly = Inches(1.8) + Inches(1.5) * i
+    h = Inches(1.2)
+    fill = NAVY if i == 0 else BG_GRAY
+    tc = WHITE if i == 0 else NAVY
+    add_rect(s, lx, ly, w, h, fill)
+    add_text(s, lx + Inches(0.2), ly + Inches(0.1), w - Inches(0.4), Inches(0.4),
+             label, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_text(s, lx + Inches(0.2), ly + Inches(0.55), w - Inches(0.4), Inches(0.5),
+             desc, font_size=BODY_SIZE, font_color=tc if i == 0 else DARK_GRAY,
+             alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+#### 16. Process Chevron (流程箭头页)
+
+**适用场景**: 线性流程展示（3-5步），如实施路径、业务流程、方法论步骤。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌NAVY┐ -> ┌GRAY┐ -> ┌GRAY┐ -> ┌GRAY┐  │
+│  │ S1 │    │ S2 │    │ S3 │    │ S4 │  │
+│  └────┘    └────┘    └────┘    └────┘  │
+│   描述      描述      描述      描述    │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '实施路径')
+steps = [('诊断', '现状评估\n痛点识别'),
+         ('设计', '方案制定\n资源规划'),
+         ('实施', '分阶段落地\n快速迭代'),
+         ('优化', '效果追踪\n持续改进')]
+sw = Inches(2.5)
+sg = (CONTENT_W - sw * len(steps)) / (len(steps) - 1)
+for i, (title, desc) in enumerate(steps):
+    sx = LM + (sw + sg) * i
+    fill = NAVY if i == 0 else BG_GRAY
+    tc = WHITE if i == 0 else NAVY
+    add_rect(s, sx, Inches(2.0), sw, Inches(1.2), fill)
+    add_oval(s, sx + Inches(0.1), Inches(2.1), str(i + 1),
+             bg=WHITE if i == 0 else NAVY, fg=NAVY if i == 0 else WHITE)
+    add_text(s, sx + Inches(0.6), Inches(2.1), sw - Inches(0.8), Inches(1.0),
+             title, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE)
+    add_text(s, sx + Inches(0.1), Inches(3.4), sw - Inches(0.2), Inches(1.5),
+             desc, font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER)
+    if i < len(steps) - 1:
+        add_text(s, sx + sw + Inches(0.05), Inches(2.3), Inches(0.4), Inches(0.5),
+                 '->', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+add_source(s, 'Source: ...')
+```
+
+#### 17. Venn Diagram Concept (维恩图概念页)
+
+**适用场景**: 展示两三个概念的交集关系（如能力交叉、市场定位）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│          ┌──BG──┐                       │
+│         ╱概念A  ╲                       │
+│        ╱  ┌──┐   ╲      右侧说明       │
+│       │   │交│    │                     │
+│        ╲  └──┘   ╱                     │
+│         ╲概念B  ╱                       │
+│          └──────┘                       │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '核心能力交叉')
+# Use overlapping rectangles to represent Venn concept
+add_rect(s, Inches(1.5), Inches(1.8), Inches(4.5), Inches(4.0), BG_GRAY)
+add_text(s, Inches(1.7), Inches(2.0), Inches(2.0), Inches(0.4),
+         '技术能力', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+add_rect(s, Inches(3.5), Inches(2.8), Inches(4.5), Inches(4.0), BG_GRAY)
+add_text(s, Inches(5.5), Inches(5.5), Inches(2.0), Inches(0.4),
+         '业务洞察', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+# Intersection area
+add_rect(s, Inches(3.5), Inches(2.8), Inches(2.5), Inches(3.0), NAVY)
+add_text(s, Inches(3.7), Inches(3.5), Inches(2.1), Inches(0.8),
+         '核心\n竞争力', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
+         alignment=PP_ALIGN.CENTER)
+# Right explanation
+add_text(s, Inches(9.0), Inches(2.0), Inches(3.5), Inches(4.0),
+         '当技术能力与业务洞察交叉时...', font_size=BODY_SIZE)
+add_source(s, 'Source: ...')
+```
+
+#### 18. Temple / House Framework (殿堂框架)
+
+**适用场景**: 展示"屋顶-支柱-基座"的结构（如企业架构、能力体系）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌═══════════NAVY（愿景/屋顶）══════════┐│
+│  ├────┤  ├────┤  ├────┤  ├────┤        ││
+│  │支柱│  │支柱│  │支柱│  │支柱│        ││
+│  │ 1  │  │ 2  │  │ 3  │  │ 4  │        ││
+│  ├════╧══╧════╧══╧════╧══╧════╧════════┤│
+│  │        基座（基础能力/文化）          ││
+│  └──────────────────────────────────────┘│
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '企业能力架构')
+# Roof
+add_rect(s, LM, Inches(1.5), CONTENT_W, Inches(0.8), NAVY)
+add_text(s, LM + Inches(0.3), Inches(1.5), CONTENT_W - Inches(0.6), Inches(0.8),
+         '企业愿景：成为行业领先的数字化平台',
+         font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+# Pillars
+pillars = ['产品力', '技术力', '运营力', '品牌力']
+pw = Inches(2.5)
+pg = (CONTENT_W - pw * 4) / 3
+for i, name in enumerate(pillars):
+    px = LM + (pw + pg) * i
+    add_rect(s, px, Inches(2.5), pw, Inches(3.0), BG_GRAY)
+    add_text(s, px + Inches(0.15), Inches(2.6), pw - Inches(0.3), Inches(0.5),
+             name, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
+             alignment=PP_ALIGN.CENTER)
+# Foundation
+add_rect(s, LM, Inches(5.7), CONTENT_W, Inches(0.8), NAVY)
+add_text(s, LM + Inches(0.3), Inches(5.7), CONTENT_W - Inches(0.6), Inches(0.8),
+         '基座：数据驱动 + 人才体系 + 企业文化',
+         font_size=BODY_SIZE, font_color=WHITE, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+---
+
+### 类别 D：对比评估
+
+#### 19. Side-by-Side Comparison (左右对比页)
+
+**适用场景**: 两个方案/选项/产品的并排对比分析。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌──方案 A──────┐  ┌──方案 B──────┐     │
+│  │ 标题（NAVY） │  │ 标题（NAVY） │     │
+│  ├──────────────┤  ├──────────────┤     │
+│  │ 优势         │  │ 优势         │     │
+│  │ 劣势         │  │ 劣势         │     │
+│  │ 成本         │  │ 成本         │     │
+│  └──────────────┘  └──────────────┘     │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '方案对比分析')
+cw = Inches(5.5)
+cg = Inches(0.733)
+options = [('方案 A：自建团队', ['投入可控', '周期较长', '成本 ¥500万/年']),
+           ('方案 B：外部合作', ['快速启动', '依赖供应商', '成本 ¥300万/年'])]
+for i, (title, points) in enumerate(options):
+    cx = LM + (cw + cg) * i
+    add_rect(s, cx, Inches(1.5), cw, Inches(0.6), NAVY)
+    add_text(s, cx + Inches(0.15), Inches(1.5), cw - Inches(0.3), Inches(0.6),
+             title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+    add_rect(s, cx, Inches(2.1), cw, Inches(4.0), BG_GRAY)
+    add_multiline(s, cx + Inches(0.3), Inches(2.3), cw - Inches(0.6), Inches(3.5),
+                  [f'• {p}' for p in points], line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 20. Before / After (前后对比页)
+
+**适用场景**: 展示变革前后的对比（如流程优化、组织变革）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌──BG_GRAY────┐  ──>  ┌──NAVY────┐    │
+│  │  现状       │       │  目标    │    │
+│  │  (Before)   │       │  (After) │    │
+│  │  痛点列表   │       │  改进点  │    │
+│  └─────────────┘       └─────────┘    │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '从现状到目标')
+hw = Inches(5.0)
+# Before
+add_rect(s, LM, Inches(1.5), hw, Inches(4.5), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
+         'X  现状（Before）', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
+add_hline(s, LM + Inches(0.3), Inches(2.2), hw - Inches(0.6), LINE_GRAY)
+add_multiline(s, LM + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
+              ['痛点一', '痛点二', '痛点三'], line_spacing_pt=10)
+# Arrow
+add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
+         '->', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
+# After
+ax = LM + hw + Inches(1.733)
+add_rect(s, ax, Inches(1.5), hw, Inches(4.5), NAVY)
+add_text(s, ax + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
+         'V  目标（After）', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
+add_hline(s, ax + Inches(0.3), Inches(2.2), hw - Inches(0.6), WHITE)
+add_multiline(s, ax + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
+              ['改进一', '改进二', '改进三'], font_color=WHITE, line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 21. Pros and Cons (优劣分析页)
+
+**适用场景**: 评估某个决策/方案的优势与风险。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  V 优势                  X 风险         │
+│  ───────────             ──────────     │
+│  • 要点1                 • 要点1        │
+│  • 要点2                 • 要点2        │
+│  • 要点3                 • 要点3        │
+│                                         │
+│  ┌──BG_GRAY 结论/建议───────────────┐   │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '方案评估：优势与风险')
+hw = Inches(5.5)
+# Pros column
+add_text(s, LM, Inches(1.5), hw, Inches(0.4),
+         'V  优势', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+add_hline(s, LM, Inches(2.0), hw, NAVY)
+add_multiline(s, LM, Inches(2.2), hw, Inches(2.5),
+              ['• 优势要点一', '• 优势要点二', '• 优势要点三'], line_spacing_pt=10)
+# Cons column
+cx = LM + hw + Inches(0.733)
+add_text(s, cx, Inches(1.5), hw, Inches(0.4),
+         'X  风险', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
+add_hline(s, cx, Inches(2.0), hw, DARK_GRAY)
+add_multiline(s, cx, Inches(2.2), hw, Inches(2.5),
+              ['• 风险要点一', '• 风险要点二', '• 风险要点三'], line_spacing_pt=10)
+# Bottom conclusion
+add_rect(s, LM, Inches(5.2), CONTENT_W, Inches(1.5), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(5.3), Inches(1.5), Inches(0.4),
+         '结论', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+add_text(s, LM + Inches(0.3), Inches(5.8), CONTENT_W - Inches(0.6), Inches(0.6),
+         '综合评估建议文字', font_size=BODY_SIZE)
+add_source(s, 'Source: ...')
+```
+
+#### 22. Traffic Light / RAG Status (红绿灯状态页)
+
+**适用场景**: 多项目/多模块的状态总览（绿=正常、黄=关注、红=风险）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  项目        状态    进度     备注       │
+│  ═══════════════════════════════════    │
+│  项目A       (G)    85%     按计划推进  │
+│  ───────────────────────────────────    │
+│  项目B       (Y)    60%     需关注资源  │
+│  ───────────────────────────────────    │
+│  项目C       (R)    30%     存在阻塞    │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '项目状态总览')
+# Header
+headers = ['项目', '状态', '进度', '备注']
+widths = [Inches(3.0), Inches(1.5), Inches(2.0), Inches(5.233)]
+hx = LM
+for hdr, w in zip(headers, widths):
+    add_text(s, hx, Inches(1.5), w, Inches(0.4), hdr,
+             font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
+    hx += w
+add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
+# Rows with status indicators
+rows = [('产品研发', 'NAVY', '85%', '按计划推进'),
+        ('市场推广', 'MED_GRAY', '60%', '需关注预算'),
+        ('团队扩招', 'DARK_GRAY', '30%', '存在阻塞')]
+color_map = {'NAVY': NAVY, 'MED_GRAY': MED_GRAY, 'DARK_GRAY': DARK_GRAY}
+ry = Inches(2.2)
+for name, status_color, pct, note in rows:
+    add_text(s, LM, ry, Inches(3.0), Inches(0.6), name, font_size=BODY_SIZE)
+    add_oval(s, LM + Inches(3.3), ry + Inches(0.05), '', size=Inches(0.35),
+             bg=color_map[status_color])
+    add_text(s, LM + Inches(4.5), ry, Inches(2.0), Inches(0.6), pct, font_size=BODY_SIZE)
+    add_text(s, LM + Inches(6.5), ry, Inches(5.233), Inches(0.6), note, font_size=BODY_SIZE)
+    ry += Inches(0.7)
+    add_hline(s, LM, ry, CONTENT_W, LINE_GRAY)
+    ry += Inches(0.15)
+add_source(s, 'Source: ...')
+```
+
+#### 23. Scorecard (计分卡页)
+
+**适用场景**: 展示多项评估维度的得分/评级，如供应商评估、团队绩效。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  评估维度          得分   评级           │
+│  ═══════════════════════════════════    │
+│  客户满意度         92    ████████░░    │
+│  产品质量           85    ███████░░░    │
+│  交付速度           78    ██████░░░░    │
+│  创新能力           65    █████░░░░░    │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '综合评估计分卡')
+headers = ['评估维度', '得分', '评级']
+add_text(s, LM, Inches(1.5), Inches(4.0), Inches(0.4), headers[0],
+         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
+add_text(s, Inches(5.0), Inches(1.5), Inches(1.5), Inches(0.4), headers[1],
+         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
+add_text(s, Inches(7.0), Inches(1.5), Inches(5.5), Inches(0.4), headers[2],
+         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
+add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
+items = [('客户满意度', '92', 0.92), ('产品质量', '85', 0.85),
+         ('交付速度', '78', 0.78), ('创新能力', '65', 0.65)]
+ry = Inches(2.2)
+bar_max = Inches(5.0)
+for name, score, pct in items:
+    add_text(s, LM, ry, Inches(4.0), Inches(0.5), name, font_size=BODY_SIZE)
+    add_text(s, Inches(5.0), ry, Inches(1.5), Inches(0.5), score,
+             font_size=BODY_SIZE, font_color=NAVY, bold=True)
+    add_rect(s, Inches(7.0), ry + Inches(0.1), bar_max, Inches(0.3), BG_GRAY)
+    add_rect(s, Inches(7.0), ry + Inches(0.1), Inches(5.0 * pct), Inches(0.3), NAVY)
+    ry += Inches(0.7)
+    add_hline(s, LM, ry, CONTENT_W, LINE_GRAY)
+    ry += Inches(0.15)
+add_source(s, 'Source: ...')
+```
+
+---
+
+### 类别 E：内容叙事
+
+#### 24. Executive Summary (执行摘要页)
+
+**适用场景**: 演示文稿的核心结论汇总，通常放在开头或结尾。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│ ┌──NAVY（核心结论）────────────────────┐ │
+│ │  一句话核心结论                       │ │
+│ └──────────────────────────────────────┘ │
+│                                         │
+│  (1) 支撑论点一      详细说明           │
+│  (2) 支撑论点二      详细说明           │
+│  (3) 支撑论点三      详细说明           │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '执行摘要')
+add_rect(s, LM, Inches(1.4), CONTENT_W, Inches(1.0), NAVY)
+add_text(s, LM + Inches(0.3), Inches(1.4), CONTENT_W - Inches(0.6), Inches(1.0),
+         '核心结论：一句话概括最重要的发现或建议',
+         font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE)
+points = [('1', '论点一标题', '支撑论点的详细说明文字'),
+          ('2', '论点二标题', '支撑论点的详细说明文字'),
+          ('3', '论点三标题', '支撑论点的详细说明文字')]
+iy = Inches(2.8)
+for num, title, desc in points:
+    add_oval(s, LM, iy, num)
+    add_text(s, LM + Inches(0.6), iy, Inches(3.5), Inches(0.4),
+             title, font_size=BODY_SIZE, font_color=NAVY, bold=True)
+    add_text(s, Inches(5.0), iy, Inches(7.5), Inches(0.4),
+             desc, font_size=BODY_SIZE)
+    iy += Inches(0.6)
+    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
+    iy += Inches(0.3)
+add_source(s, 'Source: ...')
+```
+
+#### 25. Key Takeaway with Detail (核心洞见页)
+
+**适用场景**: 左侧详细论述 + 右侧灰底要点提炼，用于核心发现页。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│                      ┌──BG_GRAY────────┐│
+│  左侧正文内容        │ Key Takeaways   ││
+│  详细分析论述        │ 1. 要点一        ││
+│  数据与支撑          │ 2. 要点二        ││
+│                      │ 3. 要点三        ││
+│                      └─────────────────┘│
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '核心发现')
+# Left content
+add_text(s, LM, Inches(1.5), Inches(7.5), Inches(0.4),
+         '分析标题', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+add_hline(s, LM, Inches(2.0), Inches(7.5), LINE_GRAY)
+add_multiline(s, LM, Inches(2.2), Inches(7.5), Inches(4.0),
+              ['详细分析段落一', '', '详细分析段落二'], line_spacing_pt=8)
+# Right takeaway
+tk_x = Inches(9.0)
+tk_w = Inches(3.5)
+add_rect(s, tk_x, Inches(1.5), tk_w, Inches(5.0), BG_GRAY)
+add_text(s, tk_x + Inches(0.2), Inches(1.7), tk_w - Inches(0.4), Inches(0.4),
+         'Key Takeaways', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+add_hline(s, tk_x + Inches(0.2), Inches(2.2), tk_w - Inches(0.4), LINE_GRAY)
+add_multiline(s, tk_x + Inches(0.2), Inches(2.4), tk_w - Inches(0.4), Inches(3.8),
+              ['1. 要点一', '2. 要点二', '3. 要点三'], line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 26. Quote / Insight Page (引言/洞见页)
+
+**适用场景**: 突出一段重要引言、专家观点或核心洞察。
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│            ──────────                   │
+│                                         │
+│      "引言内容，居中显示，               │
+│       大字号强调核心观点"                │
+│                                         │
+│            ──────────                   │
+│         — 来源/作者                      │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
+add_hline(s, Inches(5.5), Inches(2.0), Inches(2.3), NAVY, Pt(1.5))
+add_text(s, Inches(1.5), Inches(2.5), Inches(10.3), Inches(2.5),
+         '"引言内容，用于强调某个核心观点或专家洞见"',
+         font_size=Pt(24), font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
+add_hline(s, Inches(5.5), Inches(5.3), Inches(2.3), NAVY, Pt(1.5))
+add_text(s, Inches(1.5), Inches(5.6), Inches(10.3), Inches(0.5),
+         '— 作者姓名，来源',
+         font_size=BODY_SIZE, font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
+```
+
+#### 27. Two-Column Text (双栏文本页)
+
+**适用场景**: 平衡展示两个主题/方面，每列独立标题+正文。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  (A) 左栏标题         (B) 右栏标题      │
+│  ─────────────        ─────────────     │
+│  左栏正文内容         右栏正文内容       │
+│  详细分析             详细分析           │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '双维度分析')
+cw = Inches(5.5)
+cg = Inches(0.733)
+cols = [('A', '维度一标题', ['分析要点一', '分析要点二', '分析要点三']),
+        ('B', '维度二标题', ['分析要点一', '分析要点二', '分析要点三'])]
+for i, (letter, title, points) in enumerate(cols):
+    cx = LM + (cw + cg) * i
+    add_oval(s, cx, Inches(1.5), letter)
+    add_text(s, cx + Inches(0.6), Inches(1.5), cw - Inches(0.6), Inches(0.4),
+             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+    add_hline(s, cx, Inches(2.0), cw, LINE_GRAY)
+    add_multiline(s, cx, Inches(2.2), cw, Inches(4.0),
+                  [f'• {p}' for p in points], line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 28. Four-Column Overview (四栏概览页)
+
+**适用场景**: 四个并列维度的概览（如四大业务线、四个能力域）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  (1)       (2)       (3)       (4)      │
+│  标题1     标题2     标题3     标题4     │
+│  ────      ────      ────      ────     │
+│  描述      描述      描述      描述      │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '四大业务板块')
+items = [('1', '板块一', '描述内容\n关键数据'),
+         ('2', '板块二', '描述内容\n关键数据'),
+         ('3', '板块三', '描述内容\n关键数据'),
+         ('4', '板块四', '描述内容\n关键数据')]
+cw = Inches(2.7)
+cg = (CONTENT_W - cw * 4) / 3
+for i, (num, title, desc) in enumerate(items):
+    cx = LM + (cw + cg) * i
+    add_rect(s, cx, Inches(1.5), cw, Inches(4.8), BG_GRAY)
+    add_oval(s, cx + Inches(1.1), Inches(1.65), num)
+    add_text(s, cx + Inches(0.15), Inches(2.3), cw - Inches(0.3), Inches(0.4),
+             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_hline(s, cx + Inches(0.3), Inches(2.8), cw - Inches(0.6), LINE_GRAY)
+    add_multiline(s, cx + Inches(0.15), Inches(3.0), cw - Inches(0.3), Inches(3.0),
+                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+---
+
+### 类别 F：时间流程
+
+#### 29. Timeline / Roadmap (时间轴/路线图)
+
+**适用场景**: 展示时间维度的里程碑计划（季度/月度/年度路线图）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│                                         │
+│  (1)──────(2)──────(3)──────(4)         │
+│  Q1       Q2       Q3       Q4         │
+│  里程碑1  里程碑2  里程碑3  里程碑4     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '2026 年度路线图')
+# Timeline bar
+add_hline(s, LM + Inches(0.5), Inches(3.0), Inches(10.7), LINE_GRAY, Pt(2))
+milestones = [('Q1', '产品 MVP\n发布'), ('Q2', '用户增长\n达到10万'),
+              ('Q3', '盈利\n突破'), ('Q4', '国际化\n拓展')]
+spacing = Inches(10.7) / (len(milestones) - 1)
+for i, (label, desc) in enumerate(milestones):
+    mx = LM + Inches(0.5) + spacing * i
+    add_oval(s, mx - Inches(0.225), Inches(2.775), str(i + 1))
+    add_text(s, mx - Inches(1.0), Inches(2.0), Inches(2.0), Inches(0.5),
+             label, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_text(s, mx - Inches(1.0), Inches(3.5), Inches(2.0), Inches(1.5),
+             desc, font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+#### 30. Vertical Steps (垂直步骤页)
+
+**适用场景**: 从上到下的操作步骤或实施阶段。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  (1) 步骤一标题      详细说明           │
+│  ─────────────────────────────────────  │
+│  (2) 步骤二标题      详细说明           │
+│  ─────────────────────────────────────  │
+│  (3) 步骤三标题      详细说明           │
+│  ─────────────────────────────────────  │
+│  (4) 步骤四标题      详细说明           │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '实施步骤')
+steps = [('1', '需求分析', '深入调研用户需求与业务痛点'),
+         ('2', '方案设计', '制定技术架构与实施计划'),
+         ('3', '开发实施', '分阶段迭代交付核心功能'),
+         ('4', '上线运营', '监控效果并持续优化')]
+iy = Inches(1.5)
+for num, title, desc in steps:
+    add_oval(s, LM, iy, num)
+    add_text(s, LM + Inches(0.6), iy, Inches(3.5), Inches(0.4),
+             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
+    add_text(s, Inches(5.0), iy, Inches(7.5), Inches(0.4),
+             desc, font_size=BODY_SIZE)
+    iy += Inches(0.6)
+    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
+    iy += Inches(0.5)
+add_source(s, 'Source: ...')
+```
+
+#### 31. Cycle / Loop (循环图页)
+
+**适用场景**: 闭环流程或迭代循环（如 PDCA、敏捷迭代、反馈循环）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│         ┌──阶段1──┐                     │
+│         │        │                      │
+│  ┌阶段4┐│        │┌阶段2┐   右侧说明   │
+│  │     │└────────┘│     │              │
+│  └─────┘          └─────┘              │
+│         ┌──阶段3──┐                     │
+│         └────────┘                      │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '持续改进循环（PDCA）')
+phases = [('Plan\n计划', Inches(2.8), Inches(1.5)),
+          ('Do\n执行', Inches(5.0), Inches(3.0)),
+          ('Check\n检查', Inches(2.8), Inches(4.5)),
+          ('Act\n改进', Inches(0.6), Inches(3.0))]
+for i, (label, px, py) in enumerate(phases):
+    fill = NAVY if i == 0 else BG_GRAY
+    tc = WHITE if i == 0 else NAVY
+    add_rect(s, LM + px, py, Inches(2.2), Inches(1.2), fill)
+    add_text(s, LM + px + Inches(0.1), py + Inches(0.1), Inches(2.0), Inches(1.0),
+             label, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
+             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+# Arrows between phases (text arrows)
+add_text(s, LM + Inches(4.5), Inches(2.0), Inches(1.0), Inches(0.5),
+         '->', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
+add_text(s, LM + Inches(5.0), Inches(4.0), Inches(1.0), Inches(0.5),
+         'v', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
+add_text(s, LM + Inches(2.0), Inches(5.0), Inches(1.0), Inches(0.5),
+         '<-', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
+add_text(s, LM + Inches(0.8), Inches(2.0), Inches(1.0), Inches(0.5),
+         '^', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
+# Right side explanation
+add_rect(s, Inches(8.5), Inches(1.5), Inches(4.0), Inches(5.0), BG_GRAY)
+add_text(s, Inches(8.8), Inches(1.7), Inches(3.4), Inches(0.4),
+         '循环要点', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+add_multiline(s, Inches(8.8), Inches(2.3), Inches(3.4), Inches(3.5),
+              ['每个阶段的说明...'], line_spacing_pt=10)
+add_source(s, 'Source: ...')
+```
+
+#### 32. Funnel (漏斗图页)
+
+**适用场景**: 转化漏斗（如销售漏斗、用户转化路径）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌════════════════════════════┐  100%   │
+│  │         认知               │         │
+│  ├══════════════════════┤      60%      │
+│  │       兴趣           │               │
+│  ├════════════════┤           35%       │
+│  │     购买       │                     │
+│  ├══════════┤                 15%       │
+│  │   留存   │                           │
+│  └─────────┘                            │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '用户转化漏斗')
+stages = [('认知', '100,000', 1.0), ('兴趣', '60,000', 0.6),
+          ('购买', '35,000', 0.35), ('留存', '15,000', 0.15)]
+max_w = Inches(8.0)
+fy = Inches(1.6)
+for i, (name, count, pct) in enumerate(stages):
+    w = max_w * pct
+    fx = Inches(6.666) - w / 2  # center
+    fill = NAVY if i == 0 else BG_GRAY
+    tc = WHITE if i == 0 else NAVY
+    add_rect(s, fx, fy, w, Inches(1.0), fill)
+    add_text(s, fx + Inches(0.2), fy, w - Inches(0.4), Inches(1.0),
+             name, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+    add_text(s, fx + w + Inches(0.3), fy + Inches(0.2), Inches(2.5), Inches(0.5),
+             f'{count} ({int(pct*100)}%)', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+    fy += Inches(1.2)
+add_source(s, 'Source: ...')
+```
+
+---
+
+### 类别 G：团队专题
+
+#### 33. Meet the Team (团队介绍页)
+
+**适用场景**: 团队成员/核心高管/项目组简介。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌─BG──┐    ┌─BG──┐    ┌─BG──┐        │
+│  │(头像)│    │(头像)│    │(头像)│        │
+│  │ 姓名 │    │ 姓名 │    │ 姓名 │        │
+│  │ 职位 │    │ 职位 │    │ 职位 │        │
+│  │ 简介 │    │ 简介 │    │ 简介 │        │
+│  └──────┘    └──────┘    └──────┘        │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '核心团队')
+members = [('张三', 'CEO', '15年行业经验\n前XX公司VP'),
+           ('李四', 'CTO', '技术架构专家\n前XX公司总监'),
+           ('王五', 'COO', '运营管理专家\n前XX公司负责人')]
+cw = Inches(3.5)
+cg = (CONTENT_W - cw * 3) / 2
+for i, (name, role, bio) in enumerate(members):
+    cx = LM + (cw + cg) * i
+    add_rect(s, cx, Inches(1.5), cw, Inches(5.0), BG_GRAY)
+    add_oval(s, cx + Inches(1.25), Inches(1.7), name[0], size=Inches(1.0))
+    add_text(s, cx + Inches(0.15), Inches(2.9), cw - Inches(0.3), Inches(0.4),
+             name, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_text(s, cx + Inches(0.15), Inches(3.4), cw - Inches(0.3), Inches(0.4),
+             role, font_size=BODY_SIZE, font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
+    add_hline(s, cx + Inches(0.3), Inches(3.9), cw - Inches(0.6), LINE_GRAY)
+    add_multiline(s, cx + Inches(0.15), Inches(4.1), cw - Inches(0.3), Inches(2.0),
+                  bio.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+#### 34. Case Study (案例研究页)
+
+**适用场景**: 展示成功案例，按"情境-行动-结果"结构组织。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌─Situation──┐ ┌─Approach──┐ ┌Result─┐ │
+│  │ 背景/挑战  │ │ 采取行动  │ │ 成果  │ │
+│  │            │ │           │ │       │ │
+│  └────────────┘ └───────────┘ └───────┘ │
+│                                         │
+│  ┌──BG_GRAY 客户评价/关键指标──────────┐ │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '案例研究：XX项目')
+sections = [('S', 'Situation\n情境', '客户面临的\n挑战描述'),
+            ('A', 'Approach\n方法', '我们采取的\n解决方案'),
+            ('R', 'Result\n成果', '取得的量化\n成果数据')]
+sw = Inches(3.5)
+sg = (CONTENT_W - sw * 3) / 2
+for i, (letter, title, desc) in enumerate(sections):
+    sx = LM + (sw + sg) * i
+    fill = NAVY if i == 2 else BG_GRAY
+    tc = WHITE if i == 2 else NAVY
+    dc = WHITE if i == 2 else DARK_GRAY
+    add_rect(s, sx, Inches(1.5), sw, Inches(3.0), fill)
+    add_oval(s, sx + Inches(0.15), Inches(1.65), letter,
+             bg=WHITE if i == 2 else NAVY, fg=NAVY if i == 2 else WHITE)
+    add_text(s, sx + Inches(0.15), Inches(2.2), sw - Inches(0.3), Inches(0.8),
+             title, font_size=BODY_SIZE, font_color=tc, bold=True,
+             alignment=PP_ALIGN.CENTER)
+    add_text(s, sx + Inches(0.15), Inches(3.1), sw - Inches(0.3), Inches(1.0),
+             desc, font_size=BODY_SIZE, font_color=dc, alignment=PP_ALIGN.CENTER)
+# Bottom highlight
+add_rect(s, LM, Inches(5.0), CONTENT_W, Inches(1.5), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(5.1), Inches(1.5), Inches(0.4),
+         '关键成果', font_size=BODY_SIZE, font_color=NAVY, bold=True)
+add_text(s, LM + Inches(0.3), Inches(5.6), CONTENT_W - Inches(0.6), Inches(0.6),
+         '营收增长 45%  |  客户满意度 92%  |  运营效率提升 30%',
+         font_size=BODY_SIZE, font_color=DARK_GRAY)
+add_source(s, 'Source: ...')
+```
+
+#### 35. Action Items / Next Steps (行动计划页)
+
+**适用场景**: 演示文稿结尾的下一步行动清单。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  ┌──NAVY──┐   ┌──NAVY──┐   ┌──NAVY──┐  │
+│  │行动一  │   │行动二  │   │行动三  │  │
+│  ├─BG─────┤   ├─BG─────┤   ├─BG─────┤  │
+│  │ 时间   │   │ 时间   │   │ 时间   │  │
+│  │ 描述   │   │ 描述   │   │ 描述   │  │
+│  │ 负责人 │   │ 负责人 │   │ 负责人 │  │
+│  └────────┘   └────────┘   └────────┘  │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '下一步行动')
+actions = [('建立数据中台', '2026 Q2', '完成核心数据资产盘点\n搭建基础架构', '技术团队'),
+           ('启动用户增长计划', '2026 Q3', '渠道拓展+内容营销\n目标新增50万用户', '市场团队'),
+           ('优化运营流程', '2026 Q4', '自动化率提升至80%\n降本增效', '运营团队')]
+cw = Inches(3.5)
+cg = (CONTENT_W - cw * 3) / 2
+for i, (title, timeline, desc, owner) in enumerate(actions):
+    cx = LM + (cw + cg) * i
+    add_rect(s, cx, Inches(1.5), cw, Inches(0.6), NAVY)
+    add_text(s, cx + Inches(0.15), Inches(1.5), cw - Inches(0.3), Inches(0.6),
+             title, font_size=BODY_SIZE, font_color=WHITE, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+    add_rect(s, cx, Inches(2.1), cw, Inches(0.4), BG_GRAY)
+    add_text(s, cx + Inches(0.15), Inches(2.1), cw - Inches(0.3), Inches(0.4),
+             timeline, font_size=BODY_SIZE, font_color=NAVY, bold=True,
+             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
+    add_multiline(s, cx + Inches(0.15), Inches(2.7), cw - Inches(0.3), Inches(2.0),
+                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+    add_hline(s, cx + Inches(0.3), Inches(4.9), cw - Inches(0.6), LINE_GRAY)
+    add_text(s, cx + Inches(0.15), Inches(5.1), cw - Inches(0.3), Inches(0.4),
+             f'负责人：{owner}', font_size=BODY_SIZE, font_color=MED_GRAY,
+             alignment=PP_ALIGN.CENTER)
+add_source(s, 'Source: ...')
+```
+
+#### 36. Closing / Thank You (结束页)
+
+**适用场景**: 演示文稿结尾的致谢或总结收尾页。
+
+```
+┌─────────────────────────────────────────┐
+│  ═══                                    │
+│                                         │
+│           核心总结语句                    │
+│           ──────────                    │
+│           结束寄语                       │
+│                                         │
+│  ─────                                  │
+└─────────────────────────────────────────┘
+```
+
+```python
+s = prs.slides.add_slide(BL)
+add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
+add_text(s, Inches(1.5), Inches(2.0), Inches(10.3), Inches(1.0),
+         '核心总结语句', font_size=Pt(28), font_color=NAVY, bold=True,
+         font_name='Georgia', alignment=PP_ALIGN.CENTER)
+add_hline(s, Inches(5.5), Inches(3.3), Inches(2.3), NAVY, Pt(1.5))
+add_text(s, Inches(1.5), Inches(3.8), Inches(10.3), Inches(2.0),
+         '结束寄语或核心思想的延伸表达',
+         font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
+add_hline(s, Inches(1), Inches(6.8), Inches(3), NAVY, Pt(2))
+```
+
+---
+
 ## Python Code Patterns
 
 ### Helper Functions (Copy Directly)
