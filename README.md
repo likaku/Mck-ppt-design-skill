@@ -13,6 +13,19 @@
 
 ---
 
+> ### v1.1.0 更新 — 三层防御体系，彻底解决文件损坏
+>
+> | 变更 | 说明 |
+> |:-----|:-----|
+> | **废弃 connector 画线** | 所有线条改用极细矩形（`add_hline`）绘制，从源头杜绝 `<p:style>` 引入 |
+> | **形状内联清理** | `add_rect` / `add_oval` 创建后自动调用 `_clean_shape()` 移除 `p:style` |
+> | **保存后全量清洗** | `full_cleanup()` 遍历所有 slide XML + theme XML，移除全部效果引用、阴影和 3D 节点 |
+> | **函数重命名** | `add_line` → `add_hline`，`add_circle_label` → `add_oval`（支持 bg/fg 参数） |
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
+
+---
+
 ### 样例展示
 
 | 封面页 | 内容页 | 表格页 |
