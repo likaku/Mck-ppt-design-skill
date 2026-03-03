@@ -31,11 +31,17 @@
 
 | 封面页 | 内容页 | 表格页 |
 |--------|--------|--------|
-| ![封面页](docs/screenshots/cover.png) | ![内容页](docs/screenshots/content.png) | ![表格页](docs/screenshots/table.png) |
+| <img width="2192" height="1228" alt="Clipboard_Screenshot_1772517587" src="https://github.com/user-attachments/assets/075ec46d-dd73-4454-92d0-84184b78d276" />
+| <img width="2188" height="1226" alt="Clipboard_Screenshot_1772517603" src="https://github.com/user-attachments/assets/3b25f071-8a81-48e3-a62b-9d9be9026f2e" />
+| <img width="2188" height="1228" alt="Clipboard_Screenshot_1772517625" src="https://github.com/user-attachments/assets/be327c14-aff9-459f-89b0-d4a8bffaabfc" />
+|
 
 | 四栏布局 | 色彩体系 | 总结页 |
 |----------|----------|--------|
-| ![四栏布局](docs/screenshots/four-column.png) | ![色彩体系](docs/screenshots/color-palette.png) | ![总结页](docs/screenshots/summary.png) |
+|<img width="2188" height="1230" alt="Clipboard_Screenshot_1772517657" src="https://github.com/user-attachments/assets/687cee47-13bb-4d6b-840f-77f8e001a62b" />
+| <img width="2190" height="1232" alt="Clipboard_Screenshot_1772517677" src="https://github.com/user-attachments/assets/41371c47-608f-4857-9bfe-791121ec1579" />
+|<img width="2192" height="1234" alt="Clipboard_Screenshot_1772517694" src="https://github.com/user-attachments/assets/c5b6e52a-fd91-4c28-88a4-82fdfedfd956" />
+|
 
 > **提示**：将截图放入 `docs/screenshots/` 目录即可自动显示。推荐尺寸：1920x1080 或 2560x1440。
 
