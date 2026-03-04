@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-03-04
+
+### Fixed
+- Circle shape (`add_oval()`) number font now matches body text — added `font_name='Arial'` and `set_ea_font()` for consistent typography
+- Circle numbers simplified from `01, 02, 03` to `1, 2, 3` (no leading zeros)
+
+### Changed
+- Removed product-specific references from skill description; skill is now fully generic for any professional PPT
+- Skill name updated to `mck-ppt-design` for generic usage
+
 ## [1.1.0] - 2026-03-03
 
 ### Breaking Changes

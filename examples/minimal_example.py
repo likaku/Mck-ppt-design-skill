@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 Minimal example: McKinsey-style PPT with Cover + Content + Source slides.
-Uses the design system defined in SKILL.md.
+Uses the design system defined in SKILL.md (v1.2.0).
 """
 
 import os
 import zipfile
 from lxml import etree
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
@@ -31,6 +31,13 @@ HEADER_SIZE     = Pt(28)
 SMALL_SIZE      = Pt(9)
 
 # ── Helper Functions ──
+
+def _clean_shape(shape):
+    """Remove p:style from any shape to prevent effect references."""
+    sp = shape._element
+    style = sp.find(qn('p:style'))
+    if style is not None:
+        sp.remove(style)
 
 def set_ea_font(run, typeface='KaiTi'):
     rPr = run._r.get_or_add_rPr()
@@ -70,49 +77,68 @@ def add_rect(slide, left, top, width, height, fill_color):
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill_color
     shape.line.fill.background()
+    _clean_shape(shape)  # CRITICAL: remove p:style
     return shape
 
-def add_line(slide, x1, y1, x2, y2, color=BLACK, width=Pt(0.5)):
-    c = slide.shapes.add_connector(1, x1, y1, x2, y2)
-    c.line.color.rgb = color
-    c.line.width = width
-    sp = c._element
-    style = sp.find(qn('p:style'))
-    if style is not None:
-        sp.remove(style)
+def add_hline(slide, x, y, length, color=BLACK, thickness=Pt(0.5)):
+    """Draw a horizontal line using a thin rectangle (no connector)."""
+    h = max(int(thickness), Emu(6350))  # minimum ~0.5pt
+    return add_rect(slide, x, y, length, h, color)
+
+def add_oval(slide, x, y, letter, size=Inches(0.45),
+             bg=NAVY, fg=WHITE):
+    """Add a circle label with a letter (e.g. 'A', '1').
+    Uses Arial font to match body text consistency."""
+    c = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
+    c.fill.solid()
+    c.fill.fore_color.rgb = bg
+    c.line.fill.background()
+    tf = c.text_frame
+    tf.paragraphs[0].text = letter
+    tf.paragraphs[0].font.size = Pt(14)
+    tf.paragraphs[0].font.name = 'Arial'
+    tf.paragraphs[0].font.color.rgb = fg
+    tf.paragraphs[0].font.bold = True
+    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+    for run in tf.paragraphs[0].runs:
+        set_ea_font(run, 'KaiTi')
+    bodyPr = tf._txBody.find(qn('a:bodyPr'))
+    bodyPr.set('anchor', 'ctr')
+    _clean_shape(c)  # CRITICAL: remove p:style
     return c
 
 def add_action_title(slide, text, title_size=Pt(22)):
     add_text(slide, Inches(0.8), Inches(0.15), Inches(11.7), Inches(0.9),
              text, font_size=title_size, font_color=BLACK, bold=True,
              font_name='Georgia', ea_font='KaiTi', anchor=MSO_ANCHOR.MIDDLE)
-    add_line(slide, Inches(0.8), Inches(1.05), Inches(12.5), Inches(1.05),
-             color=BLACK, width=Pt(0.5))
+    add_hline(slide, Inches(0.8), Inches(1.05), Inches(11.7),
+              color=BLACK, thickness=Pt(0.5))
 
 def add_source(slide, text, y=Inches(7.05)):
     add_text(slide, Inches(0.8), y, Inches(11), Inches(0.3),
              text, font_size=Pt(9), font_color=MED_GRAY)
 
-def cleanup_theme(outpath):
+def full_cleanup(outpath):
+    """Remove ALL p:style from every slide + theme shadows/3D."""
     tmppath = outpath + '.tmp'
     with zipfile.ZipFile(outpath, 'r') as zin:
         with zipfile.ZipFile(tmppath, 'w', zipfile.ZIP_DEFLATED) as zout:
             for item in zin.infolist():
                 data = zin.read(item.filename)
-                if 'theme' in item.filename.lower() and item.filename.endswith('.xml'):
+                if item.filename.endswith('.xml'):
                     root = etree.fromstring(data)
-                    ns = {'a': 'http://schemas.openxmlformats.org/drawingml/2006/main'}
-                    for eff_list in root.findall('.//a:effectStyleLst/a:effectStyle/a:effectLst', ns):
-                        for shadow in eff_list.findall('a:outerShdw', ns):
-                            eff_list.remove(shadow)
-                        for shadow in eff_list.findall('a:innerShdw', ns):
-                            eff_list.remove(shadow)
-                    for eff_style in root.findall('.//a:effectStyleLst/a:effectStyle', ns):
-                        for s3d in eff_style.findall('a:scene3d', ns):
-                            eff_style.remove(s3d)
-                        for sp3d in eff_style.findall('a:sp3d', ns):
-                            eff_style.remove(sp3d)
-                    data = etree.tostring(root, xml_declaration=True, encoding='UTF-8', standalone=True)
+                    ns_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+                    ns_a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+                    # Remove ALL p:style elements from all shapes/connectors
+                    for style in root.findall(f'.//{{{ns_p}}}style'):
+                        style.getparent().remove(style)
+                    # Remove shadows and 3D from theme
+                    if 'theme' in item.filename.lower():
+                        for tag in ['outerShdw', 'innerShdw', 'scene3d', 'sp3d']:
+                            for el in root.findall(f'.//{{{ns_a}}}{tag}'):
+                                el.getparent().remove(el)
+                    data = etree.tostring(root, xml_declaration=True,
+                                          encoding='UTF-8', standalone=True)
                 zout.writestr(item, data)
     os.replace(tmppath, outpath)
 
@@ -135,8 +161,7 @@ def main():
              font_color=DARK_GRAY)
     add_text(s1, Inches(1), Inches(4.5), Inches(11), Inches(0.5),
              'Minimal Example  |  2026', font_size=BODY_SIZE, font_color=MED_GRAY)
-    add_line(s1, Inches(1), Inches(6.8), Inches(4), Inches(6.8),
-             color=NAVY, width=Pt(2))
+    add_hline(s1, Inches(1), Inches(6.8), Inches(3), color=NAVY, thickness=Pt(2))
 
     # Slide 2: Content
     s2 = prs.slides.add_slide(blank)
@@ -149,16 +174,16 @@ def main():
     ]
     for i, item in enumerate(items):
         y = Inches(1.6) + Inches(0.6) * i
-        add_text(s2, Inches(1.2), y, Inches(10), Inches(0.5), item)
+        add_oval(s2, Inches(0.9), y, str(i + 1))
+        add_text(s2, Inches(1.5), y, Inches(10), Inches(0.5), item)
         if i < len(items) - 1:
-            add_line(s2, Inches(1.2), y + Inches(0.55),
-                     Inches(11.2), y + Inches(0.55), color=LINE_GRAY)
-    add_source(s2, 'Source: Mck-ppt-design-skill v1.0.0')
+            add_hline(s2, Inches(0.9), y + Inches(0.55), Inches(11.3), LINE_GRAY)
+    add_source(s2, 'Source: Mck-ppt-design-skill v1.2.0')
 
     # Save & cleanup
     outpath = 'minimal_output.pptx'
     prs.save(outpath)
-    cleanup_theme(outpath)
+    full_cleanup(outpath)
     print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 if __name__ == '__main__':

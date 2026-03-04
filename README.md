@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.1.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.2.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -13,21 +13,11 @@
 
 ---
 
-> ### v1.1.0 更新 — 新增 32 种布局模式
+> ### v1.2.0 更新 — 细小格式问题解决
 >
-> 基于麦肯锡 2023 官方模板研究，新增 7 大类共 32 种页面布局，覆盖咨询项目全场景：
->
-> | 类别 | 新增布局 |
-> |:-----|:---------|
-> | **结构导航** | 章节分隔页、目录/议程页、附录标题页 |
-> | **数据统计** | 大数据展示、双数据对比、三指标仪表盘、数据表格、指标卡片行 |
-> | **框架矩阵** | 四象限矩阵、三支柱框架、金字塔层级、流程箭头、维恩图概念、殿堂框架 |
-> | **对比评估** | 左右对比、前后对比、优劣分析、红绿灯状态、计分卡 |
-> | **内容叙事** | 执行摘要、核心洞见、引言/洞见页、双栏文本、四栏概览 |
-> | **时间流程** | 时间轴/路线图、垂直步骤、循环图、漏斗图 |
-> | **团队专题** | 团队介绍、案例研究、行动计划、结束页 |
->
-> 同时重构底层渲染引擎，通过三层防御体系（矩形画线 + 内联清理 + 全量XML清洗）彻底解决文件损坏问题。
+> - 修复圆形 shape 内数字字体与其他文字不一致的问题，`add_oval()` 现在统一设置 `font_name='Arial'` + `set_ea_font()`
+> - 圆形编号简化：使用 `1, 2, 3` 而非 `01, 02, 03`
+> - 移除特定产品相关描述，Skill 更加通用
 >
 > 详见 [CHANGELOG.md](CHANGELOG.md)
 
@@ -104,8 +94,8 @@ pip install python-pptx lxml
 cd examples && python minimal_example.py
 
 # 3. 安装为 Skill（可选）
-mkdir -p ~/.workbuddy/skills/workbuddy-ppt-design
-cp SKILL.md ~/.workbuddy/skills/workbuddy-ppt-design/
+mkdir -p ~/.codebuddy/skills/mck-ppt-design
+cp SKILL.md ~/.codebuddy/skills/mck-ppt-design/
 ```
 
 ---

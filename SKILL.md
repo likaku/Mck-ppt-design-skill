@@ -1,8 +1,8 @@
 ---
-name: workbuddy-ppt-design
-description: "McKinsey-style PowerPoint presentation design for Tencent WorkBuddy product introductions. This skill provides comprehensive design guidelines, typography standards, color palettes, layout principles, and Python code patterns for creating professional, consistent presentations using python-pptx from scratch. Includes all refinements and user feedback from iterative design process."
+name: mck-ppt-design
+description: "McKinsey-style PowerPoint presentation design system. This skill provides comprehensive design guidelines, typography standards, color palettes, layout principles, and Python code patterns for creating professional, consistent presentations using python-pptx from scratch. Includes all refinements and user feedback from iterative design process."
 license: Apache-2.0
-version: "1.1.0"
+version: "1.2.0"
 user-invocable: true
 allowed-tools:
   - Read
@@ -10,11 +10,11 @@ allowed-tools:
   - Bash
 ---
 
-# WorkBuddy PPT Design Framework
+# McKinsey PPT Design Framework
 
 ## Overview
 
-This skill encodes the complete design specification for **Tencent WorkBuddy product introductions** - a professional, consultant-grade PowerPoint presentation framework based on McKinsey design principles. It includes:
+This skill encodes the complete design specification for **professional business presentations** - a consultant-grade PowerPoint presentation framework based on McKinsey design principles. It includes:
 
 - **Color systems** and typography hierarchy
 - **Layout patterns** for different slide types
@@ -31,7 +31,7 @@ All specifications have been refined through **iterative user feedback** to ensu
 
 Use this skill when you need to:
 
-1. **Create a new WorkBuddy product presentation from scratch** - Use the provided Python code templates
+1. **Create a new professional presentation from scratch** - Use the provided Python code templates
 2. **Maintain design consistency** - Reference color codes, font sizes, spacing, and layout patterns
 3. **Refine existing presentations** - Apply font adjustments, line treatments, or layout improvements
 4. **Document design decisions** - Explain color choices, typography rationale, or layout structures
@@ -126,7 +126,7 @@ Every paragraph with Chinese text MUST apply `set_ea_font()` to all runs.
 
 | Size | Type | Examples | Notes |
 |------|------|----------|-------|
-| **44pt** | Cover Title | "腾讯WorkBuddy" | Cover slide only, Georgia |
+| **44pt** | Cover Title | "项目名称" | Cover slide only, Georgia |
 | **28pt** | Section Header | "目录" (TOC title) | Largest body content, Georgia |
 | **24pt** | Subtitle | Tagline on cover | Cover slide only |
 | **22pt** | Action Title | Slide title bars | Main content titles, **bold**, Georgia |
@@ -312,13 +312,13 @@ Code template:
 s1 = prs.slides.add_slide(prs.slide_layouts[6])
 add_rect(s1, 0, 0, prs.slide_width, Inches(0.05), NAVY)
 add_text(s1, Inches(1), Inches(2.2), Inches(11), Inches(1.0),
-         '腾讯WorkBuddy', font_size=Pt(44), font_name='Georgia',
+         '项目名称', font_size=Pt(44), font_name='Georgia',
          font_color=NAVY, bold=True, ea_font='KaiTi')
 add_text(s1, Inches(1), Inches(3.5), Inches(11), Inches(0.6),
-         'AI驱动的新一代办公效率助手', font_size=Pt(24),
+         '副标题描述', font_size=Pt(24),
          font_color=DARK_GRAY, ea_font='KaiTi')
 add_text(s1, Inches(1), Inches(4.5), Inches(11), Inches(0.5),
-         '产品功能介绍  |  2026年3月', font_size=BODY_SIZE,
+         '演示文稿  |  2026年3月', font_size=BODY_SIZE,
          font_color=MED_GRAY, ea_font='KaiTi')
 add_line(s1, Inches(1), Inches(6.8), Inches(4), Inches(6.8),
          color=NAVY, width=Pt(2))
@@ -464,9 +464,9 @@ add_text(s, Inches(1.2), Inches(4.2), Inches(10), Inches(0.6),
 ```python
 s = prs.slides.add_slide(BL)
 add_action_title(s, '目录')
-items = [('01', '引言与背景', '项目起源与核心问题'),
-         ('02', '市场分析', '竞争格局与机会识别'),
-         ('03', '战略建议', '三大核心行动方案')]
+items = [('1', '引言与背景', '项目起源与核心问题'),
+         ('2', '市场分析', '竞争格局与机会识别'),
+         ('3', '战略建议', '三大核心行动方案')]
 iy = Inches(1.6)
 for num, title, desc in items:
     add_oval(s, LM, iy, num, size=Inches(0.5))
@@ -1805,7 +1805,8 @@ def add_hline(slide, x, y, length, color=RGBColor(0, 0, 0), thickness=Pt(0.5)):
 
 def add_oval(slide, x, y, letter, size=Inches(0.45),
              bg=RGBColor(0x05, 0x1C, 0x2C), fg=RGBColor(0xFF, 0xFF, 0xFF)):
-    """Add a circle label with a letter (e.g. 'A', '1')."""
+    """Add a circle label with a letter (e.g. 'A', '1').
+    Uses Arial font to match body text consistency."""
     c = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
     c.fill.solid()
     c.fill.fore_color.rgb = bg
@@ -1813,9 +1814,12 @@ def add_oval(slide, x, y, letter, size=Inches(0.45),
     tf = c.text_frame
     tf.paragraphs[0].text = letter
     tf.paragraphs[0].font.size = Pt(14)
+    tf.paragraphs[0].font.name = 'Arial'
     tf.paragraphs[0].font.color.rgb = fg
     tf.paragraphs[0].font.bold = True
     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+    for run in tf.paragraphs[0].runs:
+        set_ea_font(run, 'KaiTi')
     bodyPr = tf._txBody.find(qn('a:bodyPr'))
     bodyPr.set('anchor', 'ctr')
     _clean_shape(c)  # CRITICAL: remove p:style
@@ -1966,7 +1970,7 @@ pip install python-pptx lxml
 
 ## Example: Complete Minimal Presentation
 
-See `examples/minimal_workbuddy_ppt.py` for a complete, working example that generates:
+See `examples/minimal_example.py` for a complete, working example that generates:
 - Cover slide
 - Table of contents
 - Content slide with title + body text
@@ -1979,7 +1983,7 @@ See `examples/minimal_workbuddy_ppt.py` for a complete, working example that gen
 
 Generated presentations are typically saved to:
 ```
-/Users/kaku/.workbuddy/workspace/default_project/WorkBuddy产品介绍v2.pptx
+./output/presentation.pptx
 ```
 
 All colors, fonts, and dimensions referenced in code should match this document exactly.
@@ -1990,6 +1994,9 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.2.0 | 2026-03-04 | Fixed circle shape number font inconsistency; `add_oval()` now sets `font_name='Arial'` + `set_ea_font()` for consistent typography |
+| | | - Circle numbers simplified: use `1, 2, 3` instead of `01, 02, 03` |
+| | | - Removed product-specific references from skill description |
 | 1.1.0 | 2026-03-03 | **Breaking**: Replaced connector-based lines with rectangle-based `add_hline()` |
 | | | - `add_line()` deprecated, use `add_hline()` instead |
 | | | - `add_circle_label()` renamed to `add_oval()` with bg/fg params |
