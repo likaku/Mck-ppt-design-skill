@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.2.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.3.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -13,11 +13,12 @@
 
 ---
 
-> ### v1.2.0 更新 — 细小格式问题解决
+> ### v1.3.0 更新 — ClawHub 首发
 >
-> - 修复圆形 shape 内数字字体与其他文字不一致的问题，`add_oval()` 现在统一设置 `font_name='Arial'` + `set_ea_font()`
-> - 圆形编号简化：使用 `1, 2, 3` 而非 `01, 02, 03`
-> - 移除特定产品相关描述，Skill 更加通用
+> - 适配 ClawHub 发布标准，优化 description 提升搜索可发现性
+> - 新增 `Edge Cases` 和 `Error Handling` 章节
+> - 新增 `scripts/` 和 `references/` 目录，文件结构更规范
+> - 添加 `metadata`（依赖声明）和 `homepage`（GitHub 链接）
 >
 > 详见 [CHANGELOG.md](CHANGELOG.md)
 
@@ -107,11 +108,14 @@ python-pptx 自动为形状附加 `<p:style>` 元素，引用主题中的 `outer
 pip install python-pptx lxml
 
 # 2. 运行示例
-cd examples && python minimal_example.py
+cd scripts && python minimal_example.py
 
-# 3. 安装为 Skill（可选）
-mkdir -p ~/.codebuddy/skills/mck-ppt-design
-cp SKILL.md ~/.codebuddy/skills/mck-ppt-design/
+# 3. 从 ClawHub 安装（推荐）
+npx clawhub@latest install mck-ppt-design
+
+# 或手动安装
+mkdir -p ~/.claude/skills/mck-ppt-design
+cp SKILL.md ~/.claude/skills/mck-ppt-design/
 ```
 
 ---
@@ -119,12 +123,18 @@ cp SKILL.md ~/.codebuddy/skills/mck-ppt-design/
 ### 项目结构
 
 ```
-├── SKILL.md                 # 核心设计规范（685 行）
+├── SKILL.md                 # 核心设计规范
 ├── LICENSE                  # Apache 2.0
 ├── CHANGELOG.md             # 版本记录
+├── scripts/
+│   ├── minimal_example.py   # 2 页 Demo
+│   └── requirements.txt     # 依赖列表
+├── references/
+│   ├── color-palette.md     # 色彩速查
+│   └── layout-catalog.md    # 36 种布局目录
 └── examples/
-    ├── minimal_example.py   # 2 页 Demo
-    └── requirements.txt     # 依赖列表
+    ├── minimal_example.py   # 2 页 Demo（兼容旧路径）
+    └── requirements.txt
 ```
 
 ---

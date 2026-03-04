@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-03-04
+
+### Added
+- ClawHub-compatible `metadata` field (declares `python3`/`pip` dependencies)
+- `homepage` field pointing to GitHub repository
+- `Edge Cases` section: large presentations, font availability, slide dimensions, LibreOffice compatibility
+- `Error Handling` section: file repair, Chinese rendering, module errors, alignment issues
+- `references/color-palette.md` — quick color & font-size reference
+- `references/layout-catalog.md` — all 36 layout types at a glance
+- `scripts/` directory mirroring example code for ClawHub convention
+
+### Changed
+- Rewrote `description` for ClawHub discoverability: verb-first, `Use when` trigger pattern, keyword coverage (pitch deck, strategy, quarterly review, board meeting, etc.)
+- Expanded `When to Use` with business scenario keywords
+- Version bumped to 1.3.0
+
 ## [1.2.0] - 2026-03-04
 
 ### Fixed

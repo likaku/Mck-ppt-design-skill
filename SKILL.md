@@ -1,45 +1,43 @@
 ---
 name: mck-ppt-design
-description: "McKinsey-style PowerPoint presentation design system. This skill provides comprehensive design guidelines, typography standards, color palettes, layout principles, and Python code patterns for creating professional, consistent presentations using python-pptx from scratch. Includes all refinements and user feedback from iterative design process."
+description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.2.0"
+version: "1.3.0"
+homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
 allowed-tools:
   - Read
   - Write
   - Bash
+metadata: {"openclaw":{"emoji":"📊","requires":{"bins":["python3","pip"]}}}
 ---
 
 # McKinsey PPT Design Framework
 
 ## Overview
 
-This skill encodes the complete design specification for **professional business presentations** - a consultant-grade PowerPoint presentation framework based on McKinsey design principles. It includes:
+This skill encodes the complete design specification for **professional business presentations** — a consultant-grade PowerPoint framework based on McKinsey design principles. It includes:
 
-- **Color systems** and typography hierarchy
-- **Layout patterns** for different slide types
-- **Design principles** (minimalism, consistency, hierarchy)
-- **Font specifications** (English vs. Chinese character handling)
-- **Line and shape treatments** (no shadows, clean/flat design)
-- **Python-pptx code patterns** ready to customize
+- **36 layout patterns** across 7 categories (structure, data, framework, comparison, narrative, timeline, team)
+- **Color system** and strict typography hierarchy
+- **Python-pptx code patterns** ready to copy and customize
+- **Three-layer defense** against file corruption (zero `p:style` leaks)
+- **Chinese + English font handling** (KaiTi / Georgia / Arial)
 
-All specifications have been refined through **iterative user feedback** to ensure visual consistency and professional polish.
+All specifications have been refined through iterative user feedback to ensure visual consistency and professional polish.
 
 ---
 
 ## When to Use This Skill
 
-Use this skill when you need to:
+Use this skill when users ask to:
 
-1. **Create a new professional presentation from scratch** - Use the provided Python code templates
-2. **Maintain design consistency** - Reference color codes, font sizes, spacing, and layout patterns
-3. **Refine existing presentations** - Apply font adjustments, line treatments, or layout improvements
-4. **Document design decisions** - Explain color choices, typography rationale, or layout structures
-5. **Troubleshoot common issues**:
-   - PPT files won't open in PowerPoint (shadow/3D effects causing corruption)
-   - Text formatting inconsistencies across slides
-   - Lines appearing with unwanted shadows or effects
-   - Font size hierarchy problems
+1. **Create presentations** — pitch decks, strategy presentations, quarterly reviews, board meeting slides, consulting deliverables, project proposals, business plans
+2. **Generate slides programmatically** — using python-pptx to produce .pptx files from scratch
+3. **Apply professional design** — McKinsey / BCG / Bain consulting style, clean flat design, no shadows or gradients
+4. **Build specific slide types** — cover pages, data dashboards, 2x2 matrices, timelines, funnels, team introductions, executive summaries, comparison layouts
+5. **Fix PPT issues** — file corruption ("needs repair"), shadow/3D artifacts, inconsistent fonts, Chinese text rendering problems
+6. **Maintain design consistency** — unified color palette, font hierarchy, spacing, and line treatments across all slides
 
 ---
 
@@ -1941,6 +1939,66 @@ When users provide feedback, follow this checklist:
 
 ---
 
+## Edge Cases
+
+### Handling Large Presentations (20+ Slides)
+
+- Break generation into batches of 5-8 slides, saving and verifying after each batch
+- Always call `full_cleanup()` once at the end, not per-batch
+- Memory: python-pptx holds the entire presentation in memory; for 50+ slides, monitor usage
+
+### Font Availability
+
+- **KaiTi / SimSun** may not be installed on non-Chinese systems — the presentation will render but fall back to a default CJK font
+- **Georgia** is available on Windows/macOS by default; on Linux, install `ttf-mscorefonts-installer`
+- If target audience uses macOS only, consider using `PingFang SC` as `ea_font` fallback
+
+### Slide Dimensions
+
+- All layouts assume **13.333" × 7.5"** (widescreen 16:9). Using 4:3 or custom sizes will break coordinate calculations
+- If custom dimensions are required, scale all `Inches()` values proportionally
+
+### PowerPoint vs LibreOffice
+
+- Generated files are optimized for **Microsoft PowerPoint** (Windows/macOS)
+- LibreOffice Impress may render fonts and spacing slightly differently
+- `full_cleanup()` is still recommended for LibreOffice compatibility
+
+---
+
+## Error Handling
+
+### "File needs repair" on open
+
+```
+Cause: Residual <p:style> elements referencing theme effects
+Fix:   Ensure full_cleanup() runs AFTER prs.save()
+Verify: Zero <p:style> elements in all slide XML (see validation code in Common Issues)
+```
+
+### Chinese text shows as boxes/squares
+
+```
+Cause: Missing set_ea_font() call on text runs containing CJK characters
+Fix:   Every paragraph with Chinese text must call set_ea_font(run, 'KaiTi') on all runs
+```
+
+### ModuleNotFoundError: python-pptx / lxml
+
+```
+Fix: pip install python-pptx lxml
+Note: lxml requires a C compiler on some Linux distros — install libxml2-dev libxslt-dev first
+```
+
+### Shapes overlapping or misaligned
+
+```
+Cause: Incorrect Inches() coordinate calculations when adapting templates
+Fix:   Use the provided constants (LM, CONTENT_W, etc.) and verify visually after every 2-3 slides
+```
+
+---
+
 ## Best Practices
 
 1. **Always start from scratch** - Don't try to edit existing .pptx files with python-pptx; regenerate
@@ -1970,7 +2028,7 @@ pip install python-pptx lxml
 
 ## Example: Complete Minimal Presentation
 
-See `examples/minimal_example.py` for a complete, working example that generates:
+See `scripts/minimal_example.py` for a complete, working example that generates:
 - Cover slide
 - Table of contents
 - Content slide with title + body text
@@ -1994,6 +2052,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.3.0 | 2026-03-04 | ClawHub release: optimized description for discoverability, added metadata/homepage, added Edge Cases & Error Handling sections |
 | 1.2.0 | 2026-03-04 | Fixed circle shape number font inconsistency; `add_oval()` now sets `font_name='Arial'` + `set_ea_font()` for consistent typography |
 | | | - Circle numbers simplified: use `1, 2, 3` instead of `01, 02, 03` |
 | | | - Removed product-specific references from skill description |
