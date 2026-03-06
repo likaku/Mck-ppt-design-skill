@@ -3,6 +3,7 @@ name: mck-ppt-design
 description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
 version: "1.4.0"
+author: likaku
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
 allowed-tools:

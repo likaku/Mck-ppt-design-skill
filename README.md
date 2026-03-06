@@ -185,5 +185,5 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 ---
 
 <div align="center">
-<sub>Apache 2.0 · <a href="https://github.com/likaku/Mck-ppt-design-skill">GitHub</a> · <a href="https://github.com/likaku/Mck-ppt-design-skill/issues">反馈建议</a></sub>
+<sub>Apache 2.0 · Copyright © 2026 <strong>likaku</strong> · <a href="https://github.com/likaku/Mck-ppt-design-skill">GitHub</a> · <a href="https://github.com/likaku/Mck-ppt-design-skill/issues">反馈建议</a></sub>
 </div>
