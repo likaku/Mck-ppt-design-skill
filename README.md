@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.3.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.4.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -12,6 +12,17 @@
 </div>
 
 ---
+
+> ### v1.4.0 更新 — P0 优化
+>
+> - 合并 `add_text()` / `add_multiline()` 为统一函数，传 `str` 单行，传 `list` 多行
+> - 更新全部 36 个布局模板调用，参数名 `line_spacing_pt` → `line_spacing=Pt(N)`
+> - 删除 DEPRECATED connector 说明、v1.1 改进备注等冗余内容
+> - 合并 Common Issues + Error Handling，移除重复项
+> - 删除 Refining Existing Presentations 章节
+> - 净减 109 行 (~4.2KB)，降低每次生成的 token 消耗
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.3.0 更新 — ClawHub 首发
 >

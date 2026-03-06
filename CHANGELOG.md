@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-03-06
+
+### Changed
+- **Merged `add_text()` and `add_multiline()` into a single unified function** — pass `str` for single line, `list` for multi-line. Adds `line_spacing=Pt(6)` and `anchor` parameters
+- Updated all 36 layout template examples to use the unified `add_text()` function
+- Parameter renamed: `line_spacing_pt=N` → `line_spacing=Pt(N)` for consistency with python-pptx API
+
+### Removed
+- `add_multiline()` function (replaced by `add_text()` with list support)
+- DEPRECATED connector explanation and old code sample (lines 173-179)
+- v1.1 improvement paragraph (line 214)
+- Refining Existing Presentations section (was 22 lines of generic guidance)
+- Error Handling section (4 items consolidated into Common Issues, removing 3 duplicates)
+- Problem 3 "Lines Appearing With Shadows" from Common Issues (duplicate of "never use connectors" rule)
+- Verification code block from Problem 1 (full_cleanup already well-documented above)
+
+### Stats
+- Net reduction: **109 lines, ~4.2KB** → lower token consumption per generation
+
 ## [1.3.0] - 2026-03-04
 
 ### Added
