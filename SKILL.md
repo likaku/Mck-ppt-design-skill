@@ -2,7 +2,7 @@
 name: mck-ppt-design
 description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.3.0"
+version: "1.4.0"
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
 allowed-tools:
@@ -170,13 +170,7 @@ def add_hline(slide, x, y, length, color=BLACK, thickness=Pt(0.5)):
     return add_rect(slide, x, y, length, h, color)
 ```
 
-**Why rectangle lines**: python-pptx `add_connector()` automatically attaches `<p:style>` with `effectRef idx="2"`, which references theme effects including `outerShdw` (outer shadow). Even after removing `<p:style>` at creation time, PowerPoint may re-apply effects on open. Using thin rectangles eliminates this class of bugs entirely.
-
-**Old approach (DEPRECATED — do NOT use)**:
-```python
-# DEPRECATED: causes file corruption in some PowerPoint versions
-# c = slide.shapes.add_connector(1, x1, y1, x2, y2)
-```
+**IMPORTANT**: Never use `add_connector()` — it causes file corruption. Always use `add_hline()` (thin rectangle).
 
 #### Post-Save Full Cleanup (v1.1 — Nuclear Sanitization)
 
@@ -210,8 +204,6 @@ def full_cleanup(outpath):
                 zout.writestr(item, data)
     os.replace(tmppath, outpath)
 ```
-
-**v1.1 improvement**: The old cleanup only handled theme XML. The new `full_cleanup()` also removes `<p:style>` from every shape in every slide, preventing `effectRef idx="2"` references that cause "File needs repair" errors.
 
 ---
 
@@ -401,15 +393,15 @@ takeaway_width = Inches(2.5)
 
 # Left column
 add_text(s5, left_x, content_top, col_w5, ...)
-add_multiline(s5, left_x, content_top + Inches(0.6), col_w5, ..., 
-              bullet=True, line_spacing_pt=8)
+add_text(s5, left_x, content_top + Inches(0.6), col_w5, ..., 
+              bullet=True, line_spacing=Pt(8))
 
 # Right gray takeaway area
 add_rect(s5, takeaway_left, Inches(1.2), takeaway_width, Inches(5.6), BG_GRAY)
 add_text(s5, takeaway_left + Inches(0.15), Inches(1.35), takeaway_width - Inches(0.3), ...,
          'Key Takeaways', font_size=BODY_SIZE, color=NAVY, bold=True)
-add_multiline(s5, takeaway_left + Inches(0.15), Inches(1.9), takeaway_width - Inches(0.3), ...,
-              [f'{i+1}. {t}' for i, t in enumerate(takeaways)], line_spacing_pt=10)
+add_text(s5, takeaway_left + Inches(0.15), Inches(1.9), takeaway_width - Inches(0.3), ...,
+              [f'{i+1}. {t}' for i, t in enumerate(takeaways)], line_spacing=Pt(10))
 ```
 
 ---
@@ -543,8 +535,8 @@ add_text(s, Inches(5.0), Inches(1.5), Inches(7.5), Inches(2.0),
 add_rect(s, LM, Inches(4.5), CONTENT_W, Inches(2.2), BG_GRAY)
 add_text(s, LM + Inches(0.3), Inches(4.6), Inches(1.5), Inches(0.4),
          '关键洞见', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_multiline(s, LM + Inches(0.3), Inches(5.1), CONTENT_W - Inches(0.6), Inches(1.4),
-              ['洞见要点一', '洞见要点二', '洞见要点三'], line_spacing_pt=8)
+add_text(s, LM + Inches(0.3), Inches(5.1), CONTENT_W - Inches(0.6), Inches(1.4),
+              ['洞见要点一', '洞见要点二', '洞见要点三'], line_spacing=Pt(8))
 add_source(s, 'Source: ...')
 ```
 
@@ -704,8 +696,8 @@ for i, (letter, title, desc) in enumerate(cards):
              title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
              alignment=PP_ALIGN.CENTER)
     add_hline(s, cx + Inches(0.4), cy + Inches(1.3), cw - Inches(0.8), LINE_GRAY)
-    add_multiline(s, cx + Inches(0.2), cy + Inches(1.5), cw - Inches(0.4), Inches(2.5),
-                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+    add_text(s, cx + Inches(0.2), cy + Inches(1.5), cw - Inches(0.4), Inches(2.5),
+                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
 add_source(s, 'Source: ...')
 ```
 
@@ -789,8 +781,8 @@ for i, (title, points) in enumerate(pillars):
              title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
              anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
     add_rect(s, px, Inches(2.1), pw, Inches(4.0), BG_GRAY)
-    add_multiline(s, px + Inches(0.2), Inches(2.3), pw - Inches(0.4), Inches(3.5),
-                  [f'• {p}' for p in points], line_spacing_pt=10)
+    add_text(s, px + Inches(0.2), Inches(2.3), pw - Inches(0.4), Inches(3.5),
+                  [f'• {p}' for p in points], line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -999,8 +991,8 @@ for i, (title, points) in enumerate(options):
              title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
              anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
     add_rect(s, cx, Inches(2.1), cw, Inches(4.0), BG_GRAY)
-    add_multiline(s, cx + Inches(0.3), Inches(2.3), cw - Inches(0.6), Inches(3.5),
-                  [f'• {p}' for p in points], line_spacing_pt=10)
+    add_text(s, cx + Inches(0.3), Inches(2.3), cw - Inches(0.6), Inches(3.5),
+                  [f'• {p}' for p in points], line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -1029,8 +1021,8 @@ add_rect(s, LM, Inches(1.5), hw, Inches(4.5), BG_GRAY)
 add_text(s, LM + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
          'X  现状（Before）', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
 add_hline(s, LM + Inches(0.3), Inches(2.2), hw - Inches(0.6), LINE_GRAY)
-add_multiline(s, LM + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['痛点一', '痛点二', '痛点三'], line_spacing_pt=10)
+add_text(s, LM + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
+              ['痛点一', '痛点二', '痛点三'], line_spacing=Pt(10))
 # Arrow
 add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
          '->', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
@@ -1040,8 +1032,8 @@ add_rect(s, ax, Inches(1.5), hw, Inches(4.5), NAVY)
 add_text(s, ax + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
          'V  目标（After）', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
 add_hline(s, ax + Inches(0.3), Inches(2.2), hw - Inches(0.6), WHITE)
-add_multiline(s, ax + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['改进一', '改进二', '改进三'], font_color=WHITE, line_spacing_pt=10)
+add_text(s, ax + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
+              ['改进一', '改进二', '改进三'], font_color=WHITE, line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -1071,15 +1063,15 @@ hw = Inches(5.5)
 add_text(s, LM, Inches(1.5), hw, Inches(0.4),
          'V  优势', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
 add_hline(s, LM, Inches(2.0), hw, NAVY)
-add_multiline(s, LM, Inches(2.2), hw, Inches(2.5),
-              ['• 优势要点一', '• 优势要点二', '• 优势要点三'], line_spacing_pt=10)
+add_text(s, LM, Inches(2.2), hw, Inches(2.5),
+              ['• 优势要点一', '• 优势要点二', '• 优势要点三'], line_spacing=Pt(10))
 # Cons column
 cx = LM + hw + Inches(0.733)
 add_text(s, cx, Inches(1.5), hw, Inches(0.4),
          'X  风险', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
 add_hline(s, cx, Inches(2.0), hw, DARK_GRAY)
-add_multiline(s, cx, Inches(2.2), hw, Inches(2.5),
-              ['• 风险要点一', '• 风险要点二', '• 风险要点三'], line_spacing_pt=10)
+add_text(s, cx, Inches(2.2), hw, Inches(2.5),
+              ['• 风险要点一', '• 风险要点二', '• 风险要点三'], line_spacing=Pt(10))
 # Bottom conclusion
 add_rect(s, LM, Inches(5.2), CONTENT_W, Inches(1.5), BG_GRAY)
 add_text(s, LM + Inches(0.3), Inches(5.3), Inches(1.5), Inches(0.4),
@@ -1251,8 +1243,8 @@ add_action_title(s, '核心发现')
 add_text(s, LM, Inches(1.5), Inches(7.5), Inches(0.4),
          '分析标题', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
 add_hline(s, LM, Inches(2.0), Inches(7.5), LINE_GRAY)
-add_multiline(s, LM, Inches(2.2), Inches(7.5), Inches(4.0),
-              ['详细分析段落一', '', '详细分析段落二'], line_spacing_pt=8)
+add_text(s, LM, Inches(2.2), Inches(7.5), Inches(4.0),
+              ['详细分析段落一', '', '详细分析段落二'], line_spacing=Pt(8))
 # Right takeaway
 tk_x = Inches(9.0)
 tk_w = Inches(3.5)
@@ -1260,8 +1252,8 @@ add_rect(s, tk_x, Inches(1.5), tk_w, Inches(5.0), BG_GRAY)
 add_text(s, tk_x + Inches(0.2), Inches(1.7), tk_w - Inches(0.4), Inches(0.4),
          'Key Takeaways', font_size=BODY_SIZE, font_color=NAVY, bold=True)
 add_hline(s, tk_x + Inches(0.2), Inches(2.2), tk_w - Inches(0.4), LINE_GRAY)
-add_multiline(s, tk_x + Inches(0.2), Inches(2.4), tk_w - Inches(0.4), Inches(3.8),
-              ['1. 要点一', '2. 要点二', '3. 要点三'], line_spacing_pt=10)
+add_text(s, tk_x + Inches(0.2), Inches(2.4), tk_w - Inches(0.4), Inches(3.8),
+              ['1. 要点一', '2. 要点二', '3. 要点三'], line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -1325,8 +1317,8 @@ for i, (letter, title, points) in enumerate(cols):
     add_text(s, cx + Inches(0.6), Inches(1.5), cw - Inches(0.6), Inches(0.4),
              title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
     add_hline(s, cx, Inches(2.0), cw, LINE_GRAY)
-    add_multiline(s, cx, Inches(2.2), cw, Inches(4.0),
-                  [f'• {p}' for p in points], line_spacing_pt=10)
+    add_text(s, cx, Inches(2.2), cw, Inches(4.0),
+                  [f'• {p}' for p in points], line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -1362,8 +1354,8 @@ for i, (num, title, desc) in enumerate(items):
              title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
              alignment=PP_ALIGN.CENTER)
     add_hline(s, cx + Inches(0.3), Inches(2.8), cw - Inches(0.6), LINE_GRAY)
-    add_multiline(s, cx + Inches(0.15), Inches(3.0), cw - Inches(0.3), Inches(3.0),
-                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+    add_text(s, cx + Inches(0.15), Inches(3.0), cw - Inches(0.3), Inches(3.0),
+                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
 add_source(s, 'Source: ...')
 ```
 
@@ -1489,8 +1481,8 @@ add_text(s, LM + Inches(0.8), Inches(2.0), Inches(1.0), Inches(0.5),
 add_rect(s, Inches(8.5), Inches(1.5), Inches(4.0), Inches(5.0), BG_GRAY)
 add_text(s, Inches(8.8), Inches(1.7), Inches(3.4), Inches(0.4),
          '循环要点', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_multiline(s, Inches(8.8), Inches(2.3), Inches(3.4), Inches(3.5),
-              ['每个阶段的说明...'], line_spacing_pt=10)
+add_text(s, Inches(8.8), Inches(2.3), Inches(3.4), Inches(3.5),
+              ['每个阶段的说明...'], line_spacing=Pt(10))
 add_source(s, 'Source: ...')
 ```
 
@@ -1575,8 +1567,8 @@ for i, (name, role, bio) in enumerate(members):
     add_text(s, cx + Inches(0.15), Inches(3.4), cw - Inches(0.3), Inches(0.4),
              role, font_size=BODY_SIZE, font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
     add_hline(s, cx + Inches(0.3), Inches(3.9), cw - Inches(0.6), LINE_GRAY)
-    add_multiline(s, cx + Inches(0.15), Inches(4.1), cw - Inches(0.3), Inches(2.0),
-                  bio.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+    add_text(s, cx + Inches(0.15), Inches(4.1), cw - Inches(0.3), Inches(2.0),
+                  bio.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
 add_source(s, 'Source: ...')
 ```
 
@@ -1664,8 +1656,8 @@ for i, (title, timeline, desc, owner) in enumerate(actions):
     add_text(s, cx + Inches(0.15), Inches(2.1), cw - Inches(0.3), Inches(0.4),
              timeline, font_size=BODY_SIZE, font_color=NAVY, bold=True,
              anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_multiline(s, cx + Inches(0.15), Inches(2.7), cw - Inches(0.3), Inches(2.0),
-                  desc.split('\n'), line_spacing_pt=8, alignment=PP_ALIGN.CENTER)
+    add_text(s, cx + Inches(0.15), Inches(2.7), cw - Inches(0.3), Inches(2.0),
+                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
     add_hline(s, cx + Inches(0.3), Inches(4.9), cw - Inches(0.6), LINE_GRAY)
     add_text(s, cx + Inches(0.15), Inches(5.1), cw - Inches(0.3), Inches(0.4),
              f'负责人：{owner}', font_size=BODY_SIZE, font_color=MED_GRAY,
@@ -1737,7 +1729,9 @@ def set_ea_font(run, typeface='KaiTi'):
 
 def add_text(slide, left, top, width, height, text, font_size=Pt(14),
              font_name='Arial', font_color=RGBColor(0x33, 0x33, 0x33), bold=False,
-             alignment=PP_ALIGN.LEFT, ea_font='KaiTi', anchor=MSO_ANCHOR.TOP):
+             alignment=PP_ALIGN.LEFT, ea_font='KaiTi', anchor=MSO_ANCHOR.TOP,
+             line_spacing=Pt(6)):
+    """Unified text helper. Pass str for single line, list for multi-line."""
     txBox = slide.shapes.add_textbox(left, top, width, height)
     tf = txBox.text_frame
     tf.word_wrap = True
@@ -1747,30 +1741,7 @@ def add_text(slide, left, top, width, height, text, font_size=Pt(14),
     bodyPr.set('anchor', anchor_map.get(anchor, 't'))
     for attr in ['lIns','tIns','rIns','bIns']:
         bodyPr.set(attr, '45720')
-    p = tf.paragraphs[0]
-    p.text = text
-    p.font.size = font_size
-    p.font.name = font_name
-    p.font.color.rgb = font_color
-    p.font.bold = bold
-    p.alignment = alignment
-    p.space_before = Pt(0)
-    p.space_after = Pt(0)
-    for run in p.runs:
-        set_ea_font(run, ea_font)
-    return txBox
-
-
-def add_multiline(slide, left, top, width, height, lines, font_size=Pt(14),
-                  font_name='Arial', font_color=RGBColor(0x33, 0x33, 0x33), bold=False,
-                  alignment=PP_ALIGN.LEFT, ea_font='KaiTi', line_spacing_pt=6):
-    txBox = slide.shapes.add_textbox(left, top, width, height)
-    tf = txBox.text_frame
-    tf.word_wrap = True
-    tf.auto_size = None
-    bodyPr = tf._txBody.find(qn('a:bodyPr'))
-    for attr in ['lIns','tIns','rIns','bIns']:
-        bodyPr.set(attr, '45720')
+    lines = text if isinstance(text, list) else [text]
     for i, line in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.text = line
@@ -1779,7 +1750,7 @@ def add_multiline(slide, left, top, width, height, lines, font_size=Pt(14),
         p.font.color.rgb = font_color
         p.font.bold = bold
         p.alignment = alignment
-        p.space_before = Pt(line_spacing_pt)
+        p.space_before = line_spacing if i > 0 else Pt(0)
         p.space_after = Pt(0)
         for run in p.runs:
             set_ea_font(run, ea_font)
@@ -1846,23 +1817,10 @@ def add_source(slide, text, y=Inches(7.05)):
 
 **Cause**: Shapes or connectors carry `<p:style>` with `effectRef idx="2"`, referencing theme effects (shadows/3D)
 
-**Solution** (v1.1 — three-layer defense):
+**Solution** (three-layer defense):
 1. **Never use connectors** — use `add_hline()` (thin rectangle) instead of `add_connector()`
 2. **Inline cleanup** — every `add_rect()` and `add_oval()` calls `_clean_shape()` to remove `p:style`
-3. **Post-save nuclear cleanup** — `full_cleanup()` removes ALL `<p:style>` from every slide XML + theme effects
-4. Verify with:
-   ```python
-   import zipfile
-   from lxml import etree
-   zf = zipfile.ZipFile('file.pptx', 'r')
-   for name in zf.namelist():
-       if name.endswith('.xml'):
-           root = etree.fromstring(zf.read(name))
-           ns_p = 'http://schemas.openxmlformats.org/presentationml/2006/main'
-           styles = root.findall(f'.//{{{ns_p}}}style')
-           if styles:
-               print(f"ERROR: {name} has {len(styles)} p:style elements!")
-   ```
+3. **Post-save cleanup** — `full_cleanup()` removes ALL `<p:style>` from every slide XML + theme effects
 
 ### Problem 2: Text Not Displaying Correctly in PowerPoint
 
@@ -1876,16 +1834,7 @@ def add_source(slide, text, y=Inches(7.05)):
       set_ea_font(run, 'KaiTi')
   ```
 
-### Problem 3: Lines Appearing With Shadows
-
-**Cause**: Connectors inherently carry theme effect references
-
-**Solution** (v1.1):
-1. **Do NOT use connectors at all** — use `add_hline()` which draws lines as thin rectangles
-2. Run `full_cleanup()` after save to remove any residual `p:style`
-3. Verify zero `p:style` and zero shadow elements in the final file
-
-### Problem 4: Font Sizes Inconsistent Across Slides
+### Problem 3: Font Sizes Inconsistent Across Slides
 
 **Cause**: Using custom sizes instead of defined hierarchy
 
@@ -1901,41 +1850,16 @@ def add_source(slide, text, y=Inches(7.05)):
 - Use these constants everywhere
 - Never use arbitrary sizes like `Pt(13)` or `Pt(15)`
 
-### Problem 5: Columns/Lists Not Aligning Vertically
+### Problem 4: Columns/Lists Not Aligning Vertically
 
 **Cause**: Mixing different line spacing or not accounting for text height
 
 **Solution**:
-- Use consistent `line_spacing_pt` in `add_multiline()` calls
+- Use consistent `line_spacing=Pt(N)` in `add_text()` calls
 - Calculate row heights in tables based on actual text size:
   - For 14pt text with spacing: use 1.0" height minimum
   - For lists with bullets: use 0.35" height per line + 8pt spacing
 - Test by saving and opening in PowerPoint to verify alignment
-
----
-
-## Refining Existing Presentations
-
-### User Feedback Implementation Checklist
-
-When users provide feedback, follow this checklist:
-
-- [ ] **Font size changes** → Update `TITLE_SIZE`, `BODY_SIZE`, etc. constants and regenerate
-- [ ] **Color changes** → Update RGB tuples in color palette section
-- [ ] **Line width changes** → Update calls to `add_hline()` with new `thickness=Pt(X)`
-- [ ] **Layout spacing changes** → Adjust `Inches(X)` values in coordinate calculations
-- [ ] **Circle color changes** → Update `CIRCLE_COLOR` constant and regenerate all circles
-- [ ] **Shadow/effect issues** → Run theme cleanup immediately after save
-- [ ] **Text wrapping issues** → Increase textbox height or reduce font size incrementally
-
-### Iterative Improvement Process
-
-1. **Collect feedback** - Note specific issues (font size, colors, spacing)
-2. **Make changes to code** - Update constants or helper functions
-3. **Regenerate slides** - Re-run python-pptx generation
-4. **Post-process** - Always run theme cleanup
-5. **Test in PowerPoint** - Open and verify visually
-6. **Document changes** - Update this section with refinements
 
 ---
 
@@ -1963,39 +1887,6 @@ When users provide feedback, follow this checklist:
 - Generated files are optimized for **Microsoft PowerPoint** (Windows/macOS)
 - LibreOffice Impress may render fonts and spacing slightly differently
 - `full_cleanup()` is still recommended for LibreOffice compatibility
-
----
-
-## Error Handling
-
-### "File needs repair" on open
-
-```
-Cause: Residual <p:style> elements referencing theme effects
-Fix:   Ensure full_cleanup() runs AFTER prs.save()
-Verify: Zero <p:style> elements in all slide XML (see validation code in Common Issues)
-```
-
-### Chinese text shows as boxes/squares
-
-```
-Cause: Missing set_ea_font() call on text runs containing CJK characters
-Fix:   Every paragraph with Chinese text must call set_ea_font(run, 'KaiTi') on all runs
-```
-
-### ModuleNotFoundError: python-pptx / lxml
-
-```
-Fix: pip install python-pptx lxml
-Note: lxml requires a C compiler on some Linux distros — install libxml2-dev libxslt-dev first
-```
-
-### Shapes overlapping or misaligned
-
-```
-Cause: Incorrect Inches() coordinate calculations when adapting templates
-Fix:   Use the provided constants (LM, CONTENT_W, etc.) and verify visually after every 2-3 slides
-```
 
 ---
 
@@ -2062,7 +1953,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 | | | - `add_rect()` now auto-removes `p:style` via `_clean_shape()` |
 | | | - `cleanup_theme()` upgraded to `full_cleanup()` (sanitizes all slide XML) |
 | | | - Three-layer defense against file corruption |
-| | | - `add_multiline()` bullet param removed; use `'\u2022 '` prefix in text |
+| | | - `add_text()` bullet param removed; use `'\u2022 '` prefix in text |
 | 1.0.0 | 2026-03-02 | Initial complete specification, all refinements documented |
 | | | - Color palette finalized (NAVY primary) |
 | | | - Typography hierarchy locked (22pt title, 14pt body) |
