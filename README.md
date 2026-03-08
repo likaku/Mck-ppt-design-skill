@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.5.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.6.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -12,6 +12,15 @@
 </div>
 
 ---
+
+> ### v1.6.0 更新 — 跨模型质量对齐
+>
+> - **新增强调色系统** — 4 组强调色（Blue #006BA6 / Green #007A53 / Orange #D46A00 / Red #C62828）+ 配套浅色背景，用于多项目视觉区分
+> - **新增 Presentation Planning 章节** — 幻灯片结构模板、布局多样性规则、内容密度要求、必备元素规范
+> - **新增 `add_page_number()` 辅助函数** — 自动在右下角显示 "N/Total" 页码
+> - 基于 Opus 4.6 / Minimax 2.5 / Hunyuan 2 think / GLM5 四模型对比分析，针对性缩小弱模型与 Opus 的输出质量差距
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.5.0 更新 — 行距修复
 >
@@ -101,6 +110,15 @@
 | **MED_GRAY** | ![](docs/colors/med-gray.png) | `#666666` | 次要文本、标签、来源注释 |
 | **LINE_GRAY** | ![](docs/colors/line-gray.png) | `#CCCCCC` | 表格行分隔线 |
 | **BG_GRAY** | ![](docs/colors/bg-gray.png) | `#F2F2F2` | 背景面板、Takeaway 区域 |
+
+**强调色（v1.6.0 新增）** — 用于 3+ 并列项的视觉区分：
+
+| 名称 | Hex | 配套浅色背景 | 用途 |
+|:-----|:---:|:---:|:-----|
+| **ACCENT_BLUE** | `#006BA6` | `#E3F2FD` | 第一项强调 |
+| **ACCENT_GREEN** | `#007A53` | `#E8F5E9` | 第二项强调 |
+| **ACCENT_ORANGE** | `#D46A00` | `#FFF3E0` | 第三项强调 |
+| **ACCENT_RED** | `#C62828` | `#FFEBEE` | 第四项 / 警示 |
 
 ---
 
