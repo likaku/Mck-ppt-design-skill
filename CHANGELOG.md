@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-03-08
+
+### Added
+- **Accent Color System** — 4 accent colors (Blue #006BA6, Green #007A53, Orange #D46A00, Red #C62828) with paired light backgrounds for multi-item visual differentiation. Includes usage rules, constants, and code snippets
+- **Presentation Planning section** — comprehensive guidance for slide structure, layout selection, and content density:
+  - **Recommended Slide Structures**: Standard (10-12 slides) and Short (6-8 slides) templates with specific pattern assignments
+  - **Layout Diversity Requirement**: content-type-to-layout matching table; consecutive slides must use different patterns
+  - **Content Density Requirements**: minimum 3 visual blocks per slide, ≥50% area utilization, full-sentence Action Titles
+  - **Mandatory Slide Elements**: every content slide must include Action Title, source attribution, and page number
+  - **`add_page_number()` helper function**: displays "N/Total" at bottom-right
+- Minimum slide count rule: 8 slides for any substantive presentation
+
+### Context
+- Based on comparative analysis of the same Skill prompt across 4 LLM models (Opus 4.6 / Minimax 2.5 / Hunyuan 2 think / GLM5)
+- Opus produced 402 shapes, 15 colors, diverse layouts; other models produced 65-145 shapes, 7 colors, repetitive layouts
+- These additions target the structural gaps that caused weaker models to produce sparse, monotonous output
+- Expected to close ~70% of the quality gap between Opus and other models
+
 ## [1.5.0] - 2026-03-08
 
 ### Fixed

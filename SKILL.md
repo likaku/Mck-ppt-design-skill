@@ -2,7 +2,7 @@
 name: mck-ppt-design
 description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.5.0"
+version: "1.6.0"
 author: likaku
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
@@ -93,6 +93,37 @@ All colors in RGB format for python-pptx:
 - All action titles
 - All primary section headers
 - All TOC highlight colors
+
+#### Accent Colors (for multi-item differentiation)
+
+When a slide contains **3 or more parallel items** (e.g., comparison cards, pillar frameworks, multi-category overviews), use these accent colors to create visual distinction between items. Without accent colors, parallel items become visually indistinguishable.
+
+| Accent Name | Hex | RGB | Paired Light BG | Usage |
+|-------------|-----|-----|-----------------|-------|
+| **ACCENT_BLUE** | #006BA6 | (0, 107, 166) | #E3F2FD | First item accent |
+| **ACCENT_GREEN** | #007A53 | (0, 122, 83) | #E8F5E9 | Second item accent |
+| **ACCENT_ORANGE** | #D46A00 | (212, 106, 0) | #FFF3E0 | Third item accent |
+| **ACCENT_RED** | #C62828 | (198, 40, 40) | #FFEBEE | Fourth item / warning |
+
+**Accent Color Rules**:
+- Use accent colors for: **card top accent borders** (thin 0.06" rect), **circle labels** (`add_oval()` bg param), **section sub-headers** (font_color)
+- Use paired light BG for: **card background fills** only
+- Body text inside cards ALWAYS remains **DARK_GRAY (#333333)**
+- NAVY remains the primary color for **single-focus** elements (one card, one stat, cover title)
+- Use accent colors **ONLY** when the slide has 3+ parallel items that need visual distinction
+- The fourth item (D) can use NAVY instead of ACCENT_RED if red feels inappropriate for the content
+
+```python
+# Accent color constants
+ACCENT_BLUE   = RGBColor(0x00, 0x6B, 0xA6)
+ACCENT_GREEN  = RGBColor(0x00, 0x7A, 0x53)
+ACCENT_ORANGE = RGBColor(0xD4, 0x6A, 0x00)
+ACCENT_RED    = RGBColor(0xC6, 0x28, 0x28)
+LIGHT_BLUE    = RGBColor(0xE3, 0xF2, 0xFD)
+LIGHT_GREEN   = RGBColor(0xE8, 0xF5, 0xE9)
+LIGHT_ORANGE  = RGBColor(0xFF, 0xF3, 0xE0)
+LIGHT_RED     = RGBColor(0xFF, 0xEB, 0xEE)
+```
 
 ---
 
@@ -261,6 +292,98 @@ shape.fill.solid()
 shape.fill.fore_color.rgb = BG_GRAY
 shape.line.fill.background()  # CRITICAL: removes border
 _clean_shape(shape)            # CRITICAL: removes p:style
+```
+
+---
+
+## Presentation Planning
+
+This section provides **mandatory guidance** for planning presentation structure, selecting layouts, and ensuring adequate content density. These rules dramatically improve output quality across different LLM models.
+
+### Recommended Slide Structures
+
+When creating a presentation, follow these templates unless the user explicitly specifies a different structure:
+
+#### Standard Presentation (10-12 slides)
+
+```
+ Slide 1:  Cover Slide (Pattern #1 or #4)
+ Slide 2:  Table of Contents (Pattern #6) — list ALL content sections
+ Slide 3:  Executive Summary / Core Thesis (Pattern #24 or #8+#10)
+ Slides 4-7:  Supporting Arguments (one per slide, vary layouts)
+ Slides 8-10: Case Studies / Evidence (Pattern #33 or #19)
+ Slide 11: Synthesis / Roadmap (Pattern #29 or #16)
+ Slide 12: Key Takeaways + Closing (Pattern #34 or #36)
+```
+
+#### Short Presentation (6-8 slides)
+
+```
+ Slide 1:  Cover Slide
+ Slide 2:  Executive Summary (Pattern #24)
+ Slides 3-5: Core Content (vary layouts: #8, #14, #19, #33)
+ Slide 6:  Synthesis / Timeline (Pattern #29)
+ Slide 7:  Key Takeaways (Pattern #34)
+ Slide 8:  Closing (Pattern #36)
+```
+
+**CRITICAL RULES**:
+- **Minimum slide count**: 8 slides for any substantive topic. If the user's content supports 10+, generate 10+.
+- **Never stop early**: Generate ALL planned slides in a single script. Do not truncate.
+- **TOC must list ALL sections**: The Table of Contents slide must enumerate every content slide by number and title.
+
+### Layout Diversity Requirement
+
+**Each content slide MUST use a DIFFERENT layout pattern from its neighbors.** Repeating the same layout on consecutive slides makes the presentation feel monotonous and unprofessional.
+
+Match content type to the optimal layout pattern:
+
+| Content Type | Recommended Layouts | Avoid |
+|---|---|---|
+| Single key statistic | Big Number (#8) | Plain text |
+| 2 options comparison | Side-by-Side (#19), Before/After (#20) | Two-column text |
+| 3-4 parallel concepts | Three-Pillar (#14), Four-Column (#27), Metric Cards (#10) | Bullet list |
+| Process / steps | Process Chevron (#16), Vertical Steps (#30) | Numbered text |
+| Timeline | Timeline/Roadmap (#29), Cycle (#31) | Bullet list |
+| Data table | Data Table (#9), Scorecard (#22) | Plain text |
+| Case study | Case Study (#33): Situation → Approach → Result | Two-column text |
+| Summary / conclusion | Executive Summary (#24), Key Takeaway (#25) | Bullet list |
+| Multiple KPIs | Three-Stat Dashboard (#12), Two-Stat Comparison (#11) | Plain text |
+
+**NEVER** use Two-Column Text (#26) for more than 1 slide per deck. It is the least visually engaging layout.
+
+### Content Density Requirements
+
+"Minimalism" in McKinsey design means **removing decorative noise** (shadows, gradients, clip-art), NOT removing content. A slide with 80% whitespace is not minimalist — it is EMPTY.
+
+**Mandatory minimums per content slide**:
+
+1. **At least 3 distinct visual blocks** — e.g., title bar + content area + takeaway box, or title + left panel + right panel
+2. **Body text area utilization ≥ 50%** of the available content space (between title bar at 1.4" and source line at 7.05")
+3. **Action Title must be a FULL SENTENCE** expressing the slide's key insight:
+   - ✅ `"连接组约束的AI模型将自由参数减少90%，实现单细胞精度预测"`
+   - ❌ `"连接组约束的AI模型"`
+4. **Use specific data points** when the user provides them (numbers, percentages, names) — display them prominently with Big Number or Metric Card patterns
+5. **Source attribution** (`add_source()`) on every content slide with specific references, not generic labels
+
+### Mandatory Slide Elements
+
+EVERY content slide (except Cover and Closing) MUST include ALL of these:
+
+| Element | Function | Position |
+|---------|----------|----------|
+| Action Title | `add_action_title(slide, text)` | Top (0.15" from top) |
+| Title separator line | Included in `add_action_title()` | 1.05" from top |
+| Content area | Layout-specific content blocks | 1.4" to 6.5" |
+| Source attribution | `add_source(slide, text)` | 7.05" from top |
+| Page number | `add_page_number(slide, n, total)` | Bottom-right corner |
+
+Page number helper function:
+```python
+def add_page_number(slide, num, total):
+    add_text(slide, Inches(12.2), Inches(7.1), Inches(1), Inches(0.3),
+             f"{num}/{total}", font_size=Pt(9), font_color=MED_GRAY,
+             alignment=PP_ALIGN.RIGHT)
 ```
 
 ---
@@ -1954,6 +2077,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.6.0 | 2026-03-08 | **Cross-model quality alignment**: Added Accent Color System (4 accent + 4 light BG colors), Presentation Planning section (structure templates, layout diversity rules, content density requirements, mandatory slide elements, page number helper). Based on comparative analysis across Opus/Minimax/Hunyuan/GLM5 outputs. |
 | 1.5.0 | 2026-03-08 | **Critical fix**: `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` to prevent Chinese multi-line text overlap. Added Problem 5 to Common Issues. |
 | 1.3.0 | 2026-03-04 | ClawHub release: optimized description for discoverability, added metadata/homepage, added Edge Cases & Error Handling sections |
 | 1.2.0 | 2026-03-04 | Fixed circle shape number font inconsistency; `add_oval()` now sets `font_name='Arial'` + `set_ea_font()` for consistent typography |
