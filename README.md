@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的麦肯锡风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.4.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.5.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -12,6 +12,14 @@
 </div>
 
 ---
+
+> ### v1.5.0 更新 — 行距修复
+>
+> - **修复中文多行文字重叠问题** — `add_text()` 新增 `p.line_spacing = Pt(font_size.pt * 1.35)` 显式设置行距
+> - 此前仅设置段前距（`space_before`），未设置行高（`lnSpc`），导致自动换行的中文行互相叠压
+> - Common Issues 新增 Problem 5 详细说明根因与修复
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.4.0 更新 — P0 优化
 >

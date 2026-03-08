@@ -2,7 +2,7 @@
 name: mck-ppt-design
 description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.4.0"
+version: "1.5.0"
 author: likaku
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
@@ -1753,6 +1753,7 @@ def add_text(slide, left, top, width, height, text, font_size=Pt(14),
         p.alignment = alignment
         p.space_before = line_spacing if i > 0 else Pt(0)
         p.space_after = Pt(0)
+        p.line_spacing = Pt(font_size.pt * 1.35)  # 135% line height to prevent CJK overlap
         for run in p.runs:
             set_ea_font(run, ea_font)
     return txBox
@@ -1862,6 +1863,15 @@ def add_source(slide, text, y=Inches(7.05)):
   - For lists with bullets: use 0.35" height per line + 8pt spacing
 - Test by saving and opening in PowerPoint to verify alignment
 
+### Problem 5: Chinese Multi-Line Text Overlapping (v1.5.0 Fix)
+
+**Cause**: `add_text()` only set `space_before` (paragraph spacing) but did NOT set `p.line_spacing` (the actual line height / `<a:lnSpc>` in OOXML). When Chinese text wraps within a paragraph, lines overlap because PowerPoint has no explicit line height to follow.
+
+**Solution** (fixed in v1.5.0):
+- `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` for every paragraph
+- This maps to `<a:lnSpc><a:spcPts>` in the XML, ensuring proper spacing for both single-paragraph word-wrap and multi-paragraph lists
+- The 135% multiplier balances McKinsey's compact style with CJK readability
+
 ---
 
 ## Edge Cases
@@ -1944,6 +1954,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.5.0 | 2026-03-08 | **Critical fix**: `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` to prevent Chinese multi-line text overlap. Added Problem 5 to Common Issues. |
 | 1.3.0 | 2026-03-04 | ClawHub release: optimized description for discoverability, added metadata/homepage, added Edge Cases & Error Handling sections |
 | 1.2.0 | 2026-03-04 | Fixed circle shape number font inconsistency; `add_oval()` now sets `font_name='Arial'` + `set_ea_font()` for consistent typography |
 | | | - Circle numbers simplified: use `1, 2, 3` instead of `01, 02, 03` |

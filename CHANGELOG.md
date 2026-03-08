@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-03-08
+
+### Fixed
+- **Critical: Chinese multi-line text overlapping** — `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` for every paragraph, mapping to `<a:lnSpc><a:spcPts>` in OOXML
+- Previously only `space_before` (paragraph spacing) was set, but the actual line height (`lnSpc`) was unset, causing word-wrapped Chinese lines to render on top of each other
+
+### Added
+- Problem 5 in Common Issues: documents the CJK line overlap root cause and fix
+
+### Stats
+- Net addition: ~10 lines — 1 line of code fix + documentation
+
 ## [1.4.0] - 2026-03-06
 
 ### Changed
