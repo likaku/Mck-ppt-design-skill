@@ -13,6 +13,24 @@
 
 ---
 
+### 社区
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>微信交流群</strong><br/><br/>
+      <img width="200" height="200" alt="Clipboard_Screenshot_1772519369" src="https://github.com/user-attachments/assets/7c60a36d-9752-4321-aa7b-8cd93580086e" />
+    </td>
+    <td align="center" width="50%">
+      <strong>Discord</strong><br/><br/>
+      <!-- 替换 YOUR_INVITE_LINK -->
+      <a href="https://discord.gg/YOUR_INVITE_LINK"><img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" /></a>
+    </td>
+  </tr>
+</table>
+
+---
+
 > ### v1.6.0 更新 — 跨模型质量对齐
 >
 > - **新增强调色系统** — 4 组强调色（Blue #006BA6 / Green #007A53 / Orange #D46A00 / Red #C62828）+ 配套浅色背景，用于多项目视觉区分
@@ -182,23 +200,7 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 
 ---
 
-### 社区
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <strong>微信交流群</strong><br/><br/>
-      <img width="400" height="400" alt="Clipboard_Screenshot_1772519369" src="https://github.com/user-attachments/assets/7c60a36d-9752-4321-aa7b-8cd93580086e" />
-    </td>
-    <td align="center" width="50%">
-      <strong>Discord</strong><br/><br/>
-      <!-- 替换 YOUR_INVITE_LINK -->
-      <a href="https://discord.gg/YOUR_INVITE_LINK"><img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" /></a>
-    </td>
-  </tr>
-</table>
-
----
 
 ### 参与贡献
 
