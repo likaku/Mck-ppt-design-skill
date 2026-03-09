@@ -24,7 +24,7 @@
     <td align="center" width="50%">
       <strong>Discord</strong><br/><br/>
       <!-- 替换 YOUR_INVITE_LINK -->
-      <a href="https://discord.gg/YOUR_INVITE_LINK"><img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" /></a>
+      <a href="https://discord.gg/SaFybFAT"><img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" /></a>
     </td>
   </tr>
 </table>
