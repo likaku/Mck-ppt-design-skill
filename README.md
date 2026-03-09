@@ -2,7 +2,7 @@
 
 # Mck PPT Design Skill
 
-一套完整的麦肯锡风格 PowerPoint 设计体系
+一套完整的咨询公司风格 PowerPoint 设计体系
 <br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.6.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
