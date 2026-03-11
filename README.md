@@ -19,7 +19,8 @@
   <tr>
     <td align="center" width="50%">
       <strong>微信交流群</strong><br/><br/>
-      <img width="200" height="200" alt="Clipboard_Screenshot_1772519369" src="https://github.com/user-attachments/assets/7c60a36d-9752-4321-aa7b-8cd93580086e" />
+      <img width="240" height="540" alt="Clipboard_Screenshot_1773250313" src="https://github.com/user-attachments/assets/29735c00-2da2-4e01-bebe-8df447386a2a" />
+
     </td>
     <td align="center" width="50%">
       <strong>Discord</strong><br/><br/>
