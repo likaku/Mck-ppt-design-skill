@@ -16,16 +16,18 @@
 ### 社区
 
 <table>
-  <tr>
-    <td align="center" width="50%">
+<tr>
+    <td align="center" width="50%" valign="top">
       <strong>微信交流群</strong><br/><br/>
-      <img width="240" height="540" alt="Clipboard_Screenshot_1773250313" src="https://github.com/user-attachments/assets/29735c00-2da2-4e01-bebe-8df447386a2a" />
-
+      <img width="180" src="https://github.com/user-attachments/assets/d4eb704e-3825-4380-ac54-2fbbe4c993ce" alt="WeChat Group" />
     </td>
-    <td align="center" width="50%">
+    <td align="center" width="50%" valign="top">
       <strong>Discord</strong><br/><br/>
-      <!-- 替换 YOUR_INVITE_LINK -->
-      <a href="https://discord.gg/SaFybFAT"><img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" /></a>
+      <a href="https://discord.gg/SaFybFAT">
+        <img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+      </a>
+      <br/><br/>
+      <span>点击上方按钮加入</span>
     </td>
   </tr>
 </table>
