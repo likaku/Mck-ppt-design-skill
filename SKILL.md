@@ -1,8 +1,8 @@
 ---
 name: mck-ppt-design
-description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
+description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 39 layout patterns (including data charts), consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.6.0"
+version: "1.7.0"
 author: likaku
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
@@ -19,7 +19,7 @@ metadata: {"openclaw":{"emoji":"📊","requires":{"bins":["python3","pip"]}}}
 
 This skill encodes the complete design specification for **professional business presentations** — a consultant-grade PowerPoint framework based on McKinsey design principles. It includes:
 
-- **36 layout patterns** across 7 categories (structure, data, framework, comparison, narrative, timeline, team)
+- **39 layout patterns** across 8 categories (structure, data, framework, comparison, narrative, timeline, team, **charts**)
 - **Color system** and strict typography hierarchy
 - **Python-pptx code patterns** ready to copy and customize
 - **Three-layer defense** against file corruption (zero `p:style` leaks)
@@ -349,8 +349,12 @@ Match content type to the optimal layout pattern:
 | Case study | Case Study (#33): Situation → Approach → Result | Two-column text |
 | Summary / conclusion | Executive Summary (#24), Key Takeaway (#25) | Bullet list |
 | Multiple KPIs | Three-Stat Dashboard (#12), Two-Stat Comparison (#11) | Plain text |
+| **Time series + values/percentages** | **Grouped Bar (#37), Stacked Bar (#38)** | **Data Table, Scorecard** |
+| **Category ranking / comparison** | **Horizontal Bar (#39), Grouped Bar (#37)** | **Bullet list, Plain text** |
 
 **NEVER** use Two-Column Text (#26) for more than 1 slide per deck. It is the least visually engaging layout.
+
+**CHART PRIORITY RULE**: When data contains dates/periods + numeric values or percentages (e.g., `3/4 正面 20% 中性 80%` or `Q1: ¥850万`), you **MUST** use a Chart pattern (#37/#38/#39) instead of a text-based layout. Charts maximize data-ink ratio and are the most visually compelling way to present time-series data.
 
 ### Content Density Requirements
 
@@ -1820,6 +1824,370 @@ add_hline(s, Inches(1), Inches(6.8), Inches(3), NAVY, Pt(2))
 
 ---
 
+### 类别 H：数据图表
+
+> **触发规则**：当用户提供的内容包含 **日期/时间 + 数值/百分比** 的结构化数据（如舆情变化、销售趋势、KPI 周报、转化率变化等），**必须优先使用本类别的图表模式**，而不是 Data Table (#11) 或 Scorecard (#23)。
+>
+> **识别信号**（满足任一即触发）：
+> - 数据中出现 `日期 + 百分比` 或 `日期 + 数值` 的组合
+> - 提示词含 `████` 进度条字符 + 百分比
+> - 内容涉及"趋势"、"演变"、"变化"、"走势"、"周报"、"日报"等时序关键词
+> - 数据行数 ≥ 3 且每行包含至少一个类别和一个数值
+
+#### 37. Grouped Bar Chart（分组柱状图 / 情绪热力图）
+
+**适用场景**: 多个类别在不同时间点的数值对比（如舆情情绪分布、多产品销售对比、多指标周变化）。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  100% ─                                 │
+│   80% ─  ██                             │
+│   60% ─  ██ ██                          │
+│   40% ─  ██ ██      ██      ██          │
+│   20% ─  ██ ██ ██   ██ ██   ██ ██       │
+│    0% ────────────────────────────────  │
+│         3/4   3/6   3/8   3/10          │
+│                                         │
+│  ■ 正面  ■ 中性  ■ 负面                 │
+│                                         │
+│  ┌─BG_GRAY 趋势总结──────────────────┐  │
+│  │ 总结文字                           │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**设计规范**:
+- 柱状图使用 `add_rect()` 手工绘制，不依赖 matplotlib
+- Y 轴标签（百分比）用 `add_text()` 左对齐
+- X 轴标签（日期）用 `add_text()` 居中
+- 每组柱子间留 0.3" 间距，组内柱子间留 0.05" 间距
+- 图例用小矩形色块 + 文字标签，放在图表下方
+- 底部可选趋势总结区（BG_GRAY）
+
+**颜色分配**:
+- 第一类别：NAVY (#051C2C) — 主要/正面
+- 第二类别：LINE_GRAY (#CCCCCC) — 中性/基准
+- 第三类别：MED_GRAY (#666666) — 次要/负面
+- 第四类别：ACCENT_BLUE (#006BA6) — 扩展
+- 若类别有语义色（如正面=NAVY, 负面=MED_GRAY），优先使用语义色
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '一周舆情演变：情绪分布从中性主导转向正面主导')
+
+# ── 数据定义 ──
+dates = ['3/4', '3/6', '3/8', '3/10', '3/11']
+categories = ['正面', '中性', '负面']
+cat_colors = [NAVY, LINE_GRAY, MED_GRAY]
+# 每行 = 一个日期，每列 = 一个类别的百分比值
+data = [
+    [20, 80, 0],    # 3/4
+    [75, 15, 10],   # 3/6
+    [75, 20, 5],    # 3/8
+    [75, 20, 5],    # 3/10
+    [75, 20, 5],    # 3/11
+]
+
+# ── 图表区域参数 ──
+chart_left = LM + Inches(0.8)         # 柱子起始 X（留 Y 轴标签空间）
+chart_top = Inches(1.6)               # 图表顶部
+chart_bottom = Inches(5.0)            # 图表底部（X 轴位置）
+chart_height = chart_bottom - chart_top
+chart_right = Inches(11.5)            # 图表右侧边界
+chart_width = chart_right - chart_left
+
+n_dates = len(dates)
+n_cats = len(categories)
+group_width = chart_width / n_dates   # 每组占据的总宽度
+bar_width = Inches(0.35)              # 单根柱子宽度
+bar_gap = Inches(0.05)               # 组内柱子间距
+group_bar_width = bar_width * n_cats + bar_gap * (n_cats - 1)  # 一组柱子总宽
+
+max_val = 100  # Y 轴最大值
+
+# ── Y 轴刻度标签 + 水平参考线 ──
+y_ticks = [0, 20, 40, 60, 80, 100]
+for tick in y_ticks:
+    tick_y = chart_bottom - chart_height * (tick / max_val)
+    # Y 轴标签
+    add_text(s, LM, tick_y - Inches(0.15), Inches(0.7), Inches(0.3),
+             f'{tick}%', font_size=Pt(9), font_color=MED_GRAY,
+             alignment=PP_ALIGN.RIGHT)
+    # 水平参考线（极细浅灰色）
+    if tick > 0:
+        add_hline(s, chart_left, tick_y, chart_width, LINE_GRAY, Pt(0.25))
+
+# ── X 轴基线 ──
+add_hline(s, chart_left, chart_bottom, chart_width, BLACK, Pt(0.5))
+
+# ── 绘制柱子 ──
+for di, date in enumerate(dates):
+    group_x = chart_left + group_width * di + (group_width - group_bar_width) / 2
+    for ci, cat in enumerate(categories):
+        val = data[di][ci]
+        bar_h = chart_height * (val / max_val)
+        bar_x = group_x + (bar_width + bar_gap) * ci
+        bar_y = chart_bottom - bar_h
+        if val > 0:
+            add_rect(s, bar_x, bar_y, bar_width, bar_h, cat_colors[ci])
+            # 柱顶数值标签（仅当值 >= 10% 时显示）
+            if val >= 10:
+                add_text(s, bar_x - Inches(0.05), bar_y - Inches(0.25),
+                         bar_width + Inches(0.1), Inches(0.25),
+                         f'{val}%', font_size=Pt(9), font_color=DARK_GRAY,
+                         alignment=PP_ALIGN.CENTER)
+    # X 轴日期标签
+    add_text(s, chart_left + group_width * di, chart_bottom + Inches(0.05),
+             group_width, Inches(0.3), date,
+             font_size=BODY_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
+
+# ── 图例（图表下方居中）──
+legend_y = Inches(5.5)
+legend_start_x = Inches(4.5)
+for ci, cat in enumerate(categories):
+    lx = legend_start_x + Inches(1.8) * ci
+    add_rect(s, lx, legend_y + Inches(0.05), Inches(0.2), Inches(0.2), cat_colors[ci])
+    add_text(s, lx + Inches(0.3), legend_y, Inches(1.2), Inches(0.3),
+             cat, font_size=Pt(12), font_color=DARK_GRAY)
+
+# ── 底部趋势总结区域（可选）──
+add_rect(s, LM, Inches(6.0), CONTENT_W, Inches(0.8), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
+         '趋势总结', font_size=BODY_SIZE, font_color=NAVY, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE)
+add_text(s, LM + Inches(2.0), Inches(6.0), CONTENT_W - Inches(2.3), Inches(0.8),
+         '舆情情绪从 3/4 的中性主导（80%）迅速转向正面主导（75%），负面情绪始终控制在 10% 以内',
+         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
+add_source(s, 'Source: 舆情监测平台数据')
+add_page_number(s, 5, 12)
+```
+
+#### 38. Stacked Bar Chart（堆叠柱状图 / 百分比占比图）
+
+**适用场景**: 展示各类别在总体中的占比随时间变化（如市场份额演变、预算分配变化、渠道贡献占比）。适合强调"构成比例"而非"绝对值"。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  100% ─ ┌──┐  ┌──┐  ┌──┐  ┌──┐        │
+│         │C │  │  │  │  │  │  │        │
+│   50% ─ │B │  │B │  │  │  │  │        │
+│         │  │  │  │  │B │  │B │        │
+│         │A │  │A │  │A │  │A │        │
+│    0% ──└──┘──└──┘──└──┘──└──┘────────  │
+│         Q1    Q2    Q3    Q4            │
+│                                         │
+│  ■ A类  ■ B类  ■ C类                    │
+│                                         │
+│  ┌─BG_GRAY 关键发现──────────────────┐  │
+│  │ 分析文字                           │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**设计规范**:
+- 每根柱子内部从底部到顶部依次堆叠各类别
+- 柱子宽度统一为 0.8"~1.2"（比分组柱状图更宽）
+- 各段之间无间距，直接堆叠
+- 百分比标签写在对应色块内部（当色块高度足够时），或省略
+- 右侧可选放置"直接标签"指向最后一根柱子的各段
+
+**颜色分配**（从底到顶）:
+- 第一层（最大/最重要）：NAVY (#051C2C)
+- 第二层：ACCENT_BLUE (#006BA6)
+- 第三层：LINE_GRAY (#CCCCCC)
+- 第四层：BG_GRAY (#F2F2F2) + 细边框
+- 更多层级：使用 ACCENT_GREEN, ACCENT_ORANGE
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '渠道贡献占比：线上渠道在四个季度内从 30% 增长到 55%')
+
+# ── 数据定义 ──
+periods = ['Q1', 'Q2', 'Q3', 'Q4']
+categories = ['线上直营', '线下门店', '经销商']
+cat_colors = [NAVY, ACCENT_BLUE, LINE_GRAY]
+# 每行 = 一个时间段，值为百分比（总和应为 100）
+data = [
+    [30, 45, 25],   # Q1
+    [38, 40, 22],   # Q2
+    [48, 32, 20],   # Q3
+    [55, 28, 17],   # Q4
+]
+
+# ── 图表区域参数 ──
+chart_left = LM + Inches(0.8)
+chart_top = Inches(1.6)
+chart_bottom = Inches(5.0)
+chart_height = chart_bottom - chart_top
+chart_right = Inches(9.5)
+chart_width = chart_right - chart_left
+
+n_periods = len(periods)
+bar_width = Inches(1.0)              # 堆叠柱宽度
+bar_spacing = chart_width / n_periods
+
+max_val = 100
+
+# ── Y 轴刻度标签 ──
+y_ticks = [0, 25, 50, 75, 100]
+for tick in y_ticks:
+    tick_y = chart_bottom - chart_height * (tick / max_val)
+    add_text(s, LM, tick_y - Inches(0.15), Inches(0.7), Inches(0.3),
+             f'{tick}%', font_size=Pt(9), font_color=MED_GRAY,
+             alignment=PP_ALIGN.RIGHT)
+    if tick > 0:
+        add_hline(s, chart_left, tick_y, chart_width, LINE_GRAY, Pt(0.25))
+
+# ── X 轴基线 ──
+add_hline(s, chart_left, chart_bottom, chart_width, BLACK, Pt(0.5))
+
+# ── 绘制堆叠柱子 ──
+for pi, period in enumerate(periods):
+    bar_x = chart_left + bar_spacing * pi + (bar_spacing - bar_width) / 2
+    cumulative = 0  # 从底部累积
+    for ci in range(len(categories)):
+        val = data[pi][ci]
+        seg_h = chart_height * (val / max_val)
+        seg_y = chart_bottom - chart_height * ((cumulative + val) / max_val)
+        if val > 0:
+            add_rect(s, bar_x, seg_y, bar_width, seg_h, cat_colors[ci])
+            # 段内百分比标签（当段高 >= 0.4" 时显示）
+            if seg_h >= Inches(0.4):
+                label_color = WHITE if ci == 0 else (WHITE if ci == 1 else DARK_GRAY)
+                add_text(s, bar_x, seg_y, bar_width, seg_h,
+                         f'{val}%', font_size=Pt(11), font_color=label_color,
+                         bold=True, alignment=PP_ALIGN.CENTER,
+                         anchor=MSO_ANCHOR.MIDDLE)
+        cumulative += val
+    # X 轴标签
+    add_text(s, chart_left + bar_spacing * pi, chart_bottom + Inches(0.05),
+             bar_spacing, Inches(0.3), period,
+             font_size=BODY_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
+
+# ── 右侧直接标签（指向最后一根柱子）──
+last_bar_right = chart_left + bar_spacing * (n_periods - 1) + (bar_spacing + bar_width) / 2
+label_x = last_bar_right + Inches(0.2)
+cumulative = 0
+for ci in range(len(categories)):
+    val = data[-1][ci]
+    mid_y = chart_bottom - chart_height * ((cumulative + val / 2) / max_val)
+    add_text(s, label_x, mid_y - Inches(0.15), Inches(2.5), Inches(0.3),
+             f'{categories[ci]} {val}%', font_size=Pt(11),
+             font_color=cat_colors[ci] if ci < 2 else DARK_GRAY, bold=True)
+    cumulative += val
+
+# ── 图例（图表下方）──
+legend_y = Inches(5.5)
+legend_start_x = Inches(4.0)
+for ci, cat in enumerate(categories):
+    lx = legend_start_x + Inches(2.2) * ci
+    add_rect(s, lx, legend_y + Inches(0.05), Inches(0.2), Inches(0.2), cat_colors[ci])
+    add_text(s, lx + Inches(0.3), legend_y, Inches(1.6), Inches(0.3),
+             cat, font_size=Pt(12), font_color=DARK_GRAY)
+
+# ── 底部关键发现 ──
+add_rect(s, LM, Inches(6.0), CONTENT_W, Inches(0.8), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
+         '关键发现', font_size=BODY_SIZE, font_color=NAVY, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE)
+add_text(s, LM + Inches(2.0), Inches(6.0), CONTENT_W - Inches(2.3), Inches(0.8),
+         '线上直营渠道占比从 Q1 的 30% 稳步增长至 Q4 的 55%，成为第一大收入来源',
+         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
+add_source(s, 'Source: 内部销售数据')
+add_page_number(s, 6, 12)
+```
+
+#### 39. Horizontal Bar Chart（水平柱状图 / 排名图）
+
+**适用场景**: 类别名称较长的排名对比（如部门绩效排名、品牌认知度、功能使用率排行）。横向柱状图在类别较多时可读性更好。
+
+```
+┌─────────────────────────────────────────┐
+│ ▌ Action Title                          │
+├─────────────────────────────────────────┤
+│  类别 A    ████████████████████  92%    │
+│  类别 B    ████████████████     85%     │
+│  类别 C    ██████████████       78%     │
+│  类别 D    ████████████         65%     │
+│  类别 E    ████████             52%     │
+│                                         │
+│  ┌─BG_GRAY 说明──────────────────────┐  │
+│  │ 分析文字                           │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**设计规范**:
+- 类别标签左对齐，柱子起始位置统一
+- 最长柱子 = 100% 参考宽度
+- 每根柱子右侧标注数值
+- 第一名用 NAVY，其余用 BG_GRAY（或渐变灰色）
+- 行间距均匀
+
+```python
+s = prs.slides.add_slide(BL)
+add_action_title(s, '功能使用率排名：智能推荐以 92% 使用率位居第一')
+
+# ── 数据定义（已排序）──
+items = [
+    ('智能推荐', 92),
+    ('搜索功能', 85),
+    ('个人中心', 78),
+    ('消息通知', 65),
+    ('社区互动', 52),
+    ('数据报表', 38),
+]
+
+# ── 图表区域参数 ──
+label_x = LM
+label_w = Inches(2.0)
+bar_x = LM + Inches(2.2)
+bar_max_w = Inches(7.5)
+value_x = bar_x + bar_max_w + Inches(0.2)
+row_h = Inches(0.65)
+start_y = Inches(1.6)
+max_val = 100
+
+# ── 绘制水平柱子 ──
+for i, (name, val) in enumerate(items):
+    ry = start_y + row_h * i
+    bar_w = bar_max_w * (val / max_val)
+    fill = NAVY if i == 0 else BG_GRAY
+    tc = NAVY if i == 0 else DARK_GRAY
+    # 类别标签
+    add_text(s, label_x, ry, label_w, row_h, name,
+             font_size=BODY_SIZE, font_color=tc, bold=(i == 0),
+             anchor=MSO_ANCHOR.MIDDLE)
+    # 背景轨道（浅灰底）
+    add_rect(s, bar_x, ry + Inches(0.12), bar_max_w, Inches(0.4), RGBColor(0xF2, 0xF2, 0xF2))
+    # 数据柱
+    add_rect(s, bar_x, ry + Inches(0.12), bar_w, Inches(0.4), fill)
+    # 数值标签
+    add_text(s, value_x, ry, Inches(1.0), row_h, f'{val}%',
+             font_size=BODY_SIZE, font_color=tc, bold=(i == 0),
+             anchor=MSO_ANCHOR.MIDDLE)
+    # 行分隔线
+    if i < len(items) - 1:
+        add_hline(s, label_x, ry + row_h, bar_max_w + Inches(2.5), LINE_GRAY, Pt(0.25))
+
+# ── 底部说明 ──
+add_rect(s, LM, Inches(5.8), CONTENT_W, Inches(0.9), BG_GRAY)
+add_text(s, LM + Inches(0.3), Inches(5.8), Inches(1.5), Inches(0.9),
+         '分析', font_size=BODY_SIZE, font_color=NAVY, bold=True,
+         anchor=MSO_ANCHOR.MIDDLE)
+add_text(s, LM + Inches(2.0), Inches(5.8), CONTENT_W - Inches(2.3), Inches(0.9),
+         '智能推荐和搜索功能是用户最高频使用的两大核心功能，社区互动和数据报表仍有较大提升空间',
+         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
+add_source(s, 'Source: 产品埋点数据，2026年2月')
+add_page_number(s, 7, 12)
+```
+
+---
+
 ## Python Code Patterns
 
 ### Helper Functions (Copy Directly)
@@ -2077,6 +2445,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.7.0 | 2026-03-13 | **Category H: Data Charts**: Added 3 new chart layout patterns (#37 Grouped Bar, #38 Stacked Bar, #39 Horizontal Bar) using pure `add_rect()` drawing. Added Chart Priority Rule to Layout Diversity table — when data contains dates + values/percentages, chart patterns are mandatory. Total patterns: 39. |
 | 1.6.0 | 2026-03-08 | **Cross-model quality alignment**: Added Accent Color System (4 accent + 4 light BG colors), Presentation Planning section (structure templates, layout diversity rules, content density requirements, mandatory slide elements, page number helper). Based on comparative analysis across Opus/Minimax/Hunyuan/GLM5 outputs. |
 | 1.5.0 | 2026-03-08 | **Critical fix**: `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` to prevent Chinese multi-line text overlap. Added Problem 5 to Common Issues. |
 | 1.3.0 | 2026-03-04 | ClawHub release: optimized description for discoverability, added metadata/homepage, added Edge Cases & Error Handling sections |
