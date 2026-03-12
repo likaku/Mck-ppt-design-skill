@@ -36,14 +36,17 @@
 
 > ### v1.7.0 更新 — 品牌中性化 & 暗色调强调色
 >
-> - **移除所有咨询公司品牌名称** — 框架文本中不再出现 McKinsey / BCG / Bain 等品牌词，生成规则中新增 **Brand Name Prohibition**，防止 AI 在生成的幻灯片内容中输出任何品牌名（如 "McKinsey Insight"），建议使用 "Key Insight"、"Key Takeaway" 等中性表达
+> - **移除所有品牌名称** — 使用 "Key Insight"、"Key Takeaway" 等中性表达
 > - **强调色全面调暗** — 4 组强调色从高饱和度调整为 **接近黑色的深暗色调**，视觉更沉稳内敛：
 >   - Blue `#006BA6` → `#0A2E4D`（深墨蓝）
 >   - Green `#007A53` → `#0C3626`（深墨绿）
 >   - Orange `#D46A00` → `#4D2E0A`（深棕）
 >   - Red `#C62828` → `#4A1015`（深暗红）
 > - 配套浅色背景同步降低饱和度，整体色板更加统一克制
->
+>- 增加简单的charting能力
+<img width="500" height="250" alt="Clipboard_Screenshot_1773328974" src="https://github.com/user-attachments/assets/5fee90d7-fe61-4f94-8b2a-97f7dabc94d0" />
+
+
 > 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.6.0 更新 — 跨模型质量对齐
