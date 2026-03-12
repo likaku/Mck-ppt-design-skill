@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.6.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.7.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -210,7 +210,7 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 
 欢迎提交 Issue 和 Pull Request。贡献方向：
 
-- 新增布局模式（时间轴页、数据图表页、2x2矩阵等）
+- 新增布局模式（时间轴页、2x2矩阵等）
 - 扩展色彩主题（深色模式、品牌定制）
 - 补充示例代码与文档翻译
 

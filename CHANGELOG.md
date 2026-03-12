@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-03-13
+
+### Added
+- **Category H: Data Charts** — 3 new chart layout patterns drawn with pure `add_rect()`, no matplotlib dependency:
+  - **#37 Grouped Bar Chart** — multi-category comparison across time points (e.g., sentiment distribution, multi-product sales)
+  - **#38 Stacked Bar Chart** — part-to-whole composition over time (e.g., channel revenue mix, sentiment ratio)
+  - **#39 Horizontal Bar Chart** — category ranking with long labels (e.g., feature usage rate, department performance)
+- **Chart Priority Rule** in Layout Diversity table — when data contains dates + numeric values/percentages, chart patterns (#37/#38/#39) are mandatory over text-based layouts
+- **Chart trigger signals** — automatic detection rules: date+percentage combos, `████` progress bars, trend-related keywords, ≥3 rows with categories and values
+- Color assignment for charts uses the four-color scheme: NAVY / LINE_GRAY / MED_GRAY / ACCENT_BLUE
+
+### Stats
+- Layout patterns: 36 → **39** (3 new)
+- Categories: 7 → **8** (added Category H)
+- Net addition: ~372 lines in SKILL.md
+
 ## [1.6.0] - 2026-03-08
 
 ### Added

@@ -1,4 +1,4 @@
-# Layout Catalog — 36 Slide Types
+# Layout Catalog — 39 Slide Types
 
 ## Category A: Structure & Navigation
 | # | Name | Use Case |
@@ -63,3 +63,10 @@
 | 34 | Action Items | Next steps checklist |
 | 35 | Closing / Thank You | End slide |
 | 36 | (Reserved) | Future expansion |
+
+## Category H: Data Charts
+| # | Name | Use Case |
+|---|------|----------|
+| 37 | Grouped Bar Chart | Multi-category comparison across time points |
+| 38 | Stacked Bar Chart | Part-to-whole composition over time |
+| 39 | Horizontal Bar Chart | Category ranking with long labels |
