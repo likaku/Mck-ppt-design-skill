@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Minimal example: McKinsey-style PPT with Cover + Content + Source slides.
-Uses the design system defined in SKILL.md (v1.2.0).
+Minimal example: Professional PPT with Cover + Content + Source slides.
+Uses the design system defined in SKILL.md (v1.7.0).
 """
 
 import os
@@ -157,7 +157,7 @@ def main():
              'Sample Presentation', font_size=Pt(44), font_name='Georgia',
              font_color=NAVY, bold=True)
     add_text(s1, Inches(1), Inches(3.5), Inches(11), Inches(0.6),
-             'McKinsey-style Design System Demo', font_size=Pt(24),
+             'Professional Design System Demo', font_size=Pt(24),
              font_color=DARK_GRAY)
     add_text(s1, Inches(1), Inches(4.5), Inches(11), Inches(0.5),
              'Minimal Example  |  2026', font_size=BODY_SIZE, font_color=MED_GRAY)

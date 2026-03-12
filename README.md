@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.6.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.7.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -33,6 +33,18 @@
 </table>
 
 ---
+
+> ### v1.7.0 更新 — 品牌中性化 & 暗色调强调色
+>
+> - **移除所有咨询公司品牌名称** — 框架文本中不再出现 McKinsey / BCG / Bain 等品牌词，生成规则中新增 **Brand Name Prohibition**，防止 AI 在生成的幻灯片内容中输出任何品牌名（如 "McKinsey Insight"），建议使用 "Key Insight"、"Key Takeaway" 等中性表达
+> - **强调色全面调暗** — 4 组强调色从高饱和度调整为 **接近黑色的深暗色调**，视觉更沉稳内敛：
+>   - Blue `#006BA6` → `#0A2E4D`（深墨蓝）
+>   - Green `#007A53` → `#0C3626`（深墨绿）
+>   - Orange `#D46A00` → `#4D2E0A`（深棕）
+>   - Red `#C62828` → `#4A1015`（深暗红）
+> - 配套浅色背景同步降低饱和度，整体色板更加统一克制
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.6.0 更新 — 跨模型质量对齐
 >
@@ -132,14 +144,14 @@
 | **LINE_GRAY** | ![](docs/colors/line-gray.png) | `#CCCCCC` | 表格行分隔线 |
 | **BG_GRAY** | ![](docs/colors/bg-gray.png) | `#F2F2F2` | 背景面板、Takeaway 区域 |
 
-**强调色（v1.6.0 新增）** — 用于 3+ 并列项的视觉区分：
+**强调色（v1.7.0 暗色调）** — 用于 3+ 并列项的视觉区分：
 
 | 名称 | Hex | 配套浅色背景 | 用途 |
 |:-----|:---:|:---:|:-----|
-| **ACCENT_BLUE** | `#006BA6` | `#E3F2FD` | 第一项强调 |
-| **ACCENT_GREEN** | `#007A53` | `#E8F5E9` | 第二项强调 |
-| **ACCENT_ORANGE** | `#D46A00` | `#FFF3E0` | 第三项强调 |
-| **ACCENT_RED** | `#C62828` | `#FFEBEE` | 第四项 / 警示 |
+| **ACCENT_BLUE** | `#0A2E4D` | `#E8EDF2` | 第一项强调（深墨蓝） |
+| **ACCENT_GREEN** | `#0C3626` | `#E6EDE9` | 第二项强调（深墨绿） |
+| **ACCENT_ORANGE** | `#4D2E0A` | `#F0EBE4` | 第三项强调（深棕） |
+| **ACCENT_RED** | `#4A1015` | `#F0E6E7` | 第四项 / 警示（深暗红） |
 
 ---
 
@@ -200,6 +212,16 @@ cp SKILL.md ~/.claude/skills/mck-ppt-design/
 ### 环境要求
 
 Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
+
+---
+
+### 信息查询能力
+
+本 Skill 具备一定的简单查询能力——在生成 PPT 时，AI 可以根据用户给出的主题自动搜索相关数据、行业趋势和关键事实，将查询到的信息融入幻灯片内容中，让生成的演示文稿更具数据支撑和说服力。
+
+<!-- 在此处插入查询能力的演示截图 -->
+
+ 
 
 ---
 

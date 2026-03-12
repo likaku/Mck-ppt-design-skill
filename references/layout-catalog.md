@@ -23,7 +23,7 @@
 ## Category C: Frameworks & Matrices
 | # | Name | Use Case |
 |---|------|----------|
-| 13 | 2x2 Matrix | BCG matrix, priority grid |
+| 13 | 2x2 Matrix | Growth-share matrix, priority grid |
 | 14 | Three-Pillar Framework | Three parallel strategies |
 | 15 | Pyramid / Hierarchy | Layered structures |
 | 16 | Process Chevron | 3-5 step linear flow |

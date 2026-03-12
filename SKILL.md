@@ -1,8 +1,8 @@
 ---
 name: mck-ppt-design
-description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
+description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with clean flat design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 36 layout patterns, consistent typography, and zero file-corruption issues."
 license: Apache-2.0
-version: "1.6.0"
+version: "1.7.0"
 author: likaku
 homepage: https://github.com/likaku/Mck-ppt-design-skill
 user-invocable: true
@@ -13,11 +13,11 @@ allowed-tools:
 metadata: {"openclaw":{"emoji":"📊","requires":{"bins":["python3","pip"]}}}
 ---
 
-# McKinsey PPT Design Framework
+# Professional PPT Design Framework
 
 ## Overview
 
-This skill encodes the complete design specification for **professional business presentations** — a consultant-grade PowerPoint framework based on McKinsey design principles. It includes:
+This skill encodes the complete design specification for **professional business presentations** — a consultant-grade PowerPoint framework based on top-tier consulting design principles. It includes:
 
 - **36 layout patterns** across 7 categories (structure, data, framework, comparison, narrative, timeline, team)
 - **Color system** and strict typography hierarchy
@@ -35,7 +35,7 @@ Use this skill when users ask to:
 
 1. **Create presentations** — pitch decks, strategy presentations, quarterly reviews, board meeting slides, consulting deliverables, project proposals, business plans
 2. **Generate slides programmatically** — using python-pptx to produce .pptx files from scratch
-3. **Apply professional design** — McKinsey / BCG / Bain consulting style, clean flat design, no shadows or gradients
+3. **Apply professional design** — top-tier consulting style, clean flat design, no shadows or gradients
 4. **Build specific slide types** — cover pages, data dashboards, 2x2 matrices, timelines, funnels, team introductions, executive summaries, comparison layouts
 5. **Fix PPT issues** — file corruption ("needs repair"), shadow/3D artifacts, inconsistent fonts, Chinese text rendering problems
 6. **Maintain design consistency** — unified color palette, font hierarchy, spacing, and line treatments across all slides
@@ -44,7 +44,7 @@ Use this skill when users ask to:
 
 ## Core Design Philosophy
 
-### McKinsey Design Principles
+### Core Design Principles
 
 1. **Extreme Minimalism** - Remove all non-essential visual elements
    - No color blocks unless absolutely necessary
@@ -100,10 +100,10 @@ When a slide contains **3 or more parallel items** (e.g., comparison cards, pill
 
 | Accent Name | Hex | RGB | Paired Light BG | Usage |
 |-------------|-----|-----|-----------------|-------|
-| **ACCENT_BLUE** | #006BA6 | (0, 107, 166) | #E3F2FD | First item accent |
-| **ACCENT_GREEN** | #007A53 | (0, 122, 83) | #E8F5E9 | Second item accent |
-| **ACCENT_ORANGE** | #D46A00 | (212, 106, 0) | #FFF3E0 | Third item accent |
-| **ACCENT_RED** | #C62828 | (198, 40, 40) | #FFEBEE | Fourth item / warning |
+| **ACCENT_BLUE** | #0A2E4D | (10, 46, 77) | #E8EDF2 | First item accent |
+| **ACCENT_GREEN** | #0C3626 | (12, 54, 38) | #E6EDE9 | Second item accent |
+| **ACCENT_ORANGE** | #4D2E0A | (77, 46, 10) | #F0EBE4 | Third item accent |
+| **ACCENT_RED** | #4A1015 | (74, 16, 21) | #F0E6E7 | Fourth item / warning |
 
 **Accent Color Rules**:
 - Use accent colors for: **card top accent borders** (thin 0.06" rect), **circle labels** (`add_oval()` bg param), **section sub-headers** (font_color)
@@ -113,16 +113,21 @@ When a slide contains **3 or more parallel items** (e.g., comparison cards, pill
 - Use accent colors **ONLY** when the slide has 3+ parallel items that need visual distinction
 - The fourth item (D) can use NAVY instead of ACCENT_RED if red feels inappropriate for the content
 
+**Brand Name Prohibition** (CRITICAL):
+- **NEVER** output the word "McKinsey", "mckinsey", "BCG", "Bain", or any consulting firm name in generated slide text, action titles, annotations, source attributions, or any visible content
+- Use neutral terms instead: "Key Insight", "Key Takeaway", "Strategic Insight", "Core Finding" — never "McKinsey Insight" or similar
+- This rule applies to ALL text rendered on slides, including comments, footnotes, and source lines
+
 ```python
 # Accent color constants
-ACCENT_BLUE   = RGBColor(0x00, 0x6B, 0xA6)
-ACCENT_GREEN  = RGBColor(0x00, 0x7A, 0x53)
-ACCENT_ORANGE = RGBColor(0xD4, 0x6A, 0x00)
-ACCENT_RED    = RGBColor(0xC6, 0x28, 0x28)
-LIGHT_BLUE    = RGBColor(0xE3, 0xF2, 0xFD)
-LIGHT_GREEN   = RGBColor(0xE8, 0xF5, 0xE9)
-LIGHT_ORANGE  = RGBColor(0xFF, 0xF3, 0xE0)
-LIGHT_RED     = RGBColor(0xFF, 0xEB, 0xEE)
+ACCENT_BLUE   = RGBColor(0x0A, 0x2E, 0x4D)
+ACCENT_GREEN  = RGBColor(0x0C, 0x36, 0x26)
+ACCENT_ORANGE = RGBColor(0x4D, 0x2E, 0x0A)
+ACCENT_RED    = RGBColor(0x4A, 0x10, 0x15)
+LIGHT_BLUE    = RGBColor(0xE8, 0xED, 0xF2)
+LIGHT_GREEN   = RGBColor(0xE6, 0xED, 0xE9)
+LIGHT_ORANGE  = RGBColor(0xF0, 0xEB, 0xE4)
+LIGHT_RED     = RGBColor(0xF0, 0xE6, 0xE7)
 ```
 
 ---
@@ -354,7 +359,7 @@ Match content type to the optimal layout pattern:
 
 ### Content Density Requirements
 
-"Minimalism" in McKinsey design means **removing decorative noise** (shadows, gradients, clip-art), NOT removing content. A slide with 80% whitespace is not minimalist — it is EMPTY.
+"Minimalism" in consulting design means **removing decorative noise** (shadows, gradients, clip-art), NOT removing content. A slide with 80% whitespace is not minimalist — it is EMPTY.
 
 **Mandatory minimums per content slide**:
 
@@ -831,7 +836,7 @@ add_source(s, 'Source: ...')
 
 #### 13. 2x2 Matrix (四象限矩阵)
 
-**适用场景**: 战略分析（如 BCG 矩阵、优先级排序、风险评估）。
+**适用场景**: 战略分析（如增长-份额矩阵、优先级排序、风险评估）。
 
 ```
 ┌─────────────────────────────────────────┐
@@ -1993,7 +1998,7 @@ def add_source(slide, text, y=Inches(7.05)):
 **Solution** (fixed in v1.5.0):
 - `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` for every paragraph
 - This maps to `<a:lnSpc><a:spcPts>` in the XML, ensuring proper spacing for both single-paragraph word-wrap and multi-paragraph lists
-- The 135% multiplier balances McKinsey's compact style with CJK readability
+- The 135% multiplier balances the compact consulting style with CJK readability
 
 ---
 
@@ -2077,6 +2082,7 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.7.0 | 2026-03-12 | **Brand neutralization & dark accent palette**: Removed all consulting firm brand names (McKinsey/BCG/Bain) from framework text and slide generation rules. Added explicit Brand Name Prohibition rule to prevent brand names in generated content. Darkened all 4 accent colors to near-black tones (Blue #0A2E4D, Green #0C3626, Orange #4D2E0A, Red #4A1015) with muted light backgrounds for a more sophisticated, subdued look. |
 | 1.6.0 | 2026-03-08 | **Cross-model quality alignment**: Added Accent Color System (4 accent + 4 light BG colors), Presentation Planning section (structure templates, layout diversity rules, content density requirements, mandatory slide elements, page number helper). Based on comparative analysis across Opus/Minimax/Hunyuan/GLM5 outputs. |
 | 1.5.0 | 2026-03-08 | **Critical fix**: `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` to prevent Chinese multi-line text overlap. Added Problem 5 to Common Issues. |
 | 1.3.0 | 2026-03-04 | ClawHub release: optimized description for discoverability, added metadata/homepage, added Edge Cases & Error Handling sections |
