@@ -44,7 +44,7 @@
 >   - Red `#C62828` → `#4A1015`（深暗红）
 > - 配套浅色背景同步降低饱和度，整体色板更加统一克制
 >- 增加简单的charting能力
-<img width="500" height="250" alt="Clipboard_Screenshot_1773328974" src="https://github.com/user-attachments/assets/5fee90d7-fe61-4f94-8b2a-97f7dabc94d0" />
+>- <img width="640" height="360" alt="Clipboard_Screenshot_1773328974" src="https://github.com/user-attachments/assets/5fee90d7-fe61-4f94-8b2a-97f7dabc94d0" />
 
 
 > 详见 [CHANGELOG.md](CHANGELOG.md)
