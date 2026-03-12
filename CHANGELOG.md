@@ -2,27 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.7.0] - 2026-03-12
-
-### Changed
-- **Brand Neutralization** — removed all consulting firm brand names (McKinsey, BCG, Bain) from SKILL.md framework text, description, and design principle headings. Replaced with neutral terms ("top-tier consulting style", "professional", "consultant-grade")
-- **Dark Accent Palette** — darkened all 4 accent colors to near-black tones for a more sophisticated, subdued visual:
-  - ACCENT_BLUE: `#006BA6` → `#0A2E4D` (deep ink blue)
-  - ACCENT_GREEN: `#007A53` → `#0C3626` (deep ink green)
-  - ACCENT_ORANGE: `#D46A00` → `#4D2E0A` (deep brown)
-  - ACCENT_RED: `#C62828` → `#4A1015` (deep dark red)
-- Paired light backgrounds adjusted to lower saturation: `#E8EDF2`, `#E6EDE9`, `#F0EBE4`, `#F0E6E7`
-
-### Added
-- **Brand Name Prohibition rule** (CRITICAL) — explicit rule in SKILL.md forbidding the AI from outputting "McKinsey", "BCG", "Bain" or any consulting firm name in generated slide text, action titles, annotations, or source attributions. Recommends neutral alternatives: "Key Insight", "Key Takeaway", "Strategic Insight", "Core Finding"
-- Updated `references/color-palette.md` with accent color section matching new dark palette
-- README: added information query capability description with image placeholder
-
-### Context
-- User reported generated PPTs containing "McKinsey Insight" text in slide content
-- User reported accent colors appearing too vivid/bright; requested near-black dark tones
-- These changes affect generated content quality without modifying the Python code patterns
-
 ## [1.6.0] - 2026-03-08
 
 ### Added
