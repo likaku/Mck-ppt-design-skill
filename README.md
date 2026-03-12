@@ -35,6 +35,17 @@
 ---
 
 
+> ### v1.7.0 更新 — 数据图表类别
+>
+> - **新增 Category H：数据图表** — 3 种纯 `add_rect()` 手绘图表布局，无需 matplotlib 依赖：
+>   - **#37 Grouped Bar Chart（分组柱状图）** — 多类别在不同时间点的数值对比
+>   - **#38 Stacked Bar Chart（堆叠柱状图）** — 各部分占比随时间变化
+>   - **#39 Horizontal Bar Chart（水平柱状图）** — 类别排名对比
+> - **新增 Chart Priority Rule** — 当数据包含日期 + 数值/百分比时，必须优先使用图表模式
+> - **布局总数 36 → 39**，类别 7 → 8
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
+
 > ### v1.6.0 更新 — 跨模型质量对齐
 >
 > - **新增强调色系统** — 4 组强调色（Blue #006BA6 / Green #007A53 / Orange #D46A00 / Red #C62828）+ 配套浅色背景，用于多项目视觉区分
@@ -190,7 +201,7 @@ cp SKILL.md ~/.claude/skills/mck-ppt-design/
 │   └── requirements.txt     # 依赖列表
 ├── references/
 │   ├── color-palette.md     # 色彩速查
-│   └── layout-catalog.md    # 36 种布局目录
+│   └── layout-catalog.md    # 39 种布局目录
 └── examples/
     ├── minimal_example.py   # 2 页 Demo（兼容旧路径）
     └── requirements.txt
