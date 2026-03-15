@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.7.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.9.0
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -34,6 +34,38 @@
 
 ---
 
+
+> ### v1.9.0 更新 — 生产级质量护栏
+>
+> - **新增 Production Guard Rails** — 7 条从实际生产反馈提炼的强制规则：
+>   - 内容块与底部栏间距保护（最小 0.15"）
+>   - 内容溢出检测（右边距 + 底部边距 + 容器内文字内缩）
+>   - 底部留白消除（图表/内容填满纵向空间）
+>   - 图例颜色一致性（必须用 `add_rect()` 色块，禁止纯文本"■"）
+>   - 标题风格统一（仅使用 `add_action_title()`，`add_navy_title_bar()` 已废弃）
+>   - 矩阵图轴标签居中（基于实际网格尺寸计算）
+>   - 图片占位页强制要求（8+ 页 PPT 至少含 1 页图片占位）
+> - **新增 Code Efficiency Guidelines** — 常量提取、辅助函数复用、标准缩写表、批量数据结构、自动页码计数
+> - **新增 5 个 Common Issues**（Problem 6-10）：容器溢出、图例色差、标题风格混乱、轴标签偏移、底部留白
+> - 基于 19 页 AI 行业报告的多轮迭代反馈提炼
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
+
+> ### v1.8.0 更新 — 大规模布局扩展
+>
+> - **布局总数 39 → 70**，类别 8 → 12，新增 31 个专业布局模板
+> - **新增 Category I：图片+内容布局** — 8 种含图片占位符的布局（#40-#47）：
+>   - 内容+右侧图片、左侧图片+内容、三图对比、图片+四要点、全幅图片叠加文字、带图案例研究、引言+背景图、目标+配图
+> - **新增 Category J：高级数据可视化** — 9 种纯 `add_rect()` 手绘图表（#48-#56）：
+>   - 环形图、瀑布图、折线/趋势图、帕累托图、进度条/KPI追踪、气泡/散点图、风险热力矩阵、仪表盘、Harvey Ball 评估表
+> - **新增 Category K：仪表盘布局** — 2 种数据密集型执行仪表盘（#57-#58）
+> - **新增 Category L：视觉叙事** — 12 种视觉叙事模板（#59-#70）：
+>   - 利益相关者地图、决策树、检查清单、指标对比行、图标网格、饼图、SWOT分析、议程、价值链、双列图文、编号列表+面板、堆积面积图
+> - **新增 `add_image_placeholder()` 辅助函数** — 灰色占位矩形+十字线+标签，用户生成后替换为真实图片
+> - **新增 Image Priority Rule** — 涉及案例、产品展示等内容时优先使用图片布局
+> - 基于 McKinsey PowerPoint Template 2023（679页）系统分析，提取关键模板模式
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.7.0 更新 — 数据图表类别
 >
@@ -201,7 +233,7 @@ cp SKILL.md ~/.claude/skills/mck-ppt-design/
 │   └── requirements.txt     # 依赖列表
 ├── references/
 │   ├── color-palette.md     # 色彩速查
-│   └── layout-catalog.md    # 39 种布局目录
+│   └── layout-catalog.md    # 70 种布局目录
 └── examples/
     ├── minimal_example.py   # 2 页 Demo（兼容旧路径）
     └── requirements.txt
