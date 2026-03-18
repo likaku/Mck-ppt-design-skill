@@ -14,7 +14,7 @@ description: >-
 
 # McKinsey PPT Design Framework
 
-> **Version**: 1.10.2 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 1.10.3 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: python3, pip
 
@@ -5353,7 +5353,7 @@ def add_text(slide, left, top, width, height, text, font_size=Pt(14),
         p.alignment = alignment
         p.space_before = line_spacing if i > 0 else Pt(0)
         p.space_after = Pt(0)
-        p.line_spacing = Pt(font_size.pt * 1.35)  # 135% line height to prevent CJK overlap
+        p.line_spacing = 0.93 if font_size.pt >= 18 else Pt(font_size.pt * 1.35)  # Titles (>=18pt): 0.93x multiple; Body: 135% fixed Pt
         for run in p.runs:
             set_ea_font(run, ea_font)
     return txBox
@@ -5485,10 +5485,12 @@ def add_image_placeholder(slide, left, top, width, height, label='Image'):
 
 **Cause**: `add_text()` only set `space_before` (paragraph spacing) but did NOT set `p.line_spacing` (the actual line height / `<a:lnSpc>` in OOXML). When Chinese text wraps within a paragraph, lines overlap because PowerPoint has no explicit line height to follow.
 
-**Solution** (fixed in v1.5.0):
-- `add_text()` now sets `p.line_spacing = Pt(font_size.pt * 1.35)` for every paragraph
-- This maps to `<a:lnSpc><a:spcPts>` in the XML, ensuring proper spacing for both single-paragraph word-wrap and multi-paragraph lists
-- The 135% multiplier balances McKinsey's compact style with CJK readability
+**Solution** (fixed in v1.5.0, refined in v1.10.3):
+- `add_text()` sets `p.line_spacing` for every paragraph with a **two-tier strategy**:
+  - **Titles (font_size ≥ 18pt)**: `p.line_spacing = 0.93` — multiple spacing for tighter, more professional title rendering
+  - **Body text (font_size < 18pt)**: `p.line_spacing = Pt(font_size.pt * 1.35)` — fixed Pt spacing to prevent CJK overlap
+- Title multiple spacing (`0.93`) maps to `<a:lnSpc><a:spcPct val="93000"/>` in OOXML
+- Body fixed spacing maps to `<a:lnSpc><a:spcPts>` in OOXML
 
 ### Problem 6: Content Overflowing Container Boxes (v1.9.0)
 
@@ -5808,6 +5810,7 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.10.3 | 2026-03-18 | **Title Line Spacing Optimization**: Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional title rendering. Body text (<18pt) retains fixed Pt spacing. Updated Problem 5 documentation. Thanks to **冯梓航 Denzel** for detailed feedback. |
 | 1.10.2 | 2026-03-18 | **#54 Matrix Side Panel Variant**: Added compact grid + side panel layout variant for Pattern #54 (Risk/Heat Matrix). When matrix needs a companion insight panel, `cell_w` shrinks from 3.0" to 2.15" and `axis_label_w` from 1.8" to 0.65", yielding ~4.2" panel width. Includes layout math, ASCII wireframe, code example, and minimum-width rule. |
 | 1.10.1 | 2026-03-18 | **Frontmatter Fix**: Fixed "malformed YAML frontmatter" error on Claude install. Removed unsupported fields (`license`, `version`, `metadata` with emoji, etc.) — Claude only supports `name` + `description`. Used YAML folded block scalar (`>-`) for description. Metadata relocated to document body. |
 | 1.10.0 | 2026-03-18 | **Channel Delivery**: New `deliver_to_channel()` helper sends generated PPTX back to user's chat via `openclaw message send --media`. Supports Feishu/飞书, Telegram, WhatsApp, Discord, Slack, Signal and all OpenClaw channels. Graceful fallback when not in channel context. Updated example scripts. |

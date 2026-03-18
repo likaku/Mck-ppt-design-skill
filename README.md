@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.10.2
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.10.3
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -34,6 +34,16 @@
 
 ---
 
+
+> ### v1.10.3 更新 — 标题行间距优化
+>
+> - **标题行距优化** — 标题文本（≥18pt）从固定磅值 `Pt(fs*1.35)` 改为**多倍行距 0.93**，渲染更紧凑专业
+>   - 适用于：22pt 页面标题、28pt 章节大标题、18pt 副标题
+>   - 正文文本（<18pt）保持原有固定磅值行距，确保中文换行不重叠
+>   - 对应 PowerPoint 段落设置中的"多倍行距 0.93"
+> - 感谢 **冯梓航 Denzel** 的细致反馈 🙏
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.10.2 更新 — #54 矩阵侧面板变体
 >

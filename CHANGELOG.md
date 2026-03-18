@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.3] - 2026-03-18
+
+### Improved
+- **Title Line Spacing Optimization** — titles (font_size ≥ 18pt) now use `p.line_spacing = 0.93` (multiple spacing) instead of `Pt(font_size.pt * 1.35)` (fixed point spacing)
+  - Produces tighter, more professional title rendering — matches PowerPoint's "多倍行距 0.93" setting
+  - Applies to: 22pt page titles, 28pt section divider titles, 18pt sub-headers
+  - Body text (< 18pt) retains the existing `Pt(font_size.pt * 1.35)` fixed spacing to prevent CJK overlap
+  - In OOXML: titles now emit `<a:lnSpc><a:spcPct val="93000"/>` instead of `<a:spcPts>`
+- Updated Problem 5 documentation to reflect the two-tier line spacing strategy
+
+### Thanks
+- **冯梓航 Denzel** — for detailed feedback on title spacing refinement
+
 ## [1.10.2] - 2026-03-18
 
 ### Added
