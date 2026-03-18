@@ -3,7 +3,7 @@
 # Mck PPT Design Skill
 
 一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.9.0
+<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.10.2
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -34,6 +34,34 @@
 
 ---
 
+
+> ### v1.10.2 更新 — #54 矩阵侧面板变体
+>
+> - **新增 #54 Heat Matrix 侧面板布局变体** — 当矩阵需要搭配洞察面板（如"竞争关键变化"、"行动项"）时，使用紧凑九宫格（~60%宽）+ 侧面板（~38%宽）的组合布局
+>   - 九宫格单元格宽从 `3.0"` 缩至 `2.15"`，Y轴标签区从 `1.8"` 缩至 `0.65"`
+>   - 侧面板从 ~1.4"（被挤压不可读）扩至 ~4.2"（可容纳 6+ 条目）
+>   - 含 ASCII 线框图、布局数学代码、深色底部小结栏、最小宽度规则
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
+
+> ### v1.10.1 更新 — YAML Frontmatter 修复
+>
+> - **修复 Claude 安装报错** — Claude 的 SKILL.md 解析器仅支持 `name` + `description` 两个 frontmatter 字段
+>   - 移除 7 个不支持的字段（`license`, `version`, `author`, `homepage` 等）
+>   - `description` 改用 YAML folded block scalar (`>-`)，兼容性更好
+>   - 元数据信息迁移至正文 blockquote，无信息丢失
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
+
+> ### v1.10.0 更新 — 频道文件投递
+>
+> - **新增 Channel Delivery 能力** — 在飞书、Telegram、WhatsApp、Discord、Slack 等频道中直接回传生成的 PPTX 文件
+>   - `deliver_to_channel()` 辅助函数 — 通过 `openclaw message send --media` 自动投递
+>   - 环境感知 — IDE / CI 等非频道环境下静默跳过，打印本地路径
+>   - 支持所有文档类型，最大 100MB
+> - **更新 `minimal_example.py`** — 生成后自动调用投递流程
+>
+> 详见 [CHANGELOG.md](CHANGELOG.md)
 
 > ### v1.9.0 更新 — 生产级质量护栏
 >
