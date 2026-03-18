@@ -5,6 +5,8 @@ Uses the design system defined in SKILL.md (v1.2.0).
 """
 
 import os
+import shutil
+import subprocess
 import zipfile
 from lxml import etree
 from pptx import Presentation
@@ -142,6 +144,36 @@ def full_cleanup(outpath):
                 zout.writestr(item, data)
     os.replace(tmppath, outpath)
 
+def deliver_to_channel(outpath, slide_count):
+    """Send generated PPTX back to user's chat channel via OpenClaw media pipeline.
+    Falls back gracefully if not running in a channel context."""
+    if not shutil.which('openclaw'):
+        print(f'[deliver] openclaw CLI not found, skipping channel delivery')
+        print(f'[deliver] File saved locally: {outpath}')
+        return False
+
+    size_kb = os.path.getsize(outpath) / 1024
+    caption = f'✅ PPT generated — {slide_count} slides, {size_kb:.0f} KB'
+
+    try:
+        result = subprocess.run(
+            ['openclaw', 'message', 'send',
+             '--media', outpath,
+             '--message', caption],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            print(f'[deliver] Sent to channel: {outpath}')
+            return True
+        else:
+            print(f'[deliver] Channel send failed: {result.stderr}')
+            print(f'[deliver] File saved locally: {outpath}')
+            return False
+    except Exception as e:
+        print(f'[deliver] Error: {e}')
+        print(f'[deliver] File saved locally: {outpath}')
+        return False
+
 # ── Build Presentation ──
 
 def main():
@@ -180,10 +212,11 @@ def main():
             add_hline(s2, Inches(0.9), y + Inches(0.55), Inches(11.3), LINE_GRAY)
     add_source(s2, 'Source: Mck-ppt-design-skill v1.2.0')
 
-    # Save & cleanup
+    # Save & cleanup & deliver
     outpath = 'minimal_output.pptx'
     prs.save(outpath)
     full_cleanup(outpath)
+    deliver_to_channel(outpath, len(prs.slides))
     print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 if __name__ == '__main__':

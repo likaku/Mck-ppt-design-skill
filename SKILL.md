@@ -1,19 +1,22 @@
 ---
 name: mck-ppt-design
-description: "Create professional, consultant-grade PowerPoint presentations from scratch using python-pptx with McKinsey-style design. Use when user asks to create slides, pitch decks, business presentations, strategy decks, quarterly reviews, board meeting slides, or any professional PPTX. Generates clean, flat-design presentations with 70 layout patterns across 12 categories (structure, data, framework, comparison, narrative, timeline, team, charts, images, advanced viz, dashboards, visual storytelling), consistent typography, zero file-corruption issues, and production-hardened guard rails for spacing, overflow, legend consistency, and title style uniformity."
-license: Apache-2.0
-version: "1.9.0"
-author: likaku
-homepage: https://github.com/likaku/Mck-ppt-design-skill
-user-invocable: true
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-metadata: {"openclaw":{"emoji":"📊","requires":{"bins":["python3","pip"]}}}
+description: >-
+  Create professional, consultant-grade PowerPoint presentations from scratch
+  using python-pptx with McKinsey-style design. Use when user asks to create
+  slides, pitch decks, business presentations, strategy decks, quarterly
+  reviews, board meeting slides, or any professional PPTX. Generates clean,
+  flat-design presentations with 70 layout patterns across 12 categories
+  (structure, data, framework, comparison, narrative, timeline, team, charts,
+  images, advanced viz, dashboards, visual storytelling), consistent
+  typography, zero file-corruption issues, and production-hardened guard rails
+  for spacing, overflow, legend consistency, and title style uniformity.
 ---
 
 # McKinsey PPT Design Framework
+
+> **Version**: 1.10.2 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+>
+> **Required tools**: Read, Write, Bash · **Requires**: python3, pip
 
 ## Overview
 
@@ -3611,6 +3614,59 @@ add_source(s, 'Source: 项目管理办公室，2026年Q2')
 add_page_number(s, 10, 12)
 ```
 
+**Variant: Matrix + Side Panel** — When the matrix needs an accompanying insight panel (e.g. "Key Changes", "Action Items"), use a compact grid (~60% width) with a side panel (~38% width). This prevents the panel from being crushed by a full-width grid.
+
+```
+┌──────────────────────────────────────────────────┐
+│ [Action Title]                                   │
+├──────────────────────────────────────────────────┤
+│ Axis │ Col1   Col2   Col3 │ ┌─────────────────┐ │
+│  ──  │ ■■■    ■■■    ■■■  │ │ Insight Panel   │ │
+│  ↑   │ ■■■    ■■■    ■■■  │ │ • Bullet 1      │ │
+│      │ ■■■    ■■■    ■■■  │ │ • Bullet 2      │ │
+│      │   → Axis label →   │ │ ┌─────────────┐ │ │
+│      │                     │ │ │ Summary box │ │ │
+│      │                     │ │ └─────────────┘ │ │
+│      │                     │ └─────────────────┘ │
+├──────────────────────────────────────────────────┤
+│ Source | Page N/Total                             │
+└──────────────────────────────────────────────────┘
+```
+
+Layout math for the side-panel variant:
+
+```python
+# ── Compact grid + side panel layout ──
+axis_label_w = Inches(0.65)            # Y-axis label column (tight)
+grid_l       = LM + axis_label_w       # Grid left edge
+cell_w       = Inches(2.15)            # Narrower cells (vs 3.0" default)
+cell_h       = Inches(1.65)            # Taller cells to fill vertical space
+grid_gap     = Inches(0.04)            # Minimal gap between cells
+
+grid_right   = grid_l + 3 * (cell_w + grid_gap)
+panel_gap    = Inches(0.25)
+rx           = grid_right + panel_gap  # Panel left edge
+rw           = LM + CONTENT_W - rx     # Panel width (~4.2")
+
+# Panel height matches grid height
+panel_h = 3 * (cell_h + grid_gap) - grid_gap
+
+# Draw panel background
+add_rect(s, rx, grid_t, rw, panel_h, BG_GRAY)
+add_rect(s, rx, grid_t, rw, Inches(0.05), NAVY)  # Top accent line
+
+# Optional: dark summary box at panel bottom
+summary_h = Inches(0.65)
+summary_y = grid_t + panel_h - summary_h
+add_rect(s, rx, summary_y, rw, summary_h, NAVY)
+add_text(s, rx + Inches(0.15), summary_y, rw - Inches(0.3), summary_h,
+         'Key takeaway text here',
+         font_size=Pt(11), font_color=WHITE, bold=True,
+         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+```
+
+> **Rule**: When a matrix needs a companion panel, shrink `cell_w` to ~2.15" (from 3.0") and `axis_label_w` to ~0.65" (from 1.8"). This yields a panel width of ~4.2" — enough for 6+ bullet items with comfortable reading. Never let the panel shrink below Inches(2.5).
+
 ---
 
 #### #55 — Gauge / Dial Chart
@@ -5655,10 +5711,106 @@ All colors, fonts, and dimensions referenced in code should match this document 
 
 ---
 
+## Channel Delivery (v1.10)
+
+When users interact via a **messaging channel** (Feishu/飞书, Telegram, WhatsApp, Discord, Slack, etc.), the generated PPTX file **MUST** be sent back to the chat — not just saved to disk.
+
+### Why This Matters
+
+Users on mobile or messaging channels cannot access server file paths. Saving a file to `./output/` is invisible to them. The file must be delivered through the same channel the user is talking on.
+
+### Delivery Method
+
+After `prs.save(outpath)` and `full_cleanup(outpath)`, use the OpenClaw media pipeline to send the file:
+
+```bash
+openclaw message send --media <outpath> --message "✅ PPT generated — <N> slides, <size> bytes"
+```
+
+### Python Helper
+
+```python
+import subprocess, shutil
+
+def deliver_to_channel(outpath, slide_count):
+    """Send generated PPTX back to user's chat channel via OpenClaw media pipeline.
+    Falls back gracefully if not running in a channel context."""
+    if not shutil.which('openclaw'):
+        print(f'[deliver] openclaw CLI not found, skipping channel delivery')
+        print(f'[deliver] File saved locally: {outpath}')
+        return False
+    
+    size_kb = os.path.getsize(outpath) / 1024
+    caption = f'✅ PPT generated — {slide_count} slides, {size_kb:.0f} KB'
+    
+    try:
+        result = subprocess.run(
+            ['openclaw', 'message', 'send',
+             '--media', outpath,
+             '--message', caption],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            print(f'[deliver] Sent to channel: {outpath}')
+            return True
+        else:
+            print(f'[deliver] Channel send failed: {result.stderr}')
+            print(f'[deliver] File saved locally: {outpath}')
+            return False
+    except Exception as e:
+        print(f'[deliver] Error: {e}')
+        print(f'[deliver] File saved locally: {outpath}')
+        return False
+```
+
+### Integration with Generation Flow
+
+The complete post-generation sequence is:
+
+```python
+# 1. Save
+prs.save(outpath)
+
+# 2. Clean (mandatory)
+full_cleanup(outpath)
+
+# 3. Deliver to channel (if available)
+slide_count = len(prs.slides)
+deliver_to_channel(outpath, slide_count)
+
+# 4. Confirm
+print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
+```
+
+### Rules
+
+1. **Always attempt delivery** — after every successful generation, call `deliver_to_channel()`
+2. **Graceful fallback** — if `openclaw` CLI is not available (e.g., running in IDE or CI), skip silently and print the local path
+3. **Caption required** — always include slide count and file size so the user knows what they received
+4. **No duplicate sends** — call `deliver_to_channel()` exactly once per generation
+5. **File type** — `.pptx` is classified as "document" in OpenClaw's media pipeline (max 100MB), well within limits for any presentation
+
+### Channel-Specific Notes
+
+| Channel | File Support | Max Size | Notes |
+|---------|-------------|----------|-------|
+| Feishu/飞书 | ✅ Document | 100MB | Renders as downloadable file card |
+| Telegram | ✅ Document | 100MB | Shows as file attachment |
+| WhatsApp | ✅ Document | 100MB | Delivered as document message |
+| Discord | ✅ Attachment | 100MB | Appears in chat as file |
+| Slack | ✅ File | 100MB | Shared as file snippet |
+| Signal | ✅ Attachment | 100MB | Sent as generic attachment |
+| Others | ✅ Document | 100MB | All OpenClaw channels support document type |
+
+---
+
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.10.2 | 2026-03-18 | **#54 Matrix Side Panel Variant**: Added compact grid + side panel layout variant for Pattern #54 (Risk/Heat Matrix). When matrix needs a companion insight panel, `cell_w` shrinks from 3.0" to 2.15" and `axis_label_w` from 1.8" to 0.65", yielding ~4.2" panel width. Includes layout math, ASCII wireframe, code example, and minimum-width rule. |
+| 1.10.1 | 2026-03-18 | **Frontmatter Fix**: Fixed "malformed YAML frontmatter" error on Claude install. Removed unsupported fields (`license`, `version`, `metadata` with emoji, etc.) — Claude only supports `name` + `description`. Used YAML folded block scalar (`>-`) for description. Metadata relocated to document body. |
+| 1.10.0 | 2026-03-18 | **Channel Delivery**: New `deliver_to_channel()` helper sends generated PPTX back to user's chat via `openclaw message send --media`. Supports Feishu/飞书, Telegram, WhatsApp, Discord, Slack, Signal and all OpenClaw channels. Graceful fallback when not in channel context. Updated example scripts. |
 | 1.9.0 | 2026-03-15 | **Production Guard Rails**: 7 mandatory rules derived from real-world feedback — spacing/overflow protection, legend color consistency, title style uniformity (`add_action_title()` only), axis label centering, image placeholder page requirement, bottom whitespace elimination, content overflow detection. **Code Efficiency Guidelines**: variable reuse, helper function patterns, short abbreviation table, batch data structures, auto page numbering. **5 new Common Issues** (Problems 6-10). |
 | 1.8.0 | 2026-03-15 | **Massive layout expansion**: 39 → **70 patterns** across 8 → **12 categories**. Added Category I (Image+Content, #40-#47), Category J (Advanced Data Viz, #48-#56), Category K (Dashboards, #57-#58), Category L (Visual Storytelling, #59-#70). New `add_image_placeholder()` helper. Image Priority Rule added. Layout Diversity table expanded. Based on McKinsey PowerPoint Template 2023 analysis. |
 | 1.7.0 | 2026-03-13 | **Category H: Data Charts**: Added 3 new chart layout patterns (#37 Grouped Bar, #38 Stacked Bar, #39 Horizontal Bar) using pure `add_rect()` drawing. Added Chart Priority Rule to Layout Diversity table — when data contains dates + values/percentages, chart patterns are mandatory. Total patterns: 39. |

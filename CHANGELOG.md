@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.2] - 2026-03-18
+
+### Added
+- **#54 Matrix Side Panel Variant** — new layout variant for Pattern #54 (Risk/Heat Matrix) that pairs a compact 3×3 grid with an adjacent insight panel
+  - Compact grid dimensions: `cell_w=2.15"` (down from 3.0"), `axis_label_w=0.65"` (down from 1.8")
+  - Side panel gains ~4.2" width — sufficient for 6+ bullet items with comfortable reading
+  - Includes ASCII wireframe, layout math code, and dark summary box at panel bottom
+  - New rule: panel must never shrink below `Inches(2.5)`
+
+### Context
+- When using #54 with a side panel for "Key Changes" or "Action Items", the default 3.0" cell width consumed ~9" of the 11.7" content area, crushing the panel to ~1.4" — unreadable
+- The new compact variant allocates ~60% to grid + ~38% to panel with ~2% gap, achieving zero whitespace waste
+
+## [1.10.1] - 2026-03-18
+
+### Fixed
+- **YAML Frontmatter compatibility** — fixed "malformed YAML frontmatter in SKILL.md" error when installing via Claude's "Copy to your skills" button
+  - Claude's SKILL.md parser only supports `name` and `description` fields in frontmatter
+  - Removed unsupported fields from frontmatter: `license`, `version`, `author`, `homepage`, `user-invocable`, `allowed-tools`, `metadata`
+  - Moved `metadata` field (contained emoji `📊` and inline JSON) which caused YAML parse failures
+  - Changed `description` from single-line quoted string (673 chars) to YAML folded block scalar (`>-`) for better readability and compatibility
+  - Relocated project metadata (version, license, author, tools) to a blockquote section in the document body — no information lost
+
+## [1.10.0] - 2026-03-18
+
+### Added
+- **Channel Delivery** — new section in SKILL.md enabling automatic file delivery to messaging channels (Feishu/飞书, Telegram, WhatsApp, Discord, Slack, Signal, etc.)
+  - `deliver_to_channel()` Python helper function — sends generated PPTX back to user's chat via `openclaw message send --media`
+  - Graceful fallback — if `openclaw` CLI is not available (IDE, CI), skips silently and prints local path
+  - Caption includes slide count and file size
+  - Channel-specific compatibility table (all channels support document type, max 100MB)
+- **Updated `minimal_example.py`** — now calls `deliver_to_channel()` after save + cleanup
+  - Added `shutil` and `subprocess` imports
+  - Post-generation flow: save → cleanup → deliver → confirm
+
+### Context
+- Users interacting via OpenClaw channels (Feishu, Telegram, etc.) could not receive generated PPTX files — they were only saved to server disk
+- OpenClaw's media pipeline supports document files up to 100MB via `openclaw message send --media <path>`
+- `.pptx` is classified as "document" type in OpenClaw, well within size limits for any presentation
+
+### Stats
+- Net addition: ~80 lines in SKILL.md (Channel Delivery section)
+- Updated 2 example scripts (scripts/ and examples/)
+
 ## [1.9.0] - 2026-03-15
 
 ### Added
