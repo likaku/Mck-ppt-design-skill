@@ -1,123 +1,272 @@
 <div align="center">
 
-# Mck PPT Design Skill
+# McKinsey PPT Design Skill
 
-一套完整的咨询公司风格 PowerPoint 设计体系
-<br/>基于 `python-pptx` 从零生成专业级演示文稿 | v1.10.3
+**A complete McKinsey-style PowerPoint design system for AI agents**
+<br/>Generate professional, consultant-grade presentations from scratch using `python-pptx` | v1.10.3
+
+[English](#overview) · [中文说明](#中文说明)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![python-pptx](https://img.shields.io/badge/python--pptx-0.6.21+-orange.svg)](https://python-pptx.readthedocs.io)
+[![GitHub stars](https://img.shields.io/github/stars/likaku/Mck-ppt-design-skill?style=social)](https://github.com/likaku/Mck-ppt-design-skill)
 
 </div>
 
 ---
 
-### 社区
+## Overview
+
+**McKinsey PPT Design Skill** encodes a complete consulting-firm PowerPoint design specification into a single document (`SKILL.md`). When loaded by AI agents (Claude, GPT, Cursor, Codebuddy, etc.), it enables consistent, professional slide generation — every time.
+
+**Keywords**: McKinsey PowerPoint template, consulting slide design, AI presentation generator, python-pptx automation, professional PPT design system, business slide template, pitch deck generator, strategy deck, quarterly review slides, board meeting presentation
+
+### What It Does
+
+- 🎨 **70 layout patterns** across 12 categories — from title slides to dashboards, SWOT analyses, waterfall charts, and more
+- 📐 **Strict McKinsey design system** — flat design, no shadows, no 3D, consistent typography hierarchy
+- 🛡️ **Three-layer file corruption defense** — eliminates `p:style`, shadow, and 3D artifacts that cause PowerPoint repair prompts
+- 🔤 **CJK + Latin font handling** — proper Chinese/Japanese/Korean rendering with KaiTi / Georgia / Arial
+- 📊 **Hand-drawn charts** — donut, waterfall, line, Pareto, bubble, Harvey Ball, and more — all built with `add_rect()`, no chart XML needed
+- 🖼️ **Image placeholder system** — gray placeholder boxes with crosshairs for easy replacement
+- 🚀 **Production guard rails** — 7 mandatory rules preventing common AI generation mistakes
+- 📨 **Channel delivery** — auto-send generated PPTX via Feishu, Telegram, Slack, Discord, WhatsApp
+
+### Sample Output
+
+| Cover Page | Content Page | Table Page |
+|:------:|:------:|:------:|
+| <img width="600" alt="Cover" src="https://github.com/user-attachments/assets/075ec46d-dd73-4454-92d0-84184b78d276" /> | <img width="600" alt="Content" src="https://github.com/user-attachments/assets/3b25f071-8a81-48e3-a62b-9d9be9026f2e" /> | <img width="600" alt="Table" src="https://github.com/user-attachments/assets/be327c14-aff9-459f-89b0-d4a8bffaabfc" /> |
+| **4-Column Layout** | **Color System** | **Summary Page** |
+| <img width="600" alt="4-Column" src="https://github.com/user-attachments/assets/687cee47-13bb-4d6b-840f-77f8e001a62b" /> | <img width="600" alt="Colors" src="https://github.com/user-attachments/assets/41371c47-608f-4857-9bfe-791121ec1579" /> | <img width="600" alt="Summary" src="https://github.com/user-attachments/assets/c5b6e52a-fd91-4c28-88a4-82fdfedfd956" /> |
+
+---
+
+## Quick Start
+
+```bash
+# Install dependencies
+pip install python-pptx lxml
+
+# Run the minimal example
+cd scripts && python minimal_example.py
+
+# Install from ClawHub (recommended)
+npx clawhub@latest install mck-ppt-design
+
+# Or manual install for Claude
+mkdir -p ~/.claude/skills/mck-ppt-design
+cp SKILL.md ~/.claude/skills/mck-ppt-design/
+```
+
+### Compatibility
+
+| AI Agent | Status | Install Method |
+|----------|--------|----------------|
+| **Claude** (Anthropic) | ✅ Fully supported | ClawHub or manual SKILL.md |
+| **Cursor** | ✅ Fully supported | Add as project rule |
+| **Codebuddy** | ✅ Fully supported | Load as skill |
+| **GPT / ChatGPT** | ✅ Works with system prompt | Paste SKILL.md content |
+| **Any LLM** | ✅ Universal | Feed SKILL.md as context |
+
+---
+
+## Design Principles
+
+| Principle | Description |
+|:----------|:------------|
+| **Minimalism** | Remove all non-essential visual elements — no gradients, no decoration |
+| **Flat Design** | No shadows, no 3D, no reflections — pure solid fills |
+| **Strict Hierarchy** | Title 22pt → Subtitle 18pt → Body 14pt → Footnote 9pt |
+| **Global Consistency** | Unified color palette, fonts, spacing across every slide |
+
+---
+
+## Color System
+
+| Name | Swatch | Hex | Usage |
+|:-----|:------:|:---:|:------|
+| **NAVY** | ![](docs/colors/navy.png) | `#051C2C` | Primary — titles, circular indicators, TOC highlights |
+| **BLACK** | ![](docs/colors/black.png) | `#000000` | Dividers, title underlines, table header lines |
+| **DARK_GRAY** | ![](docs/colors/dark-gray.png) | `#333333` | Body text |
+| **MED_GRAY** | ![](docs/colors/med-gray.png) | `#666666` | Secondary text, labels, source annotations |
+| **LINE_GRAY** | ![](docs/colors/line-gray.png) | `#CCCCCC` | Table row separators |
+| **BG_GRAY** | ![](docs/colors/bg-gray.png) | `#F2F2F2` | Background panels, takeaway areas |
+
+**Accent colors** (v1.6.0+) — for 3+ parallel items:
+
+| Name | Hex | Light BG | Usage |
+|:-----|:---:|:--------:|:------|
+| **ACCENT_BLUE** | `#006BA6` | `#E3F2FD` | 1st item emphasis |
+| **ACCENT_GREEN** | `#007A53` | `#E8F5E9` | 2nd item emphasis |
+| **ACCENT_ORANGE** | `#D46A00` | `#FFF3E0` | 3rd item emphasis |
+| **ACCENT_RED** | `#C62828` | `#FFEBEE` | 4th item / alert |
+
+---
+
+## Layout Categories (70 Patterns)
+
+| # | Category | Patterns | Examples |
+|---|----------|----------|----------|
+| A | Structure | #1–#7 | Title, divider, TOC, agenda, executive summary |
+| B | Data Display | #8–#15 | Tables, KPI cards, comparison panels |
+| C | Frameworks | #16–#23 | Process flows, pyramids, matrices, Venn |
+| D | Comparison | #24–#29 | Before/after, side-by-side, scorecard |
+| E | Narrative | #30–#33 | Case study, quote, key findings |
+| F | Timeline | #34–#39 | Horizontal, vertical, milestone, roadmap |
+| G | Team/Org | — | Org chart, team profiles |
+| H | Charts | — | Bar, stacked bar, grouped bar |
+| I | Image+Content | #40–#47 | Photo+text, 3-photo comparison, full-bleed |
+| J | Advanced Viz | #48–#56 | Donut, waterfall, line, Pareto, bubble, Harvey Ball |
+| K | Dashboard | #57–#58 | Executive dashboards |
+| L | Visual Story | #59–#70 | Stakeholder map, decision tree, SWOT, pie chart |
+
+See [references/layout-catalog.md](references/layout-catalog.md) for the full catalog with ASCII wireframes.
+
+---
+
+## Core Technology
+
+### Three-Layer File Corruption Defense (v1.1)
+
+python-pptx auto-attaches `<p:style>` elements referencing `outerShdw`, `effectRef`, etc., causing PowerPoint to prompt for repair. This skill eliminates the issue with three defenses:
+
+1. **No connectors** — all lines drawn as ultra-thin rectangles (`add_hline()`), preventing connector `p:style`
+2. **Inline cleanup** — every `add_rect()` / `add_oval()` immediately calls `_clean_shape()` to remove `p:style`
+3. **Post-save full wash** — `full_cleanup()` traverses all slide XML + theme XML, stripping all `p:style`, shadow, and 3D nodes
+
+### CJK Font Handling
+
+All paragraphs containing Chinese characters call `set_ea_font(run, 'KaiTi')` to set the East Asian font — otherwise Chinese renders with default Latin fonts.
+
+---
+
+## Project Structure
+
+```
+├── SKILL.md                 # Core design specification (268KB)
+├── LICENSE                  # Apache 2.0
+├── CHANGELOG.md             # Version history
+├── scripts/
+│   ├── minimal_example.py   # 2-page demo
+│   └── requirements.txt     # Dependencies
+├── references/
+│   ├── color-palette.md     # Color quick-reference
+│   └── layout-catalog.md    # 70 layout catalog
+└── examples/
+    ├── minimal_example.py   # 2-page demo (legacy path)
+    └── requirements.txt
+```
+
+---
+
+## Recent Updates
+
+> ### v2.0.0 — BLOCK_ARC Chart Engine 🎉
+>
+> - **Major chart rendering rewrite** — Donut (#48), Pie (#64), and Gauge (#55) charts now use native BLOCK_ARC shapes
+>   - 3-4 shapes per chart instead of 100-2800 tiny rect blocks
+>   - File size reduced 60-80%, generation time from 2min → <1s
+>   - Pixel-perfect arcs with no gaps or jagged edges
+> - **New `add_block_arc()` helper** — precise control over arc angles and ring width via XML adj parameters
+> - **Guard Rail Rule 9**: Mandatory BLOCK_ARC for all circular charts
+> - **5 new Common Issues** (Problems 16-20): block-chart migration, vertical gauge fix, center text readability, title overlap, waterfall connectors
+> - Derived from 5 rounds of production testing on a 67-slide Tencent Annual Report PPT
+>
+> See [CHANGELOG.md](CHANGELOG.md)
+
+> ### v1.10.3 — Title Line Spacing Optimization
+>
+> - **Title spacing refined** — Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional rendering
+>   - Applies to: 22pt page titles, 28pt section dividers, 18pt sub-headers
+>   - Body text (<18pt) retains fixed Pt spacing for CJK overlap prevention
+>   - Maps to PowerPoint's "Multiple spacing 0.93" setting
+> - Thanks to **冯梓航 Denzel** for detailed feedback 🙏
+>
+> See [CHANGELOG.md](CHANGELOG.md)
+
+<details>
+<summary><b>Earlier versions</b></summary>
+
+> ### v1.10.4 — Bug Fixes + Dynamic Sizing
+> - 5 bug fixes: cover overlap, title anchor, checklist overflow, value chain fill, closing line width
+> - Guard Rail Rule 8: dynamic sizing for variable-count layouts
+
+> ### v1.10.2 — #54 Matrix Side Panel Variant
+>
+> - **Added side-panel layout for Heat Matrix** — compact 3×3 grid (~60% width) + insight panel (~38% width)
+>   - Grid cell width from `3.0"` to `2.15"`, Y-axis label area from `1.8"` to `0.65"`
+>   - Side panel expands from ~1.4" (unreadable) to ~4.2" (fits 6+ entries)
+>
+> See [CHANGELOG.md](CHANGELOG.md)
+
+<details>
+<summary><b>Earlier versions</b></summary>
+
+> ### v1.10.1 — YAML Frontmatter Fix
+> - Fixed Claude installation error — SKILL.md parser only supports `name` + `description` frontmatter fields
+
+> ### v1.10.0 — Channel File Delivery
+> - Added `deliver_to_channel()` — auto-send PPTX via Feishu, Telegram, WhatsApp, Discord, Slack
+
+> ### v1.9.0 — Production Guard Rails
+> - 7 mandatory rules from real production feedback: spacing protection, overflow detection, legend consistency, etc.
+
+> ### v1.8.0 — Layout Expansion (39 → 70)
+> - 31 new professional layouts across 4 new categories (Image+Content, Advanced Viz, Dashboard, Visual Story)
+
+See [CHANGELOG.md](CHANGELOG.md) for the complete history.
+
+</details>
+
+---
+
+## Community
 
 <table>
 <tr>
     <td align="center" width="50%" valign="top">
-      <strong>微信交流群</strong><br/><br/>
+      <strong>WeChat Group / 微信交流群</strong><br/><br/>
       <img width="180" src="https://github.com/user-attachments/assets/d4eb704e-3825-4380-ac54-2fbbe4c993ce" alt="WeChat Group" />
     </td>
     <td align="center" width="50%" valign="top">
       <strong>Discord</strong><br/><br/>
       <a href="https://discord.gg/SaFybFAT">
-        <img src="https://img.shields.io/badge/Discord-加入社区-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+        <img src="https://img.shields.io/badge/Discord-Join_Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
       </a>
       <br/><br/>
-      <span>点击上方按钮加入</span>
+      <span>Click above to join</span>
     </td>
   </tr>
 </table>
 
 ---
 
+## Requirements
 
-> ### v1.10.3 更新 — 标题行间距优化
->
-> - **标题行距优化** — 标题文本（≥18pt）从固定磅值 `Pt(fs*1.35)` 改为**多倍行距 0.93**，渲染更紧凑专业
->   - 适用于：22pt 页面标题、28pt 章节大标题、18pt 副标题
->   - 正文文本（<18pt）保持原有固定磅值行距，确保中文换行不重叠
->   - 对应 PowerPoint 段落设置中的"多倍行距 0.93"
-> - 感谢 **冯梓航 Denzel** 的细致反馈 🙏
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> ### v1.10.2 更新 — #54 矩阵侧面板变体
->
-> - **新增 #54 Heat Matrix 侧面板布局变体** — 当矩阵需要搭配洞察面板（如"竞争关键变化"、"行动项"）时，使用紧凑九宫格（~60%宽）+ 侧面板（~38%宽）的组合布局
->   - 九宫格单元格宽从 `3.0"` 缩至 `2.15"`，Y轴标签区从 `1.8"` 缩至 `0.65"`
->   - 侧面板从 ~1.4"（被挤压不可读）扩至 ~4.2"（可容纳 6+ 条目）
->   - 含 ASCII 线框图、布局数学代码、深色底部小结栏、最小宽度规则
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> ### v1.10.1 更新 — YAML Frontmatter 修复
->
-> - **修复 Claude 安装报错** — Claude 的 SKILL.md 解析器仅支持 `name` + `description` 两个 frontmatter 字段
->   - 移除 7 个不支持的字段（`license`, `version`, `author`, `homepage` 等）
->   - `description` 改用 YAML folded block scalar (`>-`)，兼容性更好
->   - 元数据信息迁移至正文 blockquote，无信息丢失
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> ### v1.10.0 更新 — 频道文件投递
->
-> - **新增 Channel Delivery 能力** — 在飞书、Telegram、WhatsApp、Discord、Slack 等频道中直接回传生成的 PPTX 文件
->   - `deliver_to_channel()` 辅助函数 — 通过 `openclaw message send --media` 自动投递
->   - 环境感知 — IDE / CI 等非频道环境下静默跳过，打印本地路径
->   - 支持所有文档类型，最大 100MB
-> - **更新 `minimal_example.py`** — 生成后自动调用投递流程
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> ### v1.9.0 更新 — 生产级质量护栏
->
-> - **新增 Production Guard Rails** — 7 条从实际生产反馈提炼的强制规则：
->   - 内容块与底部栏间距保护（最小 0.15"）
->   - 内容溢出检测（右边距 + 底部边距 + 容器内文字内缩）
->   - 底部留白消除（图表/内容填满纵向空间）
->   - 图例颜色一致性（必须用 `add_rect()` 色块，禁止纯文本"■"）
->   - 标题风格统一（仅使用 `add_action_title()`，`add_navy_title_bar()` 已废弃）
->   - 矩阵图轴标签居中（基于实际网格尺寸计算）
->   - 图片占位页强制要求（8+ 页 PPT 至少含 1 页图片占位）
-> - **新增 Code Efficiency Guidelines** — 常量提取、辅助函数复用、标准缩写表、批量数据结构、自动页码计数
-> - **新增 5 个 Common Issues**（Problem 6-10）：容器溢出、图例色差、标题风格混乱、轴标签偏移、底部留白
-> - 基于 19 页 AI 行业报告的多轮迭代反馈提炼
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> ### v1.8.0 更新 — 大规模布局扩展
->
-> - **布局总数 39 → 70**，类别 8 → 12，新增 31 个专业布局模板
-> - **新增 Category I：图片+内容布局** — 8 种含图片占位符的布局（#40-#47）：
->   - 内容+右侧图片、左侧图片+内容、三图对比、图片+四要点、全幅图片叠加文字、带图案例研究、引言+背景图、目标+配图
-> - **新增 Category J：高级数据可视化** — 9 种纯 `add_rect()` 手绘图表（#48-#56）：
->   - 环形图、瀑布图、折线/趋势图、帕累托图、进度条/KPI追踪、气泡/散点图、风险热力矩阵、仪表盘、Harvey Ball 评估表
-> - **新增 Category K：仪表盘布局** — 2 种数据密集型执行仪表盘（#57-#58）
-> - **新增 Category L：视觉叙事** — 12 种视觉叙事模板（#59-#70）：
->   - 利益相关者地图、决策树、检查清单、指标对比行、图标网格、饼图、SWOT分析、议程、价值链、双列图文、编号列表+面板、堆积面积图
-> - **新增 `add_image_placeholder()` 辅助函数** — 灰色占位矩形+十字线+标签，用户生成后替换为真实图片
-> - **新增 Image Priority Rule** — 涉及案例、产品展示等内容时优先使用图片布局
-> - 基于 McKinsey PowerPoint Template 2023（679页）系统分析，提取关键模板模式
->
-> 详见 [CHANGELOG.md](CHANGELOG.md)
-
-> 更早版本的更新记录请查看 [CHANGELOG.md](CHANGELOG.md)
+Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 
 ---
 
-### 样例展示
+## Contributing
 
-| 封面页 | 内容页 | 表格页 |
-|:------:|:------:|:------:|
-| <img width="600" alt="封面页" src="https://github.com/user-attachments/assets/075ec46d-dd73-4454-92d0-84184b78d276" /> | <img width="600" alt="内容页" src="https://github.com/user-attachments/assets/3b25f071-8a81-48e3-a62b-9d9be9026f2e" /> | <img width="600" alt="表格页" src="https://github.com/user-attachments/assets/be327c14-aff9-459f-89b0-d4a8bffaabfc" /> |
-| **四栏布局** | **色彩体系** | **总结页** |
-| <img width="600" alt="四栏布局" src="https://github.com/user-attachments/assets/687cee47-13bb-4d6b-840f-77f8e001a62b" /> | <img width="600" alt="色彩体系" src="https://github.com/user-attachments/assets/41371c47-608f-4857-9bfe-791121ec1579" /> | <img width="600" alt="总结页" src="https://github.com/user-attachments/assets/c5b6e52a-fd91-4c28-88a4-82fdfedfd956" /> |
+Issues and PRs welcome! Contribution ideas:
+
+- New layout patterns (timeline variants, 2×2 matrices, etc.)
+- Extended color themes (dark mode, brand customization)
+- Additional examples and documentation translations
 
 ---
+
+## 中文说明
+
+<details>
+<summary><b>点击展开中文文档</b></summary>
+
+### 简介
+
+**McKinsey PPT Design Skill**（麦肯锡 PPT 设计技能）是一套完整的咨询公司风格 PowerPoint 设计体系。将完整的麦肯锡设计规范编码为一份文档（`SKILL.md`），AI 读取后即可持续输出风格统一的专业 PPT。
 
 ### 它解决什么问题
 
@@ -125,10 +274,6 @@
 - `python-pptx` 默认生成的文件带阴影 / 3D / `p:style` 引用，PowerPoint 打开报错或提示修复
 - 中文字体渲染需要特殊处理，否则显示异常
 - AI 生成的 PPT 缺乏专业设计感，每次产出质量不一致
-
-**本 Skill 将完整的麦肯锡设计规范编码为一份文档**，AI 读取后即可持续输出风格统一的专业 PPT。
-
----
 
 ### 设计原则
 
@@ -138,46 +283,6 @@
 | **扁平设计** | 无阴影、无 3D、无反射，纯实色填充 |
 | **严格层次** | 标题 22pt → 子标题 18pt → 正文 14pt → 脚注 9pt |
 | **全局一致** | 统一色板、字体、间距，贯穿每一页 |
-
----
-
-### 色彩体系
-
-| 名称 | 色块 | Hex | 用途 |
-|:-----|:----:|:---:|:-----|
-| **NAVY** | ![](docs/colors/navy.png) | `#051C2C` | 主色调 — 标题、圆形指标、TOC 高亮 |
-| **BLACK** | ![](docs/colors/black.png) | `#000000` | 分隔线、标题下划线、表头线 |
-| **DARK_GRAY** | ![](docs/colors/dark-gray.png) | `#333333` | 正文文本 |
-| **MED_GRAY** | ![](docs/colors/med-gray.png) | `#666666` | 次要文本、标签、来源注释 |
-| **LINE_GRAY** | ![](docs/colors/line-gray.png) | `#CCCCCC` | 表格行分隔线 |
-| **BG_GRAY** | ![](docs/colors/bg-gray.png) | `#F2F2F2` | 背景面板、Takeaway 区域 |
-
-**强调色（v1.6.0 新增）** — 用于 3+ 并列项的视觉区分：
-
-| 名称 | Hex | 配套浅色背景 | 用途 |
-|:-----|:---:|:---:|:-----|
-| **ACCENT_BLUE** | `#006BA6` | `#E3F2FD` | 第一项强调 |
-| **ACCENT_GREEN** | `#007A53` | `#E8F5E9` | 第二项强调 |
-| **ACCENT_ORANGE** | `#D46A00` | `#FFF3E0` | 第三项强调 |
-| **ACCENT_RED** | `#C62828` | `#FFEBEE` | 第四项 / 警示 |
-
----
-
-### 核心技术
-
-**文件兼容性保障（v1.1 三层防御）**
-
-python-pptx 自动为形状附加 `<p:style>` 元素，引用主题中的 `outerShdw`、`effectRef` 等效果，导致文件在 PowerPoint 中无法打开或提示修复。本 Skill 通过三道防线彻底解决：
-
-1. **不使用 connector** — 所有线条用极细矩形（`add_hline()`）绘制，从源头杜绝 connector 的 `p:style`
-2. **内联清理** — 每个 `add_rect()` 和 `add_oval()` 创建后立即调用 `_clean_shape()` 移除 `p:style`
-3. **保存后全量清洗** — `full_cleanup()` 遍历所有 slide XML + theme XML，移除全部 `p:style`、阴影和 3D 节点
-
-**中文字体处理**
-
-所有含中文的段落需调用 `set_ea_font(run, 'KaiTi')` 设置东亚字体，否则中文将以默认英文字体渲染。
-
----
 
 ### 快速上手
 
@@ -196,35 +301,6 @@ mkdir -p ~/.claude/skills/mck-ppt-design
 cp SKILL.md ~/.claude/skills/mck-ppt-design/
 ```
 
----
-
-### 项目结构
-
-```
-├── SKILL.md                 # 核心设计规范
-├── LICENSE                  # Apache 2.0
-├── CHANGELOG.md             # 版本记录
-├── scripts/
-│   ├── minimal_example.py   # 2 页 Demo
-│   └── requirements.txt     # 依赖列表
-├── references/
-│   ├── color-palette.md     # 色彩速查
-│   └── layout-catalog.md    # 70 种布局目录
-└── examples/
-    ├── minimal_example.py   # 2 页 Demo（兼容旧路径）
-    └── requirements.txt
-```
-
----
-
-### 环境要求
-
-Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
-
----
-
-
-
 ### 参与贡献
 
 欢迎提交 Issue 和 Pull Request。贡献方向：
@@ -233,8 +309,10 @@ Python 3.8+ · python-pptx ≥ 0.6.21 · lxml ≥ 4.9.0
 - 扩展色彩主题（深色模式、品牌定制）
 - 补充示例代码与文档翻译
 
+</details>
+
 ---
 
 <div align="center">
-<sub>Apache 2.0 · Copyright © 2026 <strong>likaku</strong> · <a href="https://github.com/likaku/Mck-ppt-design-skill">GitHub</a> · <a href="https://github.com/likaku/Mck-ppt-design-skill/issues">反馈建议</a></sub>
+<sub>Apache 2.0 · Copyright © 2026 <strong>likaku</strong> · <a href="https://github.com/likaku/Mck-ppt-design-skill">GitHub</a> · <a href="https://github.com/likaku/Mck-ppt-design-skill/issues">Issues & Feedback</a></sub>
 </div>

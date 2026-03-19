@@ -2,6 +2,68 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-03-19
+
+### Breaking Changes — Chart Rendering Engine
+- **Donut Chart (#48)**: Rewritten from `math.cos/sin` + `add_rect()` block loops to **BLOCK_ARC** native shapes. Each segment = 1 shape (total: 4 shapes vs. hundreds of tiny squares). Center labels changed from NAVY/MED_GRAY to **WHITE** for readability against colored ring.
+- **Pie Chart (#64)**: Rewritten from 2000+ `add_rect()` blocks to **BLOCK_ARC** with `inner_ratio=0` (solid sectors). Each segment = 1 shape (total: 4 shapes vs. 2778 blocks).
+- **Gauge/Dial (#55)**: Rewritten from `add_rect()` arc + white circle overlay to **3 BLOCK_ARC** shapes (red/orange/green zones). Fixed horizontal orientation using PPT coordinate system directly (270°→0°→90° CW). Ring width controlled via `inner_ratio` parameter.
+
+### Added
+- **`add_block_arc()` helper function** — draws BLOCK_ARC preset shapes with precise angle/ring-width control via XML `adj` parameters (`adj1`=start angle, `adj2`=end angle, `adj3`=inner radius ratio). Documented in Guard Rails Rule 9.
+- **Production Guard Rails Rule 9**: BLOCK_ARC Native Shapes for Circular Charts — mandatory for all donut/pie/gauge charts. Includes PPT angle convention documentation (CW from 12 o'clock, in 60000ths of degree), three usage patterns (donut ring, solid pie sector, horizontal rainbow gauge), and explicit anti-patterns.
+- **5 new Common Issues** (Problems 16-20):
+  - Problem 16: Donut/Pie charts made of hundreds of tiny rect blocks → use BLOCK_ARC
+  - Problem 17: Gauge arc renders vertically instead of horizontally → use PPT CW coordinates
+  - Problem 18: Donut center text unreadable → use WHITE font color
+  - Problem 19: Chart elements overlapping title bar → minimum `Inches(1.3)` content start
+  - Problem 20: Waterfall connector lines look like dots → ensure full-gap width
+
+### Changed
+- Updated wireframe diagrams for #48 and #64 to show "BLOCK_ARC ×4" instead of "rects" / "blocks"
+- Georgia font used consistently for numeric values in charts (donut center labels, gauge scores, benchmark values)
+- Guard Rails section header updated to "v1.9 / v2.0"
+
+### Performance Impact
+- **File size**: Donut chart slide ~80% smaller (eliminated hundreds of shapes)
+- **Generation time**: Circular charts generate in <1s (was 30s-2min with block loops)
+- **Shape count per chart**: 3-4 (was 100-2800)
+- **Total shape count** for a 67-slide deck with donut+pie+gauge: reduced by ~3000 shapes
+
+### Context
+- All changes derived from 5 rounds of production testing on a 67-slide/70-template Tencent Annual Report PPT
+- BLOCK_ARC approach validated through XML inspection: correct `adj1`/`adj2`/`adj3` values verified in generated PPTX
+- Horizontal gauge verified: 270°(left) → 342° → 36° → 90°(right) produces correct rainbow arc
+
+### Stats
+- Common Issues: 15 → **20** (+5 new)
+- Production Guard Rails: 8 → **9** (+1 new)
+- Rewritten layout patterns: **3** (#48, #55, #64)
+- New helper function: **1** (`add_block_arc()`)
+- Estimated net SKILL.md change: ~+200 lines (new content) / ~-100 lines (removed block-loop code) = ~+100 net
+
+## [1.10.4] - 2026-03-19
+
+### Fixed
+- **Cover Slide Title/Subtitle Overlap** (Problem 11) — When cover title contains `\n`, fixed-height textbox caused title to overflow into subtitle. Fix: compute title height dynamically from line count (`Inches(0.8 + 0.65 * (n_lines - 1))`), position subtitle/author/date relative to title bottom
+- **Action Title Not Flush Against Separator** (Problem 12) — `add_action_title()` anchor changed from `MSO_ANCHOR.MIDDLE` to `MSO_ANCHOR.BOTTOM` so single-line titles sit flush against the separator line at `Inches(1.05)`
+- **Checklist #61 Rows Overflowing Page** (Problem 13) — Fixed `row_h` caused 7+ rows to extend past page boundary. Fix: `row_h = min(Inches(0.85), available_h / n_rows)` with auto font-size reduction when rows are tight
+- **Value Chain #67 Not Filling Content Area** (Problem 14) — Fixed `stage_w = Inches(2.0)` left ~2.5" whitespace on each side. Fix: `stage_w = (CW - arrow_w * (n-1)) / n` fills entire content width; stage height computed dynamically to fill vertical space
+- **Closing #36 Bottom Line Too Short** (Problem 15) — Bottom decorative line changed from `Inches(3)` (partial) to `CW` (full content width)
+
+### Added
+- **Production Guard Rails Rule 8**: Dynamic Sizing for Variable-Count Layouts — mandatory dynamic dimension computation for layouts with variable item counts (horizontal: `(CW - gap*(N-1)) / N`, vertical: `min(max_h, available/N)`, multi-line: height from line count)
+- **5 new Common Issues** (Problems 11-15) with code examples and anti-pattern warnings
+
+### Changed
+- Updated code examples for Pattern #1 (Cover), #36 (Closing), #61 (Checklist), #67 (Value Chain) to reflect the fixes
+- Updated `add_action_title()` code example in Rule 5 to show `anchor=MSO_ANCHOR.BOTTOM`
+
+### Stats
+- Common Issues: 10 → **15** (+5 new)
+- Production Guard Rails: 7 → **8** (+1 new)
+- Updated code in 4 layout patterns + 1 helper function
+
 ## [1.10.3] - 2026-03-18
 
 ### Improved

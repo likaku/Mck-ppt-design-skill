@@ -8,13 +8,15 @@ description: >-
   flat-design presentations with 70 layout patterns across 12 categories
   (structure, data, framework, comparison, narrative, timeline, team, charts,
   images, advanced viz, dashboards, visual storytelling), consistent
-  typography, zero file-corruption issues, and production-hardened guard rails
-  for spacing, overflow, legend consistency, and title style uniformity.
+  typography, zero file-corruption issues, BLOCK_ARC native shapes for
+  circular charts (donut, pie, gauge), and production-hardened guard rails
+  for spacing, overflow, legend consistency, title style uniformity,
+  dynamic sizing for variable-count layouts, and chart rendering.
 ---
 
 # McKinsey PPT Design Framework
 
-> **Version**: 1.10.3 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 1.10.4 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: python3, pip
 
@@ -28,7 +30,8 @@ This skill encodes the complete design specification for **professional business
 - **Three-layer defense** against file corruption (zero `p:style` leaks)
 - **Chinese + English font handling** (KaiTi / Georgia / Arial)
 - **Image placeholder system** for image-containing layouts (v1.8)
-- **Production Guard Rails** — spacing/overflow protection, legend color consistency, title style uniformity, axis label centering (v1.9)
+- **BLOCK_ARC native shapes for charts** — donut, pie, gauge rendered with 3-4 shapes instead of hundreds of blocks, 60-80% smaller files (v2.0)
+- **Production Guard Rails** — 9 mandatory rules including spacing/overflow protection, legend color consistency, title style uniformity, axis label centering, dynamic sizing, BLOCK_ARC chart rendering (v1.9+v2.0)
 - **Code Efficiency guidelines** — variable reuse patterns, constant extraction, loop optimization for faster generation (v1.9)
 
 All specifications have been refined through iterative production feedback to ensure visual consistency, professional polish, and zero-defect output.
@@ -385,7 +388,7 @@ Match content type to the optimal layout pattern:
 4. **Use specific data points** when the user provides them (numbers, percentages, names) — display them prominently with Big Number or Metric Card patterns
 5. **Source attribution** (`add_source()`) on every content slide with specific references, not generic labels
 
-### Production Guard Rails (v1.9)
+### Production Guard Rails (v1.9 / v2.0)
 
 These rules address **recurring production defects** observed across multiple presentation generations. Each rule is derived from real-world user feedback and must be followed without exception.
 
@@ -486,10 +489,11 @@ def add_navy_title_bar(slide, text):
     add_rect(s, 0, 0, SW, Inches(0.75), NAVY)
     add_text(s, LM, 0, CW, Inches(0.75), text, font_color=WHITE, ...)
 
-# ✅ CORRECT: Consistent white-background action title
+# ✅ CORRECT: Consistent white-background action title (bottom-anchored)
 def add_action_title(slide, text, title_size=Pt(22)):
     add_text(s, Inches(0.8), Inches(0.15), Inches(11.7), Inches(0.9), text,
-             font_size=title_size, font_color=BLACK, bold=True, font_name='Georgia')
+             font_size=title_size, font_color=BLACK, bold=True, font_name='Georgia',
+             anchor=MSO_ANCHOR.BOTTOM)  # BOTTOM: text sits flush against separator
     add_hline(s, Inches(0.8), Inches(1.05), Inches(11.7), BLACK, Pt(0.5))
 ```
 
@@ -548,6 +552,123 @@ add_text(s, img_l, img_t + img_h // 2 + Inches(0.2), img_w, Inches(0.3),
 
 This triple-border style (BG_GRAY → WHITE → #F8F8F8) creates a professional, clearly identifiable placeholder that prompts users to insert real images.
 
+#### Rule 8: Dynamic Sizing for Variable-Count Layouts (v1.10.4)
+
+**Problem observed**: Layouts with a variable number of items (checklist rows, value chain stages, cover multi-line titles) use **fixed dimensions** that only work for a specific count. When item count differs, content either overflows past page boundaries or leaves excessive whitespace.
+
+**MANDATORY**: For any layout where the number of items is variable, compute dimensions dynamically:
+
+```python
+# ✅ Horizontal items (value chain, flow): fill content width
+n = len(items)
+gap = Inches(0.35)
+item_w = (CW - gap * (n - 1)) / n   # NOT a fixed Inches(2.0)
+
+# ✅ Vertical items (checklist, table rows): fit within available height
+bottom_limit = BOTTOM_BAR_Y if bottom_bar else SOURCE_Y - Inches(0.05)
+available_h = bottom_limit - content_start_y
+item_h = min(MAX_ITEM_H, available_h / max(n, 1))  # cap at comfortable max
+
+# ✅ Multi-line titles: height scales with line count
+n_lines = text.count('\n') + 1
+title_h = Inches(0.8 + 0.65 * max(n_lines - 1, 0))
+# Position following elements relative to title bottom, NOT at fixed y
+```
+
+**Anti-patterns** (❌ NEVER DO):
+- `stage_w = Inches(2.0)` for N stages → use `(CW - gap*(N-1)) / N`
+- `row_h = Inches(0.55)` for N rows → use `min(0.85, available / N)`
+- `subtitle_y = Inches(3.5)` on cover → use `title_y + title_h + Inches(0.3)`
+
+#### Rule 9: BLOCK_ARC Native Shapes for Circular Charts (v2.0)
+
+**Problem observed**: Donut charts (#48), pie charts (#64), and gauge dials (#55) rendered with hundreds to thousands of small `add_rect()` blocks. This creates 100-2800 shapes per chart, inflates file size by 60-80%, slows generation to 2+ minutes, and produces visual artifacts (gaps between blocks, jagged edges).
+
+**MANDATORY**: Use **BLOCK_ARC** preset shapes via `python-pptx` + XML adjustment for all circular/arc charts. Each segment = 1 shape (total: 3-5 shapes per chart vs. hundreds).
+
+**BLOCK_ARC angle convention** (PPT coordinate system):
+- Angles measured **clockwise from 12 o'clock** (top), in **60000ths of a degree**
+- Top = 0°, Right = 90°, Bottom = 180°, Left = 270°
+- Example: a full-circle donut segment from 12 o'clock CW to 3 o'clock = adj1=0, adj2=5400000
+
+**Three adj parameters**:
+- `adj1`: start angle (60000ths of degree, CW from top)
+- `adj2`: end angle (60000ths of degree, CW from top)
+- `adj3`: inner radius ratio (0 = solid sector / pie, 50000 = max / invisible ring)
+
+```python
+from pptx.oxml.ns import qn
+
+def add_block_arc(slide, left, top, width, height, start_deg, end_deg, inner_ratio, color):
+    """Draw a BLOCK_ARC shape with precise angle and ring-width control.
+
+    Args:
+        slide: pptx slide object
+        left, top, width, height: bounding box (width == height for circular arc)
+        start_deg: start angle in degrees, CW from 12 o'clock (0=top, 90=right, 180=bottom, 270=left)
+        end_deg: end angle in degrees, CW from 12 o'clock
+        inner_ratio: 0 = solid pie sector, 50000 = max (paper-thin ring).
+                     For ~10px ring width: int((outer_r - Pt(10)) / outer_r * 50000)
+        color: RGBColor fill color
+    """
+    from pptx.enum.shapes import MSO_SHAPE
+    sh = slide.shapes.add_shape(MSO_SHAPE.BLOCK_ARC, left, top, width, height)
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = color
+    sh.line.fill.background()
+    _clean_shape(sh)  # remove p:style to prevent file corruption
+
+    sp = sh._element.find(qn('p:spPr'))
+    prstGeom = sp.find(qn('a:prstGeom'))
+    if prstGeom is not None:
+        avLst = prstGeom.find(qn('a:avLst'))
+        if avLst is None:
+            avLst = prstGeom.makeelement(qn('a:avLst'), {})
+            prstGeom.append(avLst)
+        for gd in avLst.findall(qn('a:gd')):
+            avLst.remove(gd)
+        gd1 = avLst.makeelement(qn('a:gd'), {'name': 'adj1', 'fmla': f'val {int(start_deg * 60000)}'})
+        gd2 = avLst.makeelement(qn('a:gd'), {'name': 'adj2', 'fmla': f'val {int(end_deg * 60000)}'})
+        gd3 = avLst.makeelement(qn('a:gd'), {'name': 'adj3', 'fmla': f'val {inner_ratio}'})
+        avLst.append(gd1)
+        avLst.append(gd2)
+        avLst.append(gd3)
+    return sh
+```
+
+**Usage patterns**:
+
+```python
+# ── Donut chart: 4 segments, ~10px ring width ──
+outer_r = Inches(1.6)
+inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)  # ~10px ring
+cum_deg = 0  # start at top (0° = 12 o'clock)
+for pct, color, label in segments:
+    sweep = pct * 360
+    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
+                  cum_deg, cum_deg + sweep, inner_ratio, color)
+    cum_deg += sweep
+
+# ── Pie chart (solid sectors): inner_ratio = 0 ──
+add_block_arc(s, cx - r, cy - r, r * 2, r * 2, 0, 151.2, 0, NAVY)  # 42%
+
+# ── Horizontal rainbow gauge (semi-circle, left→top→right) ──
+# PPT coords: left=270°, top=0°, right=90°
+gauge_segs = [(0.40, ACCENT_RED), (0.30, ACCENT_ORANGE), (0.30, ACCENT_GREEN)]
+inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)
+ppt_cum = 270  # start at left
+for pct, color in gauge_segs:
+    sweep = pct * 180
+    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
+                  ppt_cum % 360, (ppt_cum + sweep) % 360, inner_ratio, color)
+    ppt_cum += sweep
+```
+
+**Anti-patterns** (❌ NEVER DO for circular charts):
+- Nested `for deg in range(...): for r in range(...): add_rect(...)` — generates hundreds/thousands of tiny squares
+- Drawing a white circle on top of a filled circle to "fake" a donut — fragile, misaligns on resize
+- Using `math.cos/sin` + `add_rect()` loops for arcs — always use `BLOCK_ARC` instead
+
 ### Mandatory Slide Elements
 
 EVERY content slide (except Cover and Closing) MUST include ALL of these:
@@ -598,26 +719,36 @@ Widescreen format (16:9), standard for all presentations.
 
 Layout:
 - Navy bar at very top (0.05" height)
-- Main title centered (44pt, Georgia, navy) at y=2.2"
-- Subtitle (24pt, dark gray) at y=3.5"
-- Date/info (14pt, med gray) at y=4.5"
-- Decorative navy line at x=1", y=6.8" (2" wide, 2pt)
+- Main title (44pt, Georgia, navy) at y=1.2" — **height computed dynamically from line count**
+- Subtitle (24pt, dark gray) positioned **below title dynamically**
+- Date/info (14pt, med gray) follows subtitle
+- Decorative navy line at x=1", y=6.8" (4" wide, 2pt)
 
 Code template:
 ```python
 s1 = prs.slides.add_slide(prs.slide_layouts[6])
 add_rect(s1, 0, 0, prs.slide_width, Inches(0.05), NAVY)
-add_text(s1, Inches(1), Inches(2.2), Inches(11), Inches(1.0),
+
+# Dynamic title height based on line count
+lines = title.split('\n') if isinstance(title, str) else title
+n_lines = len(lines) if isinstance(lines, list) else title.count('\n') + 1
+title_h = Inches(0.8 + 0.65 * max(n_lines - 1, 0))
+
+add_text(s1, Inches(1), Inches(1.2), Inches(11), title_h,
          '项目名称', font_size=Pt(44), font_name='Georgia',
          font_color=NAVY, bold=True, ea_font='KaiTi')
-add_text(s1, Inches(1), Inches(3.5), Inches(11), Inches(0.6),
+
+# Position elements BELOW title dynamically — never use fixed y
+sub_y = Inches(1.2) + title_h + Inches(0.3)
+add_text(s1, Inches(1), sub_y, Inches(11), Inches(0.8),
          '副标题描述', font_size=Pt(24),
          font_color=DARK_GRAY, ea_font='KaiTi')
-add_text(s1, Inches(1), Inches(4.5), Inches(11), Inches(0.5),
+sub_y += Inches(1.0)
+
+add_text(s1, Inches(1), sub_y + Inches(0.3), Inches(11), Inches(0.5),
          '演示文稿  |  2026年3月', font_size=BODY_SIZE,
          font_color=MED_GRAY, ea_font='KaiTi')
-add_line(s1, Inches(1), Inches(6.8), Inches(4), Inches(6.8),
-         color=NAVY, width=Pt(2))
+add_hline(s1, Inches(1), Inches(6.8), Inches(4), NAVY, Pt(2))
 ```
 
 #### 2. Action Title Slide (Most Content Slides)
@@ -1997,7 +2128,7 @@ add_hline(s, Inches(5.5), Inches(3.3), Inches(2.3), NAVY, Pt(1.5))
 add_text(s, Inches(1.5), Inches(3.8), Inches(10.3), Inches(2.0),
          '结束寄语或核心思想的延伸表达',
          font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
-add_hline(s, Inches(1), Inches(6.8), Inches(3), NAVY, Pt(2))
+add_hline(s, LM, Inches(6.8), CW, NAVY, Pt(2))  # Full content width — not Inches(3)
 ```
 
 ---
@@ -2903,6 +3034,8 @@ add_page_number(s, 10, 12)
 
 **Use case**: Part-of-whole composition — market share, budget allocation, sentiment distribution. Up to 5 segments.
 
+> **v2.0**: Uses BLOCK_ARC native shapes — only 4 shapes per chart (was hundreds of rect blocks). See Guard Rails Rule 9.
+
 ```
 ┌──────────────────────────────────────────────┐
 │ [Action Title — full width, NAVY bg]         │
@@ -2910,17 +3043,18 @@ add_page_number(s, 10, 12)
 │                       │                      │
 │    ┌───────────┐      │  ■ Segment A  45%    │
 │    │  DONUT    │      │  ■ Segment B  28%    │
-│    │  (rects)  │      │  ■ Segment C  15%    │
-│    │  CENTER%  │      │  ■ Segment D  12%    │
-│    └───────────┘      │                      │
-│                       │  Insight text...     │
+│    │ (BLOCK_   │      │  ■ Segment C  15%    │
+│    │  ARC ×4)  │      │  ■ Segment D  12%    │
+│    │  CENTER%  │      │                      │
+│    └───────────┘      │  Insight text...     │
 ├───────────────────────┴──────────────────────┤
 │ Source | Page N/Total                         │
 └──────────────────────────────────────────────┘
 ```
 
 ```python
-import math
+from pptx.oxml.ns import qn
+
 s = prs.slides.add_slide(prs.slide_layouts[6])
 
 # ── Title bar ──
@@ -2931,11 +3065,10 @@ add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
          anchor=MSO_ANCHOR.MIDDLE)
 add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
 
-# ── Donut chart (approximated with arc-segments as colored rect blocks) ──
-# For a visual donut: draw concentric ring using small rectangular blocks
+# ── Donut chart using BLOCK_ARC (4 shapes total) ──
 cx, cy = LM + Inches(3.0), Inches(3.2)  # center
 outer_r = Inches(1.6)
-inner_r = Inches(0.9)
+inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)  # ~10px ring width
 segments = [
     (0.45, NAVY, '线上直营'),
     (0.28, ACCENT_BLUE, '经销商'),
@@ -2943,33 +3076,25 @@ segments = [
     (0.12, ACCENT_ORANGE, '其他'),
 ]
 
-# Draw donut segments as small arc-approximating rectangles
-block_size = Inches(0.08)
-start_angle = 0
+cum_deg = 0  # start at top (0° = 12 o'clock, CW)
 for pct, color, label in segments:
     sweep = pct * 360
-    for deg in range(int(start_angle), int(start_angle + sweep), 3):
-        rad = math.radians(deg)
-        for r in [outer_r, outer_r - Inches(0.2), outer_r - Inches(0.4)]:
-            if r < inner_r:
-                continue
-            bx = cx + int(r * math.cos(rad)) - block_size // 2
-            by = cy - int(r * math.sin(rad)) - block_size // 2
-            add_rect(s, bx, by, block_size, block_size, color)
-    start_angle += sweep
+    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
+                  cum_deg, cum_deg + sweep, inner_ratio, color)
+    cum_deg += sweep
 
-# Center label
+# Center label (use WHITE for readability against colored ring)
 add_text(s, cx - Inches(0.7), cy - Inches(0.3), Inches(1.4), Inches(0.6),
-         '¥8.5亿', font_size=Pt(24), font_color=NAVY, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+         '¥8.5亿', font_size=Pt(24), font_color=WHITE, bold=True,
+         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE,
+         font_name='Georgia')
 add_text(s, cx - Inches(0.7), cy + Inches(0.2), Inches(1.4), Inches(0.3),
-         '总营收', font_size=Pt(12), font_color=MED_GRAY,
+         '总营收', font_size=Pt(12), font_color=WHITE,
          alignment=PP_ALIGN.CENTER)
 
 # ── Legend (right side) ──
 legend_x = LM + Inches(7.0)
 legend_y = Inches(1.5)
-colors = [NAVY, ACCENT_BLUE, ACCENT_GREEN, ACCENT_ORANGE]
 for i, (pct, color, label) in enumerate(segments):
     ly = legend_y + i * Inches(0.8)
     add_rect(s, legend_x, ly + Inches(0.05), Inches(0.3), Inches(0.3), color)
@@ -3673,25 +3798,28 @@ add_text(s, rx + Inches(0.15), summary_y, rw - Inches(0.3), summary_h,
 
 **Use case**: Single KPI health indicator — customer satisfaction, system uptime, quality score. Visual "speedometer" metaphor.
 
+> **v2.0**: Uses BLOCK_ARC native shapes — only 3 shapes for the arc (was 180+ rect blocks + white overlay). Horizontal rainbow arc (left→top→right). See Guard Rails Rule 9.
+
 ```
 ┌──────────────────────────────────────────────┐
 │ [Action Title — full width, NAVY bg]         │
 ├──────────────────────────────────────────────┤
 │                                              │
-│     ┌────────────────────────────┐           │
-│     │     ╭───────────────╮      │           │
-│     │  Low│ ■■■■ Med ■■■■ │High  │           │
-│     │     ╰───────────────╯      │           │
-│     │         ▲ 78 / 100         │           │
-│     └────────────────────────────┘           │
-│  Context / benchmark comparison text         │
+│         ╭──── ── ── ── ── ────╮              │
+│      Red│   Orange    Green   │              │
+│         ╰─────────────────────╯              │
+│               78 / 100                       │
+│                                              │
+│  ┃ 当前NPS  ┃ 行业平均  ┃ 去年同期  ┃ 目标  │
+│  ┃ 78       ┃ 52        ┃ 65        ┃ 80    │
 ├──────────────────────────────────────────────┤
 │ Source | Page N/Total                         │
 └──────────────────────────────────────────────┘
 ```
 
 ```python
-import math
+from pptx.oxml.ns import qn
+
 s = prs.slides.add_slide(prs.slide_layouts[6])
 
 # ── Title bar ──
@@ -3702,59 +3830,43 @@ add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
          anchor=MSO_ANCHOR.MIDDLE)
 add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
 
-# ── Gauge: semi-circle arc using small blocks ──
+# ── Gauge: horizontal rainbow arc using BLOCK_ARC (3 shapes) ──
+# Arc goes from left (270° PPT) → top (0°) → right (90° PPT)
+# Total sweep = 180° (a horizontal semi-circle, opening upward like ⌢)
 cx = LM + CONTENT_W // 2
 cy = Inches(3.8)
-radius = Inches(2.2)
-block_sz = Inches(0.1)
+outer_r = Inches(2.2)
+inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)  # ~10px ring width
 score = 78  # out of 100
 
-# Draw arc from 180° to 0° (left to right)
-for deg in range(0, 181, 2):
-    rad = math.radians(deg)
-    bx = cx + int(radius * math.cos(rad)) - block_sz // 2
-    by = cy - int(radius * math.sin(rad)) - block_sz // 2
-    # Color zones: 0-40 red, 40-70 orange, 70-100 green
-    frac = deg / 180.0
-    if frac < 0.40:
-        color = ACCENT_RED
-    elif frac < 0.70:
-        color = ACCENT_ORANGE
-    else:
-        color = ACCENT_GREEN
-    add_rect(s, bx, by, block_sz, block_sz, color)
+gauge_segs = [
+    (0.40, ACCENT_RED),    # 0-40%: red zone (PPT 270° → 342°)
+    (0.30, ACCENT_ORANGE), # 40-70%: orange zone (PPT 342° → 396°→36°)
+    (0.30, ACCENT_GREEN),  # 70-100%: green zone (PPT 36° → 90°)
+]
 
-# Inner arc (white, to create donut effect)
-inner_r = Inches(1.5)
-for deg in range(0, 181, 2):
-    rad = math.radians(deg)
-    bx = cx + int(inner_r * math.cos(rad)) - block_sz // 2
-    by = cy - int(inner_r * math.sin(rad)) - block_sz // 2
-    add_rect(s, bx, by, block_sz, block_sz, WHITE)
-
-# Needle indicator (score = 78 → deg ≈ 78/100 * 180 = 140.4°)
-needle_deg = (score / 100.0) * 180
-needle_rad = math.radians(needle_deg)
-needle_len = Inches(1.8)
-nx = cx + int(needle_len * math.cos(needle_rad))
-ny = cy - int(needle_len * math.sin(needle_rad))
-# Draw needle as thin rect from center to point
-add_rect(s, min(cx, nx), min(cy, ny), abs(nx - cx) + Pt(2), abs(ny - cy) + Pt(2), NAVY)
+ppt_cum = 270  # start at left (270° in PPT CW from 12 o'clock)
+for pct, color in gauge_segs:
+    sweep = pct * 180  # half-circle, so 180° total
+    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
+                  ppt_cum % 360, (ppt_cum + sweep) % 360, inner_ratio, color)
+    ppt_cum += sweep
 
 # Center score
 add_text(s, cx - Inches(0.8), cy - Inches(0.5), Inches(1.6), Inches(0.6),
          str(score), font_size=Pt(44), font_color=NAVY, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE,
+         font_name='Georgia')
 add_text(s, cx - Inches(0.5), cy + Inches(0.1), Inches(1.0), Inches(0.3),
          '/ 100', font_size=Pt(14), font_color=MED_GRAY,
          alignment=PP_ALIGN.CENTER)
 
 # Zone labels
-add_text(s, cx - radius - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
+add_text(s, cx - outer_r - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
          '差', font_size=Pt(11), font_color=ACCENT_RED, alignment=PP_ALIGN.CENTER)
-add_text(s, cx - Inches(0.3), cy - radius - Inches(0.3), Inches(0.6), Inches(0.25),
+add_text(s, cx - Inches(0.3), cy - outer_r - Inches(0.3), Inches(0.6), Inches(0.25),
          '良', font_size=Pt(11), font_color=ACCENT_ORANGE, alignment=PP_ALIGN.CENTER)
-add_text(s, cx + radius - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
+add_text(s, cx + outer_r - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
          '优', font_size=Pt(11), font_color=ACCENT_GREEN, alignment=PP_ALIGN.CENTER)
 
 # ── Benchmark context ──
@@ -3773,7 +3885,8 @@ for i, (label, val, color) in enumerate(benchmarks):
     add_text(s, bx + Inches(0.2), by_row, bw - Inches(0.3), Inches(0.3),
              label, font_size=Pt(12), font_color=MED_GRAY)
     add_text(s, bx + Inches(0.2), by_row + Inches(0.3), bw - Inches(0.3), Inches(0.3),
-             val, font_size=Pt(22), font_color=color, bold=True)
+             val, font_size=Pt(22), font_color=color, bold=True,
+             font_name='Georgia')
 
 add_source(s, 'Source: 客户体验部 NPS 调研，2026年Q2')
 add_page_number(s, 11, 12)
@@ -4405,15 +4518,10 @@ add_page_number(s, 6, 12)
 s = prs.slides.add_slide(prs.slide_layouts[6])
 
 # ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '系统上线前检查清单 — 进度追踪',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
+add_action_title(s, '系统上线前检查清单 — 进度追踪')
 
 # ── Table header ──
-hy = Inches(1.0)
+hy = CONTENT_TOP + Inches(0.1)
 headers = [('#', Inches(0.5)), ('任务项', Inches(4.5)), ('负责人', Inches(1.8)),
            ('截止日期', Inches(1.8)), ('状态', Inches(2.0))]
 hx = LM
@@ -4421,7 +4529,7 @@ for label, w in headers:
     add_text(s, hx, hy, w, Inches(0.35),
              label, font_size=Pt(12), font_color=NAVY, bold=True)
     hx += w
-add_hline(s, LM, hy + Inches(0.35), CONTENT_W, BLACK, Pt(0.75))
+add_hline(s, LM, hy + Inches(0.35), CW, BLACK, Pt(0.75))
 
 # ── Checklist rows ──
 tasks = [
@@ -4440,46 +4548,42 @@ status_config = {
     'pending': ('○ 待启动', MED_GRAY, BG_GRAY),
 }
 
-row_h = Inches(0.55)
+# ── Dynamic row height: fit all rows without overflowing page ──
+data_start_y = hy + Inches(0.5)
+bottom_limit = SOURCE_Y - Inches(0.1)  # or BOTTOM_BAR_Y if using bottom bar
+available_h = bottom_limit - data_start_y
+row_h = min(Inches(0.85), available_h / max(len(tasks), 1))  # cap at 0.85"
+
+# Use smaller font when rows are tight
+row_font = SMALL_SIZE if row_h < Inches(0.65) else BODY_SIZE
+
 for i, (num, task, owner, deadline, status) in enumerate(tasks):
-    ry = Inches(1.45) + i * row_h
+    ry = data_start_y + i * row_h
     st_label, st_color, st_bg = status_config[status]
 
     # Row background for alternating
     if i % 2 == 0:
-        add_rect(s, LM, ry, CONTENT_W, row_h, RGBColor(0xFA, 0xFA, 0xFA))
+        add_rect(s, LM, ry, CW, row_h, RGBColor(0xFA, 0xFA, 0xFA))
 
     rx = LM
     vals = [(num, Inches(0.5)), (task, Inches(4.5)), (owner, Inches(1.8)),
             (deadline, Inches(1.8))]
     for val, w in vals:
         add_text(s, rx, ry, w, row_h,
-                 val, font_size=BODY_SIZE, font_color=DARK_GRAY,
+                 val, font_size=row_font, font_color=DARK_GRAY,
                  anchor=MSO_ANCHOR.MIDDLE)
         rx += w
 
     # Status badge
-    add_rect(s, rx + Inches(0.1), ry + Inches(0.1), Inches(1.5), row_h - Inches(0.2), st_bg)
+    badge_h = min(row_h - Inches(0.2), Inches(0.35))
+    add_rect(s, rx + Inches(0.1), ry + (row_h - badge_h) / 2,
+             Inches(1.5), badge_h, st_bg)
     add_text(s, rx + Inches(0.1), ry, Inches(1.5), row_h,
              st_label, font_size=Pt(12), font_color=st_color, bold=True,
              alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
 
     if i < len(tasks) - 1:
-        add_hline(s, LM, ry + row_h, CONTENT_W, LINE_GRAY, Pt(0.25))
-
-# ── Progress bar ──
-done_count = sum(1 for t in tasks if t[4] == 'done')
-progress = done_count / len(tasks)
-py = Inches(5.5)
-add_rect(s, LM, py, CONTENT_W, Inches(0.6), BG_GRAY)
-add_text(s, LM + Inches(0.3), py, Inches(2.5), Inches(0.6),
-         f'总进度：{done_count}/{len(tasks)} ({int(progress*100)}%)',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-# Progress bar
-bar_x = LM + Inches(3.0)
-bar_w = CONTENT_W - Inches(3.5)
-add_rect(s, bar_x, py + Inches(0.2), bar_w, Inches(0.2), LINE_GRAY)
-add_rect(s, bar_x, py + Inches(0.2), int(bar_w * progress), Inches(0.2), ACCENT_GREEN)
+        add_hline(s, LM, ry + row_h, CW, LINE_GRAY, Pt(0.25))
 
 add_source(s, 'Source: 项目管理办公室，2026年3月')
 add_page_number(s, 8, 12)
@@ -4679,7 +4783,9 @@ add_page_number(s, 5, 12)
 
 #### #64 — Pie Chart (Simple)
 
-**Use case**: Simple part-of-whole with ≤5 segments — budget allocation, market share, time allocation. Uses rectangular approximation.
+**Use case**: Simple part-of-whole with ≤5 segments — budget allocation, market share, time allocation.
+
+> **v2.0**: Uses BLOCK_ARC native shapes with `inner_ratio=0` for solid pie sectors — only 4 shapes per chart (was 2000+ rect blocks). See Guard Rails Rule 9.
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -4688,9 +4794,9 @@ add_page_number(s, 5, 12)
 │                       │                      │
 │    ┌───────────┐      │  ■ Segment A  42%    │
 │    │   PIE     │      │  ■ Segment B  28%    │
-│    │  (blocks) │      │  ■ Segment C  18%    │
-│    └───────────┘      │  ■ Segment D  12%    │
-│                       │                      │
+│    │ (BLOCK_   │      │  ■ Segment C  18%    │
+│    │  ARC ×4)  │      │  ■ Segment D  12%    │
+│    └───────────┘      │                      │
 │  Insight text box                            │
 ├───────────────────────┴──────────────────────┤
 │ Source | Page N/Total                         │
@@ -4698,7 +4804,8 @@ add_page_number(s, 5, 12)
 ```
 
 ```python
-import math
+from pptx.oxml.ns import qn
+
 s = prs.slides.add_slide(prs.slide_layouts[6])
 
 # ── Title bar ──
@@ -4709,10 +4816,9 @@ add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
          anchor=MSO_ANCHOR.MIDDLE)
 add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
 
-# ── Pie chart (block approximation) ──
+# ── Pie chart using BLOCK_ARC with inner_ratio=0 (solid sectors) ──
 cx, cy = LM + Inches(3.0), Inches(3.2)
 radius = Inches(1.8)
-block_sz = Inches(0.08)
 
 segments = [
     (0.42, NAVY, '基础设施'),
@@ -4721,17 +4827,12 @@ segments = [
     (0.12, ACCENT_ORANGE, '创新研发'),
 ]
 
-start_angle = 0
+cum_deg = 0  # start at top (0° = 12 o'clock, CW)
 for pct, color, label in segments:
     sweep = pct * 360
-    for deg in range(int(start_angle), int(start_angle + sweep), 2):
-        rad = math.radians(deg)
-        # Fill from center to edge
-        for r_step in range(0, int(radius), int(block_sz)):
-            bx = cx + int(r_step * math.cos(rad)) - block_sz // 2
-            by = cy - int(r_step * math.sin(rad)) - block_sz // 2
-            add_rect(s, bx, by, block_sz, block_sz, color)
-    start_angle += sweep
+    add_block_arc(s, cx - radius, cy - radius, radius * 2, radius * 2,
+                  cum_deg, cum_deg + sweep, 0, color)  # inner_ratio=0 → solid sector
+    cum_deg += sweep
 
 # ── Legend (right side) ──
 legend_x = LM + Inches(7.0)
@@ -4948,12 +5049,7 @@ add_page_number(s, 2, 12)
 s = prs.slides.add_slide(prs.slide_layouts[6])
 
 # ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '端到端价值链分析 — 从获客到复购',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
+add_action_title(s, '端到端价值链分析 — 从获客到复购')
 
 # ── Value chain stages ──
 stages = [
@@ -4964,15 +5060,16 @@ stages = [
     ('复购', '续约管理\n增购推荐', '续约率 92%', ACCENT_BLUE),
 ]
 
-stage_w = Inches(2.0)
-stage_h = Inches(2.8)
+# ── Dynamic sizing: fill full content width and height ──
+n = len(stages)
 arrow_w = Inches(0.4)
-total_w = len(stages) * stage_w + (len(stages) - 1) * arrow_w
-start_x = LM + (CONTENT_W - total_w) / 2
-stage_y = Inches(1.3)
+stage_w = (CW - arrow_w * (n - 1)) / n   # fills entire content width
+stage_y = CONTENT_TOP + Inches(0.1)
+# Fill down to bottom bar or source area
+stage_h = SOURCE_Y - Inches(0.15) - stage_y
 
 for i, (title, desc, kpi, color) in enumerate(stages):
-    sx = start_x + i * (stage_w + arrow_w)
+    sx = LM + i * (stage_w + arrow_w)
 
     # Stage card
     add_rect(s, sx, stage_y, stage_w, stage_h, WHITE)
@@ -4985,7 +5082,8 @@ for i, (title, desc, kpi, color) in enumerate(stages):
              title, font_size=Pt(16), font_color=color, bold=True,
              anchor=MSO_ANCHOR.MIDDLE)
     # Description
-    add_text(s, sx + Inches(0.15), stage_y + Inches(0.8), stage_w - Inches(0.3), Inches(1.0),
+    desc_h = stage_h - Inches(1.6)  # space for title row + KPI box + padding
+    add_text(s, sx + Inches(0.15), stage_y + Inches(0.8), stage_w - Inches(0.3), desc_h,
              desc, font_size=BODY_SIZE, font_color=DARK_GRAY,
              alignment=PP_ALIGN.CENTER)
     # KPI box at bottom
@@ -5003,15 +5101,6 @@ for i, (title, desc, kpi, color) in enumerate(stages):
         add_text(s, ax, ay - Inches(0.15), arrow_w - Inches(0.1), Inches(0.3),
                  '→', font_size=Pt(22), font_color=LINE_GRAY,
                  alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Bottleneck insight ──
-add_rect(s, LM, Inches(4.6), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(4.6), Inches(1.5), Inches(0.8),
-         '瓶颈分析', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(4.6), CONTENT_W - Inches(2.3), Inches(0.8),
-         '"交付"环节平均21天周期是最大瓶颈，通过自动化部署工具预计可缩短至14天（–33%）',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
 
 add_source(s, 'Source: 运营效率分析，2026年Q2')
 add_page_number(s, 7, 12)
@@ -5531,6 +5620,191 @@ For tight spaces, reduce font_size by 1-2pt rather than reducing padding below 0
 
 **Solution**: Either extend chart height to fill the gap or move the bottom bar up. Target maximum 0.3" gap. See **Production Guard Rails Rule 3**.
 
+### Problem 11: Cover Slide Title/Subtitle Overlap (v1.10.4)
+
+**Cause**: Cover slide title textbox height is fixed (e.g. `Inches(1.0)`), but when the title contains `\n` (multi-line), two lines of 44pt text require ~1.66" of vertical space. The subtitle is positioned at a fixed `y` coordinate (e.g. `Inches(3.5)`), so the title overflows its textbox and visually overlaps the subtitle.
+
+**Solution**: Calculate title height **dynamically** based on line count, then position subtitle/author/date relative to title bottom:
+
+```python
+# ✅ CORRECT: Dynamic title height on cover slides
+lines = title.split('\n') if isinstance(title, str) else title
+n_lines = len(lines) if isinstance(lines, list) else title.count('\n') + 1
+title_h = Inches(0.8 + 0.65 * max(n_lines - 1, 0))  # ~0.65" per extra line
+
+add_text(s, Inches(1), Inches(1.2), Inches(11), title_h,
+         title, font_size=Pt(44), font_color=NAVY, bold=True, font_name='Georgia')
+
+# Position subtitle BELOW the title dynamically
+sub_y = Inches(1.2) + title_h + Inches(0.3)
+if subtitle:
+    add_text(s, Inches(1), sub_y, Inches(11), Inches(0.8),
+             subtitle, font_size=Pt(24), font_color=DARK_GRAY)
+    sub_y += Inches(1.0)
+```
+
+**Rule**: Never use fixed `y` coordinates for cover slide elements below the title. Always compute positions relative to title bottom.
+
+### Problem 12: Action Title Text Not Flush Against Separator Line (v1.10.4)
+
+**Cause**: `add_action_title()` uses `anchor=MSO_ANCHOR.MIDDLE` (vertical center alignment), so single-line titles float in the middle of the title bar, leaving a visible gap between the text baseline and the separator line at `Inches(1.05)`.
+
+**Solution**: Change the text anchor from `MSO_ANCHOR.MIDDLE` to **`MSO_ANCHOR.BOTTOM`** so the text sits flush against the bottom of the textbox, right above the separator line:
+
+```python
+# ✅ CORRECT: Bottom-anchored action title — text sits flush against separator
+def add_action_title(slide, text, title_size=Pt(22)):
+    add_text(s, Inches(0.8), Inches(0.15), Inches(11.7), Inches(0.9), text,
+             font_size=title_size, font_color=BLACK, bold=True, font_name='Georgia',
+             anchor=MSO_ANCHOR.BOTTOM)  # ← BOTTOM, not MIDDLE
+    add_hline(s, Inches(0.8), Inches(1.05), Inches(11.7), BLACK, Pt(0.5))
+```
+
+### Problem 13: Checklist Rows Overflowing Page Bottom (v1.10.4)
+
+**Cause**: `#61 Checklist / Status` uses a fixed `row_h = Inches(0.55)` or `Inches(0.85)`. With 7+ rows, total height = `0.85 * 7 = 5.95"`, starting from `~Inches(1.45)` extends to `Inches(7.4)` — exceeding page height (7.5") and overlapping with source/page number areas.
+
+**Solution**: Calculate `row_h` dynamically based on available vertical space, and switch to smaller font when rows are tight:
+
+```python
+# ✅ CORRECT: Dynamic row height for checklist
+bottom_limit = BOTTOM_BAR_Y - Inches(0.1) if bottom_bar else SOURCE_Y - Inches(0.05)
+available_h = bottom_limit - (header_y + Inches(0.5))
+row_h = min(Inches(0.85), available_h / max(len(rows), 1))  # cap at 0.85" max
+
+# Use smaller font when rows are tight
+row_font = SMALL_SIZE if row_h < Inches(0.65) else BODY_SIZE
+```
+
+**Rule**: For any layout with a variable number of rows/items, ALWAYS compute item height dynamically: `item_h = min(MAX_ITEM_H, available_space / n_items)`. Never use a fixed height that assumes a specific item count.
+
+### Problem 14: Value Chain Stages Not Filling Content Area (v1.10.4)
+
+**Cause**: `#67 Value Chain` uses a fixed `stage_w = Inches(2.0)` and centers stages. With 4 stages, total width = `4*2.0 + 3*0.4 = 9.2"`, centered in `CW=11.73"` leaves ~1.27" empty on each side. Stage height is also fixed at `Inches(2.8)`, leaving ~3.3" of dead space below.
+
+**Solution**: Calculate stage width and height dynamically to fill the entire content area:
+
+```python
+# ✅ CORRECT: Dynamic stage sizing — fills full content width and height
+n = len(stages)
+arrow_w = Inches(0.35)
+stage_w = (CW - arrow_w * (n - 1)) / n  # fill entire content width
+stage_y = CONTENT_TOP + Inches(0.1)
+# Fill down to bottom_bar or source area
+stage_h = (BOTTOM_BAR_Y - Inches(0.15) - stage_y) if bottom_bar else (SOURCE_Y - Inches(0.15) - stage_y)
+```
+
+**Rule**: For layouts with N equally-sized elements arranged horizontally, compute width as `(CW - gap * (N-1)) / N`, not a fixed `Inches(2.0)`. For vertical space, fill down to the bottom bar or source line.
+
+### Problem 15: Closing Slide Bottom Line Too Short (v1.10.4)
+
+**Cause**: The closing slide's bottom decorative line uses a fixed width like `Inches(3)`, which only spans a small portion of the slide — looking unfinished and asymmetric.
+
+**Solution**: Use `CW` (content width) as the line width, and `LM` (left margin) as the starting x, so the line spans the full content area:
+
+```python
+# ❌ WRONG: Fixed short width
+add_hline(s, Inches(1), Inches(6.8), Inches(3), NAVY, Pt(2))
+
+# ✅ CORRECT: Full content width
+add_hline(s, LM, Inches(6.8), CW, NAVY, Pt(2))
+```
+
+**Rule**: Decorative horizontal lines on structural slides (cover, closing) should span the full content width (`CW`), not arbitrary fixed widths.
+
+### Problem 16: Donut/Pie Charts Made of Hundreds of Tiny Rect Blocks (v2.0)
+
+**Cause**: Using nested loops with `math.cos/sin` + `add_rect()` to approximate circles/arcs creates 100-2800 shapes per chart. This inflates PPTX file size by 60-80%, causes generation timeouts (2+ minutes), and produces visible gaps and jagged edges.
+
+**Solution**: Use `BLOCK_ARC` preset shapes with XML `adj` parameter control. Each segment = 1 shape:
+
+```python
+# ❌ WRONG: Hundreds of tiny blocks (slow, large file, jagged)
+for deg in range(0, 360, 2):
+    rad = math.radians(deg)
+    for r in range(0, int(radius), int(block_sz)):
+        bx = cx + int(r * math.cos(rad))
+        add_rect(s, bx, by, block_sz, block_sz, color)  # → 2000+ shapes!
+
+# ✅ CORRECT: One BLOCK_ARC per segment (fast, clean, 4 shapes total)
+add_block_arc(s, cx - r, cy - r, r * 2, r * 2,
+              start_deg, end_deg, inner_ratio, color)
+```
+
+See **Production Guard Rails Rule 9** for the complete `add_block_arc()` helper and usage patterns.
+
+### Problem 17: Gauge Arc Renders Vertically Instead of Horizontally (v2.0)
+
+**Cause**: Using math convention angles (0°=right, 90°=top, CCW) instead of PPT convention (0°=top, 90°=right, CW). A "horizontal rainbow" gauge using `math.radians(0)` to `math.radians(180)` renders as a **vertical** arc in PowerPoint because the coordinate systems are incompatible.
+
+**Solution**: Use PPT's native clockwise-from-12-o'clock coordinate system directly:
+
+```python
+# PPT angle mapping for horizontal rainbow (opening upward ⌢):
+#   Left  = 270° PPT
+#   Top   = 0° (or 360°) PPT
+#   Right = 90° PPT
+# Total sweep: 270° → 0° → 90° = 180° clockwise
+
+# ❌ WRONG: Math convention angles
+ppt_angle = (90 - math_angle) % 360  # Fragile, error-prone conversion
+
+# ✅ CORRECT: Think directly in PPT coordinates
+ppt_cum = 270  # start at left
+for pct, color in gauge_segs:
+    sweep = pct * 180
+    add_block_arc(s, ..., ppt_cum % 360, (ppt_cum + sweep) % 360, ...)
+    ppt_cum += sweep
+```
+
+### Problem 18: Donut Center Text Unreadable Against Colored Ring (v2.0)
+
+**Cause**: Center labels (e.g., "¥7,013亿", "总营收") use NAVY or MED_GRAY font color, which is invisible or low-contrast against the colored BLOCK_ARC ring segments behind them.
+
+**Solution**: Use **WHITE** for center labels inside donut charts. The colored ring provides enough contrast:
+
+```python
+# ❌ WRONG: Navy text on navy/blue ring — invisible
+add_text(s, ..., '¥7,013亿', font_color=NAVY, ...)
+
+# ✅ CORRECT: White text, visible against any ring color
+add_text(s, ..., '¥7,013亿', font_color=WHITE, bold=True,
+         font_name='Georgia', ...)
+add_text(s, ..., '总营收', font_color=WHITE, ...)
+```
+
+### Problem 19: Chart Elements Overlapping Title Bar — Body Content Too High (v2.0)
+
+**Cause**: Chart area `chart_top` set to `Inches(1.0)` or `Inches(1.2)`, which places chart elements above the title separator line at `Inches(1.05)`. Applies to waterfall charts, line charts, bar charts, and other data visualization layouts.
+
+**Solution**: All chart/content body areas must start at or below `Inches(1.3)`:
+
+```python
+# ❌ WRONG: Content starts above title separator
+chart_top = Inches(1.0)   # overlaps title!
+
+# ✅ CORRECT: Content respects title bar space
+chart_top = Inches(1.3)   # safe start below title + separator + gap
+```
+
+**Rule**: Apply `Inches(1.3)` as minimum content start for ALL content slides (charts, tables, text blocks). The title bar occupies `Inches(0) → Inches(1.05)`, and `Inches(0.25)` gap is mandatory.
+
+### Problem 20: Waterfall Chart Connector Lines Look Like Dots (v2.0)
+
+**Cause**: Connector lines between waterfall bars are drawn using `add_hline()` with very short length (< 0.1"), making them appear as small dots instead of visible connection lines.
+
+**Solution**: Ensure connector lines span the full gap between bars, and use consistent thin styling:
+
+```python
+# Between bar[i] and bar[i+1]:
+connector_x = bx + bar_w  # start at right edge of current bar
+connector_w = gap          # span the full gap to next bar
+connector_y = running_top  # at the running total level
+add_hline(s, connector_x, connector_y, connector_w, LINE_GRAY, Pt(0.75))
+```
+
+**Rule**: Waterfall connector lines must have `width >= gap_between_bars` and use `Pt(0.75)` line weight for visibility.
+
 ---
 
 ## Edge Cases
@@ -5810,6 +6084,8 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.0.0 | 2026-03-19 | **BLOCK_ARC Chart Engine**: Donut (#48), Pie (#64), and Gauge (#55) charts rewritten from hundreds of `add_rect()` blocks to native BLOCK_ARC shapes — 3-4 shapes per chart instead of 100-2800. File size reduced 60-80%. New `add_block_arc()` helper function with PPT coordinate system documentation. **Guard Rail Rule 9**: mandatory BLOCK_ARC for all circular charts. **5 new Common Issues** (Problems 16-20): rect-block charts, vertical gauge, unreadable donut center text, body content above title bar, waterfall connector dots. Donut center labels changed to WHITE for contrast. Gauge uses correct PPT angle mapping (270°→0°→90° for horizontal rainbow). |
+| 1.10.4 | 2026-03-19 | **5 New Bug Fixes + Guard Rail Rule 8**: (1) Cover slide title/subtitle overlap — dynamic title height from line count; (2) Action title anchor changed to `MSO_ANCHOR.BOTTOM` for flush separator alignment; (3) Checklist `#61` dynamic `row_h` prevents page overflow with 7+ rows; (4) Value Chain `#67` dynamic `stage_w` and `stage_h` fill content area instead of fixed 2.0" width; (5) Closing `#36` bottom line changed from `Inches(3)` to `CW` for full-width. New **Production Guard Rails Rule 8**: dynamic sizing for variable-count layouts. **5 new Common Issues** (Problems 11-15). Updated code examples for #1, #36, #61, #67. |
 | 1.10.3 | 2026-03-18 | **Title Line Spacing Optimization**: Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional title rendering. Body text (<18pt) retains fixed Pt spacing. Updated Problem 5 documentation. Thanks to **冯梓航 Denzel** for detailed feedback. |
 | 1.10.2 | 2026-03-18 | **#54 Matrix Side Panel Variant**: Added compact grid + side panel layout variant for Pattern #54 (Risk/Heat Matrix). When matrix needs a companion insight panel, `cell_w` shrinks from 3.0" to 2.15" and `axis_label_w` from 1.8" to 0.65", yielding ~4.2" panel width. Includes layout math, ASCII wireframe, code example, and minimum-width rule. |
 | 1.10.1 | 2026-03-18 | **Frontmatter Fix**: Fixed "malformed YAML frontmatter" error on Claude install. Removed unsupported fields (`license`, `version`, `metadata` with emoji, etc.) — Claude only supports `name` + `description`. Used YAML folded block scalar (`>-`) for description. Metadata relocated to document body. |
