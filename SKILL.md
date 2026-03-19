@@ -330,7 +330,7 @@ When creating a presentation, follow these templates unless the user explicitly 
 ```
  Slide 1:  Cover Slide
  Slide 2:  Executive Summary (Pattern #24)
- Slides 3-5: Core Content (vary layouts: #8, #14, #19, #33)
+ Slides 3-5: Core Content (vary layouts: #8, #71, #19, #33)
  Slide 6:  Synthesis / Timeline (Pattern #29)
  Slide 7:  Key Takeaways (Pattern #34)
  Slide 8:  Closing (Pattern #36)
@@ -351,7 +351,7 @@ Match content type to the optimal layout pattern:
 |---|---|---|
 | Single key statistic | Big Number (#8) | Plain text |
 | 2 options comparison | Side-by-Side (#19), Before/After (#20), Metric Comparison Row (#62) | Two-column text |
-| 3-4 parallel concepts | Three-Pillar (#14), Four-Column (#27), Metric Cards (#10), Icon Grid (#63) | Bullet list |
+| 3-4 parallel concepts | Table+Insight (#71), Four-Column (#27), Metric Cards (#10), Icon Grid (#63) | Bullet list |
 | Process / steps | Process Chevron (#16), Vertical Steps (#30), Value Chain (#67) | Numbered text |
 | Timeline | Timeline/Roadmap (#29), Cycle (#31) | Bullet list |
 | Data table | Data Table (#9), Scorecard (#22), Harvey Ball Table (#56) | Plain text |
@@ -367,8 +367,16 @@ Match content type to the optimal layout pattern:
 | **Multi-KPI executive dashboard** | **Dashboard KPI+Chart (#57), Dashboard Table+Chart (#58)** | **Simple table** |
 | **Stakeholder / relationship** | **Stakeholder Map (#59)** | **Bullet list** |
 | **Meeting agenda** | **Agenda (#66)** | **Plain text** |
+| **Opening analysis / key arguments** | **Table+Insight (#71), Key Takeaway (#25)** | **Bullet list, Plain text** |
 
 **NEVER** use Two-Column Text (#26) for more than 1 slide per deck. It is the least visually engaging layout.
+
+**OPENING SLIDE PRIORITY RULE**: For **Slides 2–5** (the first few content slides after cover/TOC), **strongly prefer high-impact editorial layouts** that set the tone for the entire presentation. Prioritized layouts for opening slides (in order of preference):
+1. **Table+Insight (`table_insight`, #71)** — structured arguments with gray-bg right-panel takeaways + chevron icon
+2. **Big Number (#8)** — single impactful statistic
+3. **Key Takeaway (#25)** — left detail + right summary
+
+These layouts create a strong visual opening that hooks the audience. Avoid starting presentations with plain text or simple bullet lists.
 
 **CHART PRIORITY RULE**: When data contains dates/periods + numeric values or percentages (e.g., `3/4 正面 20% 中性 80%` or `Q1: ¥850万`), you **MUST** use a Chart pattern (#37-#39, #48-#56, #64, #70) instead of a text-based layout. Charts maximize data-ink ratio and are the most visually compelling way to present time-series data.
 
@@ -1185,44 +1193,6 @@ add_text(s, mx + Inches(0.3), my + Inches(0.3), cw - Inches(0.6), Inches(0.5),
 add_source(s, 'Source: ...')
 ```
 
-#### 14. Three-Pillar Framework (三支柱框架)
-
-**适用场景**: 展示三个并列的核心策略、能力或主题模块。
-
-```
-┌─────────────────────────────────────────┐
-│ ▌ Action Title                          │
-├─────────────────────────────────────────┤
-│ ┌──NAVY──┐   ┌──NAVY──┐   ┌──NAVY──┐   │
-│ │ 标题1  │   │ 标题2  │   │ 标题3  │   │
-│ ├────────┤   ├────────┤   ├────────┤   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ └────────┘   └────────┘   └────────┘   │
-└─────────────────────────────────────────┘
-```
-
-```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '三大核心战略')
-pillars = [('数字化转型', ['建设数据中台', '打通全渠道', '自动化运营']),
-           ('组织升级', ['扁平化管理', '敏捷团队', '人才梯队']),
-           ('客户深耕', ['精细化运营', '会员体系', 'LTV 提升'])]
-pw = Inches(3.5)
-pg = (CONTENT_W - pw * 3) / 2
-for i, (title, points) in enumerate(pillars):
-    px = LM + (pw + pg) * i
-    add_rect(s, px, Inches(1.5), pw, Inches(0.6), NAVY)
-    add_text(s, px + Inches(0.15), Inches(1.5), pw - Inches(0.3), Inches(0.6),
-             title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_rect(s, px, Inches(2.1), pw, Inches(4.0), BG_GRAY)
-    add_text(s, px + Inches(0.2), Inches(2.3), pw - Inches(0.4), Inches(3.5),
-                  [f'• {p}' for p in points], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
-```
-
 #### 15. Pyramid / Hierarchy (金字塔/层级图)
 
 **适用场景**: 展示层级关系（如 Maslow 需求层次、战略-战术-执行分层）。
@@ -1433,46 +1403,77 @@ for i, (title, points) in enumerate(options):
 add_source(s, 'Source: ...')
 ```
 
-#### 20. Before / After (前后对比页)
+#### 20. Before / After (前后对比页) _(v2.0.1 rewrite)_
 
-**适用场景**: 展示变革前后的对比（如流程优化、组织变革）。
+**适用场景**: 展示变革前后的对比（如行业退潮 vs 生存公式、流程优化、组织变革）。
+
+**设计特征**:
+- **白底清洁布局** — 无背景色块，纯白底
+- **黑色竖线 + 圆圈箭头** — 中间细竖线分隔，竖线正中放黑色实心圆圈内含 `>` 箭头（Arial 字体，内边距0）
+- **结构化数据行**（左侧）— 每行有 label/brand/value/extra，数值红色大字
+- **公式卡片**（右侧）— 每条有 title/desc/cases，案例数字黑色+下划线
+- **支持简单文字列表后备** — 如传入 `list[str]` 自动退化为简单 bullet 模式
+- **可选虚线角标** — 右上角虚线框（如 `Part II > 退潮`）
+- **可选底部总结条** — bottom_bar
 
 ```
-┌─────────────────────────────────────────┐
-│ ▌ Action Title                          │
-├─────────────────────────────────────────┤
-│  ┌──BG_GRAY────┐  ──>  ┌──NAVY────┐    │
-│  │  现状       │       │  目标    │    │
-│  │  (Before)   │       │  (After) │    │
-│  │  痛点列表   │       │  改进点  │    │
-│  └─────────────┘       └─────────┘    │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ ▌ Action Title                   ┊Part II >┊ │
+├──────────────────┬────┬──────────────────────┤
+│  左侧标题        │    │  右侧标题            │
+│                  │ ● │                      │
+│  标签 品牌 数值   │ > │  1. 公式标题          │
+│  ────────────── │ ● │     描述 + 案例下划线  │
+│  标签 品牌 数值   │    │  ─────────────      │
+│  ────────────── │    │  2. 公式标题          │
+│  总结(灰粗体)    │    │     总结(红色粗体)    │
+├──────────────────────────────────────────────┤
+│ [关键洞察] 底部总结条                         │
+└──────────────────────────────────────────────┘
 ```
+
+**Engine method**: `eng.before_after()`
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '从现状到目标')
-hw = Inches(5.0)
-# Before
-add_rect(s, LM, Inches(1.5), hw, Inches(4.5), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
-         'X  现状（Before）', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
-add_hline(s, LM + Inches(0.3), Inches(2.2), hw - Inches(0.6), LINE_GRAY)
-add_text(s, LM + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['痛点一', '痛点二', '痛点三'], line_spacing=Pt(10))
-# Arrow
-add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
-         '->', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-# After
-ax = LM + hw + Inches(1.733)
-add_rect(s, ax, Inches(1.5), hw, Inches(4.5), NAVY)
-add_text(s, ax + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
-         'V  目标（After）', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
-add_hline(s, ax + Inches(0.3), Inches(2.2), hw - Inches(0.6), WHITE)
-add_text(s, ax + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['改进一', '改进二', '改进三'], font_color=WHITE, line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.before_after(
+    title='行业巨变：日企退潮 vs 生存公式',
+    before_title='日企在华业务退潮',
+    before_points=[
+        {'label': '汽车', 'brand1': '本田在华业务每年减少', 'val1': '-15%',
+         'brand2': '日产在华业务', 'val2': '-30%', 'extra': '基本退出中国市场'},
+        {'label': '电子', 'brand1': '索尼中国区', 'val1': '-22%',
+         'brand2': '夏普', 'val2': '退出'},
+    ],
+    after_title='日企生存公式',
+    after_points=[
+        {'title': '1. 本土化产品创新', 'desc': '针对中国市场开发专属产品线',
+         'cases': [('味之素', '中国区收入+35%'), ('资生堂', '高端线增长28%')]},
+        {'title': '2. 渠道深耕下沉市场', 'desc': '进入三四线城市',
+         'cases': [('优衣库', '三线城市门店+120家')]},
+    ],
+    corner_label='Part II > 退潮',
+    bottom_bar=('关键洞察', '本土化是日企在中国生存的唯一路径'),
+    left_summary='传统模式已全面失效',
+    right_summary='本土化创新是唯一出路',
+    source='公开市场数据整理'
+)
 ```
+
+**Parameters**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `title` | str | 页面标题 |
+| `before_title` | str | 左侧标题 |
+| `before_points` | list[dict] 或 list[str] | 左侧数据行（dict: label/brand1/val1/brand2/val2/extra）或简单文字列表 |
+| `after_title` | str | 右侧标题 |
+| `after_points` | list[dict] 或 list[str] | 右侧公式卡片（dict: title/desc/cases）或简单文字列表 |
+| `corner_label` | str | 右上角虚线角标文字（可选） |
+| `bottom_bar` | tuple(str,str) | 底部条 (标签, 文字)（可选） |
+| `left_summary` | str | 左侧底部总结文字（可选，灰色粗体） |
+| `right_summary` | str | 右侧底部总结文字（可选，默认红色粗体） |
+| `right_summary_color` | RGBColor | 右侧总结文字颜色（默认 ACCENT_RED） |
+| `source` | str | 数据来源 |
 
 #### 21. Pros and Cons (优劣分析页)
 
@@ -5386,6 +5387,173 @@ add_page_number(s, 5, 12)
 
 ---
 
+### 类别 M：编辑叙事 _(v2.0.3)_
+
+> **触发规则**：当内容需要"左侧结构化论据 + 右侧洞察提炼"或"多面板数据对比"时使用此类别。
+> **开头页加权**：Slides 2–5（封面/目录后的头几页）**优先选择此类别的高冲击力布局**。
+
+#### #71 — Table + Insight Panel（表格+洞察面板）
+
+**适用场景**: 左侧展示结构化论据/数据表格，右侧提炼关键洞察。适合战略分析的开场论述、矛盾拆解、趋势总结等。
+
+**设计特征**:
+- **左侧（~60%）**：数据表格，表头行 + 水平分隔线 + N 行数据
+  - 第一列：粗体标签，垂直居中
+  - 后续列：支持 `**bold**` markup，垂直居中
+  - 自适应行高（行数多时自动缩小字号）
+- **中间（0.7"）**：`MSO_SHAPE.CHEVRON` 深灰实心箭头图标，作为表格→洞察的视觉引导
+- **右侧（~32%）**：浅灰底 `BG_GRAY (#F2F2F2)` 背景面板
+  - **标题**：粗体"启示："（可自定义 `insight_title`）
+  - **圆点 `•` 子弹** + 紧凑排列的洞察文字
+- **无垂直分隔线** — chevron 图标自然分隔
+
+```
+┌──────────────────────────────────────────────────────┐
+│ ▌ Action Title                                       │
+├───────────────────────┬─────┬─────────────────────────┤
+│  表头1    表头2       │     │ ┌─ BG_GRAY ──────────┐ │
+│  ─────────────────── │     │ │ 启示：              │ │
+│  标签  **关键词**描述 │  ▸  │ │ • 洞察要点一        │ │
+│  ─────────────────── │     │ │ • 洞察要点二        │ │
+│  标签  **关键词**描述 │     │ │                     │ │
+│  ─────────────────── │     │ └─────────────────────┘ │
+│  标签  **关键词**描述 │     │                         │
+├──────────────────────────────────────────────────────┤
+│ Source: ...                                          │
+└──────────────────────────────────────────────────────┘
+```
+
+**Engine method**: `eng.table_insight()`
+
+```python
+eng.table_insight(
+    title='三重剧变正在同时冲击冰淇淋行业',
+    headers=['趋势', '关键表现'],
+    rows=[
+        ['消费降级', '**零食量贩店**价格战激烈；**蜜雪冰城**以低价策略抢占市场\n消费者从品牌溢价转向性价比'],
+        ['健康升级', '**低糖/低脂**需求激增；年轻人追求"无负担甜品"\n传统高糖高脂配方面临淘汰'],
+        ['渠道碎片', '**线上+社区团购**分流传统渠道；\n经销商利润空间被持续压缩'],
+    ],
+    insights=[
+        '行业正从"品牌驱动"转向"效率驱动"，传统日企模式面临系统性挑战',
+        'AI+数据能力将成为下一阶段竞争的核心壁垒',
+    ],
+    col_widths=[Inches(1.2), Inches(6.0)],
+    insight_title='启示：',
+    bottom_bar=('核心判断', '不变革就出局 — 这不是选择题'),
+    source='公开市场数据整理，2024-2025'
+)
+```
+
+**Parameters**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `title` | str | 页面标题 |
+| `headers` | list[str] | 表格列头 |
+| `rows` | list[list[str]] | 数据行（每行对应 headers），支持 `**bold**` 和 `\n` |
+| `insights` | list[str] | 右侧洞察要点列表 |
+| `col_widths` | list[Inches] 或 None | 列宽（默认平均分配） |
+| `insight_title` | str | 右侧面板标题（默认 `'启示：'`） |
+| `bottom_bar` | tuple(str,str) | 底部条 (标签, 文字)（可选） |
+| `source` | str | 数据来源 |
+
+#### #72 — Multi-Bar Panel Chart（多面板柱状图）
+
+**适用场景**: 2–3 个并排柱状图面板展示相关但独立的数据集，每个面板有独立标题/单位/CAGR 趋势箭头。适合人口结构、市场规模、竞争格局等多维数据对比。
+
+**设计特征**:
+- **2–3 个并排面板**：每个面板独立绘制柱状图
+- **NAVY 深蓝柱** + 每根柱子顶部数值标签 + X 轴年份标签
+- **自动编号标题**：`1. xxx  2. xxx  3. xxx`，支持 `**bold**` markup 突出关键数字
+- **CAGR 趋势箭头**：根据首尾柱子的实际高度计算**倾斜角度**
+  - 正数绿色 (`ACCENT_GREEN`)，负数红色 (`ACCENT_RED`)
+  - 使用 `RIGHT_ARROW` 形状（shaft ~1.5px），紧贴柱顶上方 0.27"
+- **无 connector 圆圈** — 面板紧密排列，无分隔符
+- **底部脚注区** — 可选多行脚注
+
+```
+┌───────────────────────────────────────────────────────────┐
+│ ▌ Action Title                                            │
+├──────────────────┬──────────────────┬─────────────────────┤
+│ 1. 标题**数字**  │ 2. 标题**数字**  │ 3. 标题**数字**     │
+│ 万人  CAGR ─▸   │ 万人  CAGR ─▸   │ 万亿  CAGR ─▸      │
+│  99   99  100    │  88   90   95    │  210  280  342      │
+│  ██  ██   ██    │  ██  ██   ██    │  ██   ██   ██      │
+│  ██  ██   ██    │  ██  ██   ██    │  ██   ██   ██      │
+│  20  21   25     │  20  21   25     │  20   21   25       │
+├───────────────────────────────────────────────────────────┤
+│ 1) 脚注说明...                                           │
+│ Source: ...                                               │
+└───────────────────────────────────────────────────────────┘
+```
+
+**Engine method**: `eng.multi_bar_panel()`
+
+```python
+eng.multi_bar_panel(
+    title='中国人口结构与冰淇淋市场：三张确定性王牌',
+    panels=[
+        {
+            'title': '劳动力人口**稳中有降**',
+            'unit': '万人',
+            'legend': '15-64岁人口',
+            'categories': ['2020', '2021', '2022', '2023', '2024', '2025'],
+            'values': [99200, 99400, 99600, 99500, 99700, 99800],
+            'cagr': [{'rate': '+0.1%', 'start': 0, 'end': 5}],
+        },
+        {
+            'title': '城镇化率持续提升至**65%+**',
+            'unit': '万人',
+            'legend': '城镇常住人口',
+            'categories': ['2020', '2021', '2022', '2023', '2024', '2025'],
+            'values': [88000, 90000, 91000, 93000, 94000, 95000],
+            'cagr': [{'rate': '+1.5%', 'start': 0, 'end': 5}],
+        },
+        {
+            'title': '冰淇淋市场规模突破**¥342亿**',
+            'unit': '¥亿',
+            'legend': '市场规模',
+            'categories': ['2020', '2021', '2022', '2023', '2024', '2025'],
+            'values': [210, 240, 260, 290, 310, 342],
+            'cagr': [{'rate': '+10.2%', 'start': 0, 'end': 5}],
+        },
+    ],
+    footnotes=[
+        '1) 数据来源：国家统计局、中国冰淇淋协会',
+        '2) CAGR 基于 2020-2025 年复合增长率计算',
+    ],
+    source='国家统计局, Euromonitor, 2025'
+)
+```
+
+**Parameters**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `title` | str | 页面标题 |
+| `panels` | list[dict] | 面板列表（2–3 个），每个 dict 详见下表 |
+| `connectors` | list[str] 或 None | (已弃用，忽略) |
+| `footnotes` | list[str] 或 None | 底部脚注行 |
+| `source` | str | 数据来源 |
+
+**Panel dict 字段**:
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `title` | str | 面板标题（支持 `**bold**`） |
+| `unit` | str | Y 轴单位 |
+| `legend` | str | 图例文字 |
+| `categories` | list[str] | X 轴标签（年份） |
+| `values` | list[number] | 柱高数值 |
+| `bar_color` | RGBColor | 柱颜色（默认 NAVY） |
+| `cagr` | list[dict] | CAGR 注释：`{'rate': str, 'start': int, 'end': int}` |
+| `highlight_idx` | list[int] | 高亮柱子索引 |
+| `highlight_color` | RGBColor | 高亮颜色（默认 ACCENT_BLUE） |
+| `value_format` | str | 数值格式化字符串（默认 `'{:,.0f}'`） |
+
+---
+
 ## Python Code Patterns
 
 ### Helper Functions (Copy Directly)
@@ -6084,6 +6252,8 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.0.4 | 2026-03-19 | **#14 Three-Pillar RETIRED**: Removed `three_pillar` method from engine.py and its documentation from SKILL.md. All former #14 use cases now served by **#71 Table+Insight Panel** (`table_insight`). Updated Layout Diversity table, Opening Slide Priority Rule, and recommended slide structure. `generate_ppt.py` Slide 14 (三轨制) and Slide 20 (高压场景) converted from `three_pillar` → `table_insight` with structured table+insight format. |
+| 2.0.3 | 2026-03-19 | **3 Template Updates — Category M: Editorial Narrative**: (1) **#20 Before/After rewrite** (v2.0.1) — replaced BG_GRAY+NAVY color blocks with clean white-bg + black vertical divider + black circle `>` arrow + structured data rows (dict: label/brand/val/extra) + formula cards (dict: title/desc/cases with underline), new params: `corner_label`, `bottom_bar`, `left_summary`, `right_summary`, `right_summary_color`; (2) **#71 Table+Insight Panel** (NEW) — left data table (~60%) + middle CHEVRON shape icon (0.7") + right gray-bg (#F2F2F2) insight panel (~32%) with "启示：" title + `•` bullet points, supports `**bold**` markup in cells, self-adaptive row height; (3) **#72 Multi-Bar Panel Chart** (NEW) — 2-3 side-by-side bar panels with auto-numbered titles, CAGR trend arrows following actual bar-top slopes (RIGHT_ARROW shape, ~1.5px shaft, ±0.27" offset), per-bar value labels, green/red CAGR coloring. **OPENING SLIDE PRIORITY RULE** added: Slides 2-5 strongly prefer #71, #8, #14, #25. New Category M in layout-catalog.md. Total patterns: **72**. |
 | 2.0.0 | 2026-03-19 | **BLOCK_ARC Chart Engine**: Donut (#48), Pie (#64), and Gauge (#55) charts rewritten from hundreds of `add_rect()` blocks to native BLOCK_ARC shapes — 3-4 shapes per chart instead of 100-2800. File size reduced 60-80%. New `add_block_arc()` helper function with PPT coordinate system documentation. **Guard Rail Rule 9**: mandatory BLOCK_ARC for all circular charts. **5 new Common Issues** (Problems 16-20): rect-block charts, vertical gauge, unreadable donut center text, body content above title bar, waterfall connector dots. Donut center labels changed to WHITE for contrast. Gauge uses correct PPT angle mapping (270°→0°→90° for horizontal rainbow). |
 | 1.10.4 | 2026-03-19 | **5 New Bug Fixes + Guard Rail Rule 8**: (1) Cover slide title/subtitle overlap — dynamic title height from line count; (2) Action title anchor changed to `MSO_ANCHOR.BOTTOM` for flush separator alignment; (3) Checklist `#61` dynamic `row_h` prevents page overflow with 7+ rows; (4) Value Chain `#67` dynamic `stage_w` and `stage_h` fill content area instead of fixed 2.0" width; (5) Closing `#36` bottom line changed from `Inches(3)` to `CW` for full-width. New **Production Guard Rails Rule 8**: dynamic sizing for variable-count layouts. **5 new Common Issues** (Problems 11-15). Updated code examples for #1, #36, #61, #67. |
 | 1.10.3 | 2026-03-18 | **Title Line Spacing Optimization**: Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional title rendering. Body text (<18pt) retains fixed Pt spacing. Updated Problem 5 documentation. Thanks to **冯梓航 Denzel** for detailed feedback. |

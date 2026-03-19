@@ -114,7 +114,8 @@ def build_all_tests(eng: MckEngine, stress: bool = False):
     # ── Framework ──
     # matrix_2x2: quadrants = (label, bg_color:RGBColor, description)
     _run("matrix_2x2", eng.matrix_2x2, title="Priority Matrix", quadrants=[("High Impact / Low Effort", LIGHT_BLUE, "Quick wins, process automation"), ("High Impact / High Effort", LIGHT_GREEN, "Market expansion, M&A targets"), ("Low Impact / Low Effort", LIGHT_ORANGE, "Minor fixes, low priority"), ("Low Impact / High Effort", LIGHT_RED, "Deprioritize, avoid")], source="Strategy")
-    _run("three_pillar", eng.three_pillar, title="Strategic Pillars", pillars=[("Growth", ["Market expansion", "New products", "Partnerships"]), ("Efficiency", ["Cost optimization", "Process automation", "Shared services"]), ("Innovation", ["R&D investment", "Digital transformation", "AI/ML adoption"])], source="CEO Office")
+    # #14 three_pillar retired (v2.0.4) → use #71 table_insight
+    _run("table_insight_strategic", eng.table_insight, title="Strategic Pillars", headers=["Pillar", "Key Initiatives", "Expected Impact"], rows=[["Growth", "Market expansion\nNew products\nPartnerships", "Revenue +20%"], ["Efficiency", "Cost optimization\nProcess automation\nShared services", "Margin +5pp"], ["Innovation", "R&D investment\nDigital transformation\nAI/ML adoption", "New revenue streams"]], insights=["Growth is the top priority for FY2026", "Efficiency gains fund innovation investments", "AI/ML adoption accelerates all three pillars"], source="CEO Office")
     # pyramid: levels = (label, description, width_inches:float)
     _run("pyramid", eng.pyramid, title="Capability Pyramid", levels=[("Vision", "Long-term direction", 4.0), ("Strategy", "How we compete", 6.0), ("Execution", "Day-to-day delivery", 8.0), ("Foundation", "People and culture", 10.0)], source="Org Design")
     # process_chevron: steps = (label, step_title, description)
