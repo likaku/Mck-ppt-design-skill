@@ -81,11 +81,11 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 ┌─────────────────────────────────────────────────────────┐
 │  Tier 1: SKILL.md (Design Specification)                │
 │  ├── 70 layout patterns with exact coordinates          │
-│  ├── Color system + typography hierarchy                 │
+│  ├── Color system + typography hierarchy                │
 │  ├── 9 production guard rails                           │
 │  └── BLOCK_ARC chart rendering spec                     │
 ├─────────────────────────────────────────────────────────┤
-│  Tier 2: mck_ppt/ (Python Runtime Engine)      [NEW]   │
+│  Tier 2: mck_ppt/ (Python Runtime Engine)      [NEW]    │
 │  ├── engine.py — 70 high-level layout methods           │
 │  ├── core.py — Drawing primitives + XML cleanup         │
 │  ├── constants.py — Colors, typography, grid constants  │
