@@ -194,6 +194,8 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v2.0.5** | 2026-03-19 | Unified release: merged v2.0.4 engine + v2.1 SKILL.md rewrite. Retire #14 → #71 `table_insight`. QA 68/68 pass, 87/100 |
+| **v2.0.4** | 2026-03-19 | New `table_insight()` layout (#71), retire `three_pillar` (#14) |
 | **v2.0.2** | 2026-03-19 | Adaptive row height for `data_table` / `vertical_steps` (overflow prevention) |
 | **v2.0.1** | 2026-03-19 | `before_after` template rewrite — white editorial layout with structured data |
 | **v2.0** | 2026-03-19 | BLOCK_ARC chart engine, Python runtime engine, three-tier architecture |

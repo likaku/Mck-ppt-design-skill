@@ -118,10 +118,12 @@ eng.grouped_bar(title='季度营收趋势',
     max_val=200, source='Source: 财务部')
 
 eng.section_divider(section_label='第三部分', title='战略建议')
-eng.three_pillar(title='三大战略方向',
-    pillars=[('产品创新', ['AI赋能', '用户体验升级']),
-             ('市场拓展', ['进入3个新行业', '海外布局']),
-             ('运营卓越', ['成本优化20%', '数字化覆盖85%'])],
+eng.table_insight(title='三大战略方向对比',
+    headers=['战略方向', '核心举措', '预期成效'],
+    rows=[['产品创新', 'AI赋能 + 用户体验升级', '市场份额+15%'],
+          ['市场拓展', '进入3个新行业 + 海外布局', '营收增长30%'],
+          ['运营卓越', '成本优化20% + 数字化覆盖85%', '利润率+8pp']],
+    insights=['三大方向协同发力，形成增长飞轮', '产品创新为引擎，市场拓展为杠杆', '运营卓越为底座，确保可持续性'],
     source='Source: 战略部')
 eng.timeline(title='执行路线图',
     milestones=[('Q1', '方案设计'), ('Q2', '试点验证'),
@@ -1145,31 +1147,9 @@ eng.matrix_2x2(title='战略优先级矩阵',
     source='Source: ...')
 ```
 
-#### 14. Three-Pillar Framework (三支柱框架)
+#### ~~14. Three-Pillar Framework~~ → RETIRED (v2.0.4)
 
-**适用场景**: 展示三个并列的核心策略、能力或主题模块。
-
-```
-┌─────────────────────────────────────────┐
-│ ▌ Action Title                          │
-├─────────────────────────────────────────┤
-│ ┌──NAVY──┐   ┌──NAVY──┐   ┌──NAVY──┐   │
-│ │ 标题1  │   │ 标题2  │   │ 标题3  │   │
-│ ├────────┤   ├────────┤   ├────────┤   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ │ 要点   │   │ 要点   │   │ 要点   │   │
-│ └────────┘   └────────┘   └────────┘   │
-└─────────────────────────────────────────┘
-```
-
-```python
-eng.three_pillar(title='数字化转型三大支柱',
-    pillars=[('技术基座', ['云原生架构', '微服务改造', '数据中台']),
-             ('组织能力', ['敏捷团队', '数字人才', '创新文化']),
-             ('业务重塑', ['客户体验', '供应链优化', '智能决策'])],
-    source='Source: ...')
-```
+> **已退役**：#14 布局已被 **#71 Table+Insight** 取代。请使用 `eng.table_insight()` 实现类似的三列对比需求，数据表达更清晰、视觉层级更强。
 
 #### 15. Pyramid / Hierarchy (金字塔/层级图)
 
@@ -3079,9 +3059,10 @@ eng.save('output/deck.pptx')  # Auto-runs full_cleanup (p:style, shadow, 3D remo
 > quadrants: list of 4 (label, bg_color, description).
 > axis_labels: (x_label, y_label) or None.
 
-**`eng.three_pillar(title, pillars, source='')`**
-> #14 Three-Pillar Framework — 3 accent-colored columns.
-> pillars: list of (name, points:list[str]) or (name, points, accent, light_bg).
+**`eng.table_insight(title, headers, rows, insights, col_widths=None, insight_title='启示：', source='', bottom_bar=None)`**
+> #71 Table+Insight — left data table + right insight panel with chevron icon.
+> headers: list[str], rows: list[list[str]], insights: list[str].
+> Supports **bold** markup in cell text. Replaces retired #14 Three-Pillar.
 
 **`eng.pyramid(title, levels, source='', bottom_bar=None)`**
 > #15 Pyramid — top-down widening layers.
@@ -3721,10 +3702,12 @@ eng.cover(title='示例演示', subtitle='McKinsey Design Framework', date='2026
 eng.toc(items=[('1', '数据概览', '核心指标'), ('2', '分析', '趋势洞见')])
 eng.big_number(title='核心发现', number='42%', description='年增长率',
     source='Source: 内部数据')
-eng.three_pillar(title='三大方向',
-    pillars=[('创新', ['产品迭代', 'AI赋能']),
-             ('增长', ['市场扩张', '客户深耕']),
-             ('效率', ['流程优化', '自动化'])],
+eng.table_insight(title='核心发现',
+    headers=['维度', '现状', '目标'],
+    rows=[['创新', '产品迭代中', 'AI赋能'],
+          ['增长', '市场扩张中', '客户深耕'],
+          ['效率', '流程优化中', '全面自动化']],
+    insights=['创新驱动增长', '效率保障可持续'],
     source='Source: 战略部')
 eng.closing(title='谢谢')
 eng.save('output/demo.pptx')
@@ -3844,7 +3827,10 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.1.0 | 2026-03-19 | **SKILL.md → MckEngine Integration**: Rewrote all 70 layout code examples from inline `add_shape()` to `eng.xxx()` calls. Added MckEngine Quick Start section, API Reference (67 methods), and updated Best Practices for engine-first workflow. Estimated **75% token reduction** per generation. |
+| 2.0.5 | 2026-03-19 | **Unified Release**: Merged v2.0.4 engine fixes with v2.1 SKILL.md rewrite. Cleaned residual `three_pillar` references from SKILL.md — all 6 occurrences replaced with `table_insight` (#71). Marked #14 as RETIRED in layout catalog section. QA: 68/68 layouts pass, table_insight scores 100/100, overall 87/100. |
+| 2.0.4 | 2026-03-19 | **Retire #14 Three-Pillar → #71 Table+Insight**: Removed `three_pillar()` from engine, added `table_insight()` (left data table + right insight panel with chevron icon). Supports **bold** markup, adaptive row heights, gray-bg insight panel. |
+| 2.0.2 | 2026-03-19 | **Adaptive Row Height**: `data_table` / `vertical_steps` dynamically calculate row_h to prevent overflow. Font shrinks to Pt(10) for compact rows. |
+| 2.0.1 | 2026-03-19 | **Before/After Rewrite**: White editorial layout with structured data rows (label/brand/val/extra), formula cards, left/right summaries. Fixed `set_ea_font` import in core.py. |
 | 2.0.0 | 2026-03-19 | **BLOCK_ARC Chart Engine**: Donut (#48), Pie (#64), and Gauge (#55) charts rewritten from hundreds of `add_rect()` blocks to native BLOCK_ARC shapes — 3-4 shapes per chart instead of 100-2800. File size reduced 60-80%. New `add_block_arc()` helper function with PPT coordinate system documentation. **Guard Rail Rule 9**: mandatory BLOCK_ARC for all circular charts. **5 new Common Issues** (Problems 16-20): rect-block charts, vertical gauge, unreadable donut center text, body content above title bar, waterfall connector dots. Donut center labels changed to WHITE for contrast. Gauge uses correct PPT angle mapping (270°→0°→90° for horizontal rainbow). |
 | 1.10.4 | 2026-03-19 | **5 New Bug Fixes + Guard Rail Rule 8**: (1) Cover slide title/subtitle overlap — dynamic title height from line count; (2) Action title anchor changed to `MSO_ANCHOR.BOTTOM` for flush separator alignment; (3) Checklist `#61` dynamic `row_h` prevents page overflow with 7+ rows; (4) Value Chain `#67` dynamic `stage_w` and `stage_h` fill content area instead of fixed 2.0" width; (5) Closing `#36` bottom line changed from `Inches(3)` to `CW` for full-width. New **Production Guard Rails Rule 8**: dynamic sizing for variable-count layouts. **5 new Common Issues** (Problems 11-15). Updated code examples for #1, #36, #61, #67. |
 | 1.10.3 | 2026-03-18 | **Title Line Spacing Optimization**: Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional title rendering. Body text (<18pt) retains fixed Pt spacing. Updated Problem 5 documentation. Thanks to **冯梓航 Denzel** for detailed feedback. |
