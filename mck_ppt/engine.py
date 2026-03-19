@@ -19,7 +19,7 @@ from pptx.oxml.ns import qn
 
 from .constants import *
 from .core import (
-    _clean_shape,
+    _clean_shape, set_ea_font,
     add_text, add_rect, add_hline, add_oval, add_image_placeholder,
     add_action_title, add_source, add_page_number, add_bottom_bar,
     add_block_arc, add_color_legend, draw_harvey_ball,
@@ -474,29 +474,254 @@ class MckEngine:
         return s
 
     def before_after(self, title, before_title, before_points,
-                     after_title, after_points, source=''):
-        """#20 Before/After — gray (before) + navy (after) with arrow."""
+                     after_title, after_points, source='',
+                     corner_label='', bottom_bar=None,
+                     left_summary='', right_summary='',
+                     right_summary_color=None):
+        """#20 Before/After — vertical divider with black circle arrow.
+
+        Layout: left half + black vertical line with > circle + right half.
+        No background color blocks — clean white layout with data rows.
+
+        Parameters
+        ----------
+        title : str
+            Slide action title.
+        before_title : str
+            Left section subtitle.
+        before_points : list[dict] or list[str]
+            Left section content. If list[dict], each dict has keys:
+              - 'label': str — row label (bold black, left column)
+              - 'brand1': str — first brand/description (gray small text)
+              - 'val1': str — first value (red bold large text)
+              - 'brand2': str — second brand (optional)
+              - 'val2': str — second value (optional)
+              - 'extra': str — supplementary note below val1 (optional, gray small text)
+            If list[str], falls back to simple bullet points.
+        after_title : str
+            Right section subtitle.
+        after_points : list[dict] or list[str]
+            Right section content. If list[dict], each dict has keys:
+              - 'title': str — numbered title (e.g. '1. xxx', bold black)
+              - 'desc': str — description text (gray)
+              - 'cases': list[tuple(str, str)] — (name, performance) pairs,
+                performance shown in black bold + underline
+            If list[str], falls back to simple bullet points.
+        source : str
+            Source footnote text.
+        corner_label : str
+            Optional dashed corner label (e.g. 'Part II > 退潮').
+        bottom_bar : tuple(str, str) or None
+            Optional bottom bar (label, text), e.g. ('关键洞察', '...').
+        left_summary : str
+            Optional summary text below left section (dark gray bold).
+        right_summary : str
+            Optional summary text below right section (red bold).
+        right_summary_color : RGBColor or None
+            Color for right summary. Defaults to ACCENT_RED.
+        """
+        from pptx.enum.dml import MSO_LINE_DASH_STYLE
+
         s = self._ns()
         add_action_title(s, title)
-        hw = Inches(5.0)
-        # Before
-        add_rect(s, LM, CONTENT_TOP + Inches(0.1), hw, Inches(4.8), BG_GRAY)
-        add_text(s, LM + Inches(0.3), CONTENT_TOP + Inches(0.2), hw - Inches(0.6), Inches(0.5),
-                 before_title, font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
-        add_hline(s, LM + Inches(0.3), CONTENT_TOP + Inches(0.8), hw - Inches(0.6), LINE_GRAY)
-        add_text(s, LM + Inches(0.3), CONTENT_TOP + Inches(1.0), hw - Inches(0.6), Inches(3.5),
-                 before_points, font_size=BODY_SIZE, line_spacing=Pt(10))
-        # Arrow
-        add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
-                 '→', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-        # After
-        ax = LM + hw + Inches(1.733)
-        add_rect(s, ax, CONTENT_TOP + Inches(0.1), hw, Inches(4.8), NAVY)
-        add_text(s, ax + Inches(0.3), CONTENT_TOP + Inches(0.2), hw - Inches(0.6), Inches(0.5),
-                 after_title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
-        add_hline(s, ax + Inches(0.3), CONTENT_TOP + Inches(0.8), hw - Inches(0.6), WHITE)
-        add_text(s, ax + Inches(0.3), CONTENT_TOP + Inches(1.0), hw - Inches(0.6), Inches(3.5),
-                 after_points, font_size=BODY_SIZE, font_color=WHITE, line_spacing=Pt(10))
+
+        if right_summary_color is None:
+            right_summary_color = ACCENT_RED
+
+        # ── Optional dashed corner label ──
+        if corner_label:
+            _corner_x = Inches(11.2)
+            _corner_y = Inches(0.15)
+            _corner_w = Inches(1.8)
+            _corner_h = Inches(0.45)
+            _corner_shape = s.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, _corner_x, _corner_y, _corner_w, _corner_h)
+            _corner_shape.fill.background()
+            _corner_shape.line.color.rgb = MED_GRAY
+            _corner_shape.line.width = Pt(1.0)
+            _corner_shape.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+            _clean_shape(_corner_shape)
+            add_text(s, _corner_x, _corner_y, _corner_w, _corner_h,
+                     corner_label, font_size=SMALL_SIZE, font_color=MED_GRAY,
+                     alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+        # ── Layout parameters ──
+        ct = CONTENT_TOP + Inches(0.15)
+        left_x = LM
+        left_w = Inches(5.5)
+        divider_x = left_x + left_w
+        divider_w = Inches(0.733)
+        right_x = divider_x + divider_w
+        right_w = Inches(5.5)
+
+        # ── Vertical divider line + black circle with > ──
+        line_center_x = divider_x + divider_w / 2
+        vline_top = ct
+        vline_bottom = Inches(6.1)
+        vline_h = vline_bottom - vline_top
+
+        # Vertical line (thin rectangle)
+        add_rect(s, line_center_x - Pt(0.5), vline_top, Pt(1.0), vline_h, BLACK)
+
+        # Black circle with > arrow (text in oval text_frame, 0 margins, Arial)
+        circle_size = Inches(0.5)
+        circle_y = vline_top + (vline_h - circle_size) / 2
+        circle_x = line_center_x - circle_size / 2
+        circle = s.shapes.add_shape(
+            MSO_SHAPE.OVAL, circle_x, circle_y, circle_size, circle_size)
+        circle.fill.solid()
+        circle.fill.fore_color.rgb = BLACK
+        circle.line.fill.background()
+        _clean_shape(circle)
+        ctf = circle.text_frame
+        ctf.paragraphs[0].text = '>'
+        ctf.paragraphs[0].font.size = Pt(22)
+        ctf.paragraphs[0].font.name = 'Arial'
+        ctf.paragraphs[0].font.color.rgb = WHITE
+        ctf.paragraphs[0].font.bold = True
+        ctf.paragraphs[0].alignment = PP_ALIGN.CENTER
+        for run in ctf.paragraphs[0].runs:
+            set_ea_font(run, 'Arial')
+        cbodyPr = ctf._txBody.find(qn('a:bodyPr'))
+        cbodyPr.set('anchor', 'ctr')
+        for attr in ['lIns', 'tIns', 'rIns', 'bIns']:
+            cbodyPr.set(attr, '0')
+
+        # ══════════════════════════════════
+        # LEFT HALF
+        # ══════════════════════════════════
+        add_text(s, left_x, ct, left_w, Inches(0.5),
+                 before_title, font_size=Pt(16), font_color=BLACK, bold=True)
+
+        if before_points and isinstance(before_points[0], dict):
+            # ── Structured data rows ──
+            table_top = ct + Inches(0.6)
+            label_w = Inches(0.8)
+            data_x = left_x + label_w + Inches(0.15)
+            data_w = left_w - label_w - Inches(0.15)
+            row_h = Inches(1.0)
+
+            for ri, row in enumerate(before_points):
+                ry = table_top + row_h * ri
+
+                # Row label (bold black text, no background, vertically centered)
+                add_text(s, left_x, ry, label_w, row_h,
+                         row.get('label', ''), font_size=Pt(13),
+                         font_color=BLACK, bold=True,
+                         alignment=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
+
+                # First group: brand name (gray) + value (red bold)
+                brand_y = ry + Inches(0.1)
+                add_text(s, data_x, brand_y, Inches(2.2), Inches(0.22),
+                         row.get('brand1', ''), font_size=Pt(11),
+                         font_color=DARK_GRAY)
+                add_text(s, data_x, brand_y + Inches(0.22), Inches(2.2), Inches(0.35),
+                         row.get('val1', ''), font_size=Pt(18),
+                         font_color=ACCENT_RED, bold=True)
+
+                # Second group (optional)
+                if row.get('brand2'):
+                    col2_x = data_x + Inches(2.4)
+                    add_text(s, col2_x, brand_y, Inches(2.0), Inches(0.22),
+                             row['brand2'], font_size=Pt(11),
+                             font_color=DARK_GRAY)
+                    add_text(s, col2_x, brand_y + Inches(0.22),
+                             Inches(2.0), Inches(0.35),
+                             row.get('val2', ''), font_size=Pt(18),
+                             font_color=ACCENT_RED, bold=True)
+
+                # Extra note (optional, gray small text)
+                if row.get('extra'):
+                    add_text(s, data_x, brand_y + Inches(0.55),
+                             data_w, Inches(0.2),
+                             row['extra'], font_size=Pt(10),
+                             font_color=MED_GRAY)
+
+                # Row separator line
+                if ri < len(before_points) - 1:
+                    add_hline(s, left_x, ry + row_h, left_w, LINE_GRAY, Pt(0.5))
+
+            # Left summary
+            if left_summary:
+                summary_y = table_top + row_h * len(before_points) + Inches(0.1)
+                add_text(s, left_x, summary_y, left_w, Inches(0.35),
+                         left_summary, font_size=Pt(12),
+                         font_color=DARK_GRAY, bold=True)
+        else:
+            # ── Simple bullet points fallback ──
+            add_text(s, left_x, ct + Inches(0.6), left_w, Inches(4.5),
+                     before_points, font_size=SMALL_SIZE,
+                     font_color=DARK_GRAY, line_spacing=Pt(8))
+            if left_summary:
+                add_text(s, left_x, Inches(5.8), left_w, Inches(0.35),
+                         left_summary, font_size=Pt(12),
+                         font_color=DARK_GRAY, bold=True)
+
+        # ══════════════════════════════════
+        # RIGHT HALF
+        # ══════════════════════════════════
+        add_text(s, right_x, ct, right_w, Inches(0.5),
+                 after_title, font_size=Pt(16), font_color=BLACK, bold=True)
+
+        if after_points and isinstance(after_points[0], dict):
+            # ── Structured formula cards ──
+            r_top = ct + Inches(0.65)
+            fy = r_top
+            for fi, f in enumerate(after_points):
+                # Formula title (bold black)
+                add_text(s, right_x, fy, right_w, Inches(0.35),
+                         f.get('title', ''), font_size=Pt(14),
+                         font_color=BLACK, bold=True)
+
+                # Description (gray)
+                add_text(s, right_x + Inches(0.15), fy + Inches(0.35),
+                         right_w - Inches(0.15), Inches(0.3),
+                         f.get('desc', ''), font_size=Pt(11),
+                         font_color=DARK_GRAY)
+
+                # Case data (name in gray bold, performance in black bold + underline)
+                case_x = right_x + Inches(0.15)
+                for ci, (name, perf) in enumerate(f.get('cases', [])):
+                    cx = case_x + Inches(2.5) * ci
+                    add_text(s, cx, fy + Inches(0.65), Inches(1.0), Inches(0.3),
+                             name, font_size=Pt(11),
+                             font_color=DARK_GRAY, bold=True)
+                    perf_box = add_text(
+                        s, cx + Inches(1.0), fy + Inches(0.6),
+                        Inches(1.4), Inches(0.35),
+                        perf, font_size=Pt(16),
+                        font_color=BLACK, bold=True)
+                    # Add underline
+                    for p in perf_box.text_frame.paragraphs:
+                        for r in p.runs:
+                            r.font.underline = True
+
+                fy += Inches(1.15)
+
+                # Formula separator line
+                if fi < len(after_points) - 1:
+                    add_hline(s, right_x, fy - Inches(0.2), right_w,
+                              LINE_GRAY, Pt(0.5))
+
+            # Right summary
+            if right_summary:
+                add_text(s, right_x, fy, right_w, Inches(0.35),
+                         right_summary, font_size=Pt(12),
+                         font_color=right_summary_color, bold=True)
+        else:
+            # ── Simple bullet points fallback ──
+            add_text(s, right_x, ct + Inches(0.65), right_w, Inches(4.5),
+                     after_points, font_size=SMALL_SIZE,
+                     font_color=DARK_GRAY, line_spacing=Pt(8))
+            if right_summary:
+                add_text(s, right_x, Inches(5.8), right_w, Inches(0.35),
+                         right_summary, font_size=Pt(12),
+                         font_color=right_summary_color, bold=True)
+
+        # ── Bottom bar ──
+        if bottom_bar:
+            add_bottom_bar(s, bottom_bar[0], bottom_bar[1])
+
         self._footer(s, source)
         return s
 

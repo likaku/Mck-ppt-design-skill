@@ -126,14 +126,17 @@ def add_oval(slide, x, y, letter, size=Inches(0.45), bg=NAVY, fg=WHITE):
     tf = c.text_frame
     tf.paragraphs[0].text = letter
     tf.paragraphs[0].font.size = Pt(14)
-    tf.paragraphs[0].font.name = FONT_BODY
+    tf.paragraphs[0].font.name = 'Arial'
     tf.paragraphs[0].font.color.rgb = fg
     tf.paragraphs[0].font.bold = True
     tf.paragraphs[0].alignment = PP_ALIGN.CENTER
     for run in tf.paragraphs[0].runs:
-        set_ea_font(run, FONT_EA)
+        set_ea_font(run, 'Arial')
     bodyPr = tf._txBody.find(qn('a:bodyPr'))
     bodyPr.set('anchor', 'ctr')
+    # 圆形内文字边距全部设为0，确保文字居中紧贴
+    for attr in ['lIns', 'tIns', 'rIns', 'bIns']:
+        bodyPr.set(attr, '0')
     _clean_shape(c)
     return c
 
