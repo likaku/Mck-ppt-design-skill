@@ -254,12 +254,19 @@ class MckEngine:
                      font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
             cx += cw
         add_hline(s, LM, hdr_y + Inches(0.45), CW, BLACK, Pt(1.0))
-        row_h = Inches(0.95)
+        # --- adaptive row height ---
+        row_start_y = hdr_y + Inches(0.55)
+        bottom_limit = (BOTTOM_BAR_Y - Inches(0.15)) if bottom_bar else (SOURCE_Y - Inches(0.1))
+        avail_h = bottom_limit - row_start_y
+        n_rows = len(rows)
+        row_h = min(Inches(0.95), avail_h / n_rows) if n_rows > 0 else Inches(0.95)
+        # shrink font when rows are compact
+        row_font = SMALL_SIZE if row_h >= Inches(0.6) else Pt(10)
         for ri, row in enumerate(rows):
-            ry = hdr_y + Inches(0.55) + row_h * ri
+            ry = row_start_y + row_h * ri
             cx = LM
             for val, cw in zip(row, col_widths):
-                add_text(s, cx, ry, cw, row_h, val, font_size=SMALL_SIZE)
+                add_text(s, cx, ry, cw, row_h, val, font_size=row_font)
                 cx += cw
             add_hline(s, LM, ry + row_h, CW, LINE_GRAY)
         if bottom_bar:
@@ -854,17 +861,26 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        iy = CONTENT_TOP + Inches(0.1)
-        for num, stitle, desc in steps:
+        # --- adaptive step spacing ---
+        n_steps = len(steps)
+        start_y = CONTENT_TOP + Inches(0.1)
+        bottom_limit = (BOTTOM_BAR_Y - Inches(0.15)) if bottom_bar else (SOURCE_Y - Inches(0.1))
+        avail = bottom_limit - start_y
+        step_h = min(Inches(1.1), avail / n_steps) if n_steps > 0 else Inches(1.1)
+        row_h = step_h * 0.55   # text row portion
+        gap_h = step_h * 0.45   # gap + hline portion
+        use_small = step_h < Inches(0.85)
+        for i, (num, stitle, desc) in enumerate(steps):
+            iy = start_y + step_h * i
             add_oval(s, LM, iy + Inches(0.05), str(num))
-            add_text(s, LM + Inches(0.6), iy, Inches(3.0), Inches(0.4),
-                     stitle, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-            add_text(s, Inches(4.5), iy, Inches(8.0), Inches(0.4), desc, font_size=BODY_SIZE)
-            iy += Inches(0.6)
-            add_hline(s, LM, iy, CW, LINE_GRAY)
-            iy += Inches(0.5)
+            add_text(s, LM + Inches(0.6), iy, Inches(3.0), row_h,
+                     stitle, font_size=SUB_HEADER_SIZE if not use_small else BODY_SIZE,
+                     font_color=NAVY, bold=True)
+            add_text(s, Inches(4.5), iy, Inches(8.0), row_h, desc,
+                     font_size=BODY_SIZE if not use_small else SMALL_SIZE)
+            add_hline(s, LM, iy + row_h + gap_h * 0.5, CW, LINE_GRAY)
         if bottom_bar:
-            add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=max(iy + Inches(0.2), BOTTOM_BAR_Y))
+            add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=BOTTOM_BAR_Y)
         self._footer(s, source)
         return s
 
