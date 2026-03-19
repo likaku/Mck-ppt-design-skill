@@ -1,4 +1,4 @@
-# Layout Catalog — 70 Slide Types
+# Layout Catalog — 72 Slide Types
 
 ## Category A: Structure & Navigation
 | # | Name | Use Case |
@@ -24,7 +24,7 @@
 | # | Name | Use Case |
 |---|------|----------|
 | 13 | 2x2 Matrix | BCG matrix, priority grid |
-| 14 | Three-Pillar Framework | Three parallel strategies |
+| ~~14~~ | ~~Three-Pillar Framework~~ | _Retired v2.0.4 → use #71 Table+Insight_ |
 | 15 | Pyramid / Hierarchy | Layered structures |
 | 16 | Process Chevron | 3-5 step linear flow |
 | 17 | Venn Diagram | Concept intersections |
@@ -34,7 +34,7 @@
 | # | Name | Use Case |
 |---|------|----------|
 | 19 | Side-by-Side Comparison | Option A vs Option B |
-| 20 | Before / After | Transformation showcase |
+| 20 | Before / After | White-bg editorial layout with vertical divider + black circle arrow — structured data rows + formula cards |
 | 21 | Pros and Cons | Advantage-risk analysis |
 | 22 | Traffic Light Status | Multi-item RAG status |
 
@@ -117,3 +117,9 @@
 | 68 | Two-Column Image + Text Grid | 2×2 visual catalog |
 | 69 | Numbered List with Side Panel | Recommendations + highlight panel |
 | 70 | Stacked Area Chart | Cumulative trends over time |
+
+## Category M: Editorial Narrative _(v2.0.3)_
+| # | Name | Use Case |
+|---|------|----------|
+| 71 | Table + Insight Panel | Left data table + right gray-bg insight panel with chevron — ideal for opening analysis slides |
+| 72 | Multi-Bar Panel Chart | 2-3 side-by-side bar chart panels with CAGR trend arrows — multi-dimension data comparison |

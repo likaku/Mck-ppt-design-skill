@@ -425,7 +425,7 @@ When creating a presentation, follow these templates unless the user explicitly 
 ```
  Slide 1:  Cover Slide
  Slide 2:  Executive Summary (Pattern #24)
- Slides 3-5: Core Content (vary layouts: #8, #14, #19, #33)
+ Slides 3-5: Core Content (vary layouts: #8, #71, #19, #33)
  Slide 6:  Synthesis / Timeline (Pattern #29)
  Slide 7:  Key Takeaways (Pattern #34)
  Slide 8:  Closing (Pattern #36)
@@ -446,7 +446,7 @@ Match content type to the optimal layout pattern:
 |---|---|---|
 | Single key statistic | Big Number (#8) | Plain text |
 | 2 options comparison | Side-by-Side (#19), Before/After (#20), Metric Comparison Row (#62) | Two-column text |
-| 3-4 parallel concepts | Three-Pillar (#14), Four-Column (#27), Metric Cards (#10), Icon Grid (#63) | Bullet list |
+| 3-4 parallel concepts | Table+Insight (#71), Four-Column (#27), Metric Cards (#10), Icon Grid (#63) | Bullet list |
 | Process / steps | Process Chevron (#16), Vertical Steps (#30), Value Chain (#67) | Numbered text |
 | Timeline | Timeline/Roadmap (#29), Cycle (#31) | Bullet list |
 | Data table | Data Table (#9), Scorecard (#22), Harvey Ball Table (#56) | Plain text |
@@ -462,8 +462,16 @@ Match content type to the optimal layout pattern:
 | **Multi-KPI executive dashboard** | **Dashboard KPI+Chart (#57), Dashboard Table+Chart (#58)** | **Simple table** |
 | **Stakeholder / relationship** | **Stakeholder Map (#59)** | **Bullet list** |
 | **Meeting agenda** | **Agenda (#66)** | **Plain text** |
+| **Opening analysis / key arguments** | **Table+Insight (#71), Key Takeaway (#25)** | **Bullet list, Plain text** |
 
 **NEVER** use Two-Column Text (#26) for more than 1 slide per deck. It is the least visually engaging layout.
+
+**OPENING SLIDE PRIORITY RULE**: For **Slides 2–5** (the first few content slides after cover/TOC), **strongly prefer high-impact editorial layouts** that set the tone for the entire presentation. Prioritized layouts for opening slides (in order of preference):
+1. **Table+Insight (`table_insight`, #71)** — structured arguments with gray-bg right-panel takeaways + chevron icon
+2. **Big Number (#8)** — single impactful statistic
+3. **Key Takeaway (#25)** — left detail + right summary
+
+These layouts create a strong visual opening that hooks the audience. Avoid starting presentations with plain text or simple bullet lists.
 
 **CHART PRIORITY RULE**: When data contains dates/periods + numeric values or percentages (e.g., `3/4 正面 20% 中性 80%` or `Q1: ¥850万`), you **MUST** use a Chart pattern (#37-#39, #48-#56, #64, #70) instead of a text-based layout. Charts maximize data-ink ratio and are the most visually compelling way to present time-series data.
 
@@ -1295,21 +1303,36 @@ eng.side_by_side(title='方案A vs 方案B',
     source='Source: ...')
 ```
 
-#### 20. Before / After (前后对比页)
+#### 20. Before / After (前后对比页) _(v2.0.1 rewrite)_
 
-**适用场景**: 展示变革前后的对比（如流程优化、组织变革）。
+**适用场景**: 展示变革前后的对比（如行业退潮 vs 生存公式、流程优化、组织变革）。
+
+**设计特征**:
+- **白底清洁布局** — 无背景色块，纯白底
+- **黑色竖线 + 圆圈箭头** — 中间细竖线分隔，竖线正中放黑色实心圆圈内含 `>` 箭头（Arial 字体，内边距0）
+- **结构化数据行**（左侧）— 每行有 label/brand/value/extra，数值红色大字
+- **公式卡片**（右侧）— 每条有 title/desc/cases，案例数字黑色+下划线
+- **支持简单文字列表后备** — 如传入 `list[str]` 自动退化为简单 bullet 模式
+- **可选虚线角标** — 右上角虚线框（如 `Part II > 退潮`）
+- **可选底部总结条** — bottom_bar
 
 ```
-┌─────────────────────────────────────────┐
-│ ▌ Action Title                          │
-├─────────────────────────────────────────┤
-│  ┌──BG_GRAY────┐  ──>  ┌──NAVY────┐    │
-│  │  现状       │       │  目标    │    │
-│  │  (Before)   │       │  (After) │    │
-│  │  痛点列表   │       │  改进点  │    │
-│  └─────────────┘       └─────────┘    │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ ▌ Action Title                   ┊Part II >┊ │
+├──────────────────┬────┬──────────────────────┤
+│  左侧标题        │    │  右侧标题            │
+│                  │ ● │                      │
+│  标签 品牌 数值   │ > │  1. 公式标题          │
+│  ────────────── │ ● │     描述 + 案例下划线  │
+│  标签 品牌 数值   │    │  ─────────────      │
+│  ────────────── │    │  2. 公式标题          │
+│  总结(灰粗体)    │    │     总结(红色粗体)    │
+├──────────────────────────────────────────────┤
+│ [关键洞察] 底部总结条                         │
+└──────────────────────────────────────────────┘
 ```
+
+**Engine method**: `eng.before_after()`
 
 ```python
 eng.before_after(title='流程优化效果',
@@ -1317,6 +1340,22 @@ eng.before_after(title='流程优化效果',
     after_title='优化后', after_points=['自动审批 2小时', '错误率 0.5%', '满意度 92分'],
     source='Source: ...')
 ```
+
+**Parameters**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `title` | str | 页面标题 |
+| `before_title` | str | 左侧标题 |
+| `before_points` | list[dict] 或 list[str] | 左侧数据行（dict: label/brand1/val1/brand2/val2/extra）或简单文字列表 |
+| `after_title` | str | 右侧标题 |
+| `after_points` | list[dict] 或 list[str] | 右侧公式卡片（dict: title/desc/cases）或简单文字列表 |
+| `corner_label` | str | 右上角虚线角标文字（可选） |
+| `bottom_bar` | tuple(str,str) | 底部条 (标签, 文字)（可选） |
+| `left_summary` | str | 左侧底部总结文字（可选，灰色粗体） |
+| `right_summary` | str | 右侧底部总结文字（可选，默认红色粗体） |
+| `right_summary_color` | RGBColor | 右侧总结文字颜色（默认 ACCENT_RED） |
+| `source` | str | 数据来源 |
 
 #### 21. Pros and Cons (优劣分析页)
 

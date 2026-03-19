@@ -19,7 +19,7 @@ from pptx.oxml.ns import qn
 
 from .constants import *
 from .core import (
-    _clean_shape,
+    _clean_shape, set_ea_font,
     add_text, add_rect, add_hline, add_oval, add_image_placeholder,
     add_action_title, add_source, add_page_number, add_bottom_bar,
     add_block_arc, add_color_legend, draw_harvey_ball,
@@ -254,14 +254,179 @@ class MckEngine:
                      font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
             cx += cw
         add_hline(s, LM, hdr_y + Inches(0.45), CW, BLACK, Pt(1.0))
-        row_h = Inches(0.95)
+        # --- adaptive row height ---
+        row_start_y = hdr_y + Inches(0.55)
+        bottom_limit = (BOTTOM_BAR_Y - Inches(0.15)) if bottom_bar else (SOURCE_Y - Inches(0.1))
+        avail_h = bottom_limit - row_start_y
+        n_rows = len(rows)
+        row_h = min(Inches(0.95), avail_h / n_rows) if n_rows > 0 else Inches(0.95)
+        # shrink font when rows are compact
+        row_font = SMALL_SIZE if row_h >= Inches(0.6) else Pt(10)
         for ri, row in enumerate(rows):
-            ry = hdr_y + Inches(0.55) + row_h * ri
+            ry = row_start_y + row_h * ri
             cx = LM
             for val, cw in zip(row, col_widths):
-                add_text(s, cx, ry, cw, row_h, val, font_size=SMALL_SIZE)
+                add_text(s, cx, ry, cw, row_h, val, font_size=row_font)
                 cx += cw
             add_hline(s, LM, ry + row_h, CW, LINE_GRAY)
+        if bottom_bar:
+            add_bottom_bar(s, bottom_bar[0], bottom_bar[1])
+        self._footer(s, source)
+        return s
+
+    def table_insight(self, title, headers, rows, insights,
+                      col_widths=None, insight_title='启示：',
+                      source='', bottom_bar=None):
+        """Table + right insight panel — McKinsey editorial layout.
+
+        Left ~60%: data table with header row + horizontal-line separated rows.
+                   Each row is list[str] matching headers.
+                   Supports **bold** markup within cell text.
+        Middle: double-chevron arrow icon bridging table → insight.
+        Right ~32%: "启示：" title + decorative line + bullet insights.
+
+        Parameters
+        ----------
+        headers : list[str] — column headers for the table.
+        rows : list[list[str]] — each inner list maps to headers.
+        insights : list[str] — insight bullet points (shown on the right panel).
+        col_widths : list[Inches] or None — custom widths for table columns.
+        insight_title : str — title for the right panel (default '启示：').
+        """
+        import re
+        s = self._ns()
+        add_action_title(s, title)
+
+        # ── Layout geometry ──
+        table_w = Inches(7.2)               # left table area width
+        chevron_zone = Inches(0.7)           # middle zone for chevron icon
+        insight_w = CW - table_w - chevron_zone  # right insight panel width
+        table_x = LM
+        chevron_x = LM + table_w             # chevron zone left edge
+        insight_x = LM + table_w + chevron_zone
+
+        # ── NO vertical separator line — chevron icon separates visually ──
+
+        # ── Table: header row ──
+        n_cols = len(headers)
+        if col_widths is None:
+            col_widths = [table_w / n_cols] * n_cols
+        hdr_y = CONTENT_TOP + Inches(0.1)
+        cx = table_x
+        for hdr, cw in zip(headers, col_widths):
+            add_text(s, cx, hdr_y, cw, Inches(0.4), hdr,
+                     font_size=BODY_SIZE, font_color=BLACK, bold=True)
+            cx += cw
+        add_hline(s, table_x, hdr_y + Inches(0.45), table_w, BLACK, Pt(1.0))
+
+        # ── Table: data rows ──
+        row_start_y = hdr_y + Inches(0.55)
+        bottom_limit = (BOTTOM_BAR_Y - Inches(0.15)) if bottom_bar else (SOURCE_Y - Inches(0.1))
+        avail_h = bottom_limit - row_start_y
+        n_rows = len(rows)
+        row_h = min(Inches(1.55), avail_h / n_rows) if n_rows > 0 else Inches(1.55)
+        row_font = BODY_SIZE if row_h >= Inches(1.0) else SMALL_SIZE
+
+        for ri, row in enumerate(rows):
+            ry = row_start_y + row_h * ri
+            cx = table_x
+            for ci, (val, cw) in enumerate(zip(row, col_widths)):
+                # First column (label): bold, vertically centered
+                if ci == 0:
+                    add_text(s, cx, ry, cw, row_h, val,
+                             font_size=SUB_HEADER_SIZE, font_color=BLACK, bold=True,
+                             anchor=MSO_ANCHOR.MIDDLE)
+                else:
+                    # Support **bold** markup in cell text
+                    lines = val if isinstance(val, list) else val.split('\n')
+                    txBox = s.shapes.add_textbox(cx, ry, cw, row_h)
+                    tf = txBox.text_frame
+                    tf.word_wrap = True
+                    tf.auto_size = None
+                    bodyPr = tf._txBody.find(qn('a:bodyPr'))
+                    bodyPr.set('anchor', 'ctr')
+                    for attr in ['lIns', 'tIns', 'rIns', 'bIns']:
+                        bodyPr.set(attr, '45720')
+                    for li, line in enumerate(lines):
+                        p = tf.paragraphs[0] if li == 0 else tf.add_paragraph()
+                        p.space_before = Pt(3) if li > 0 else Pt(0)
+                        p.space_after = Pt(0)
+                        p.line_spacing = Pt(row_font.pt * 1.35)
+                        segments = re.split(r'(\*\*.*?\*\*)', line)
+                        for seg in segments:
+                            if seg.startswith('**') and seg.endswith('**'):
+                                run = p.add_run()
+                                run.text = seg[2:-2]
+                                run.font.size = row_font
+                                run.font.name = FONT_BODY
+                                run.font.color.rgb = BLACK
+                                run.font.bold = True
+                                set_ea_font(run, FONT_EA)
+                            elif seg:
+                                run = p.add_run()
+                                run.text = seg
+                                run.font.size = row_font
+                                run.font.name = FONT_BODY
+                                run.font.color.rgb = DARK_GRAY
+                                run.font.bold = False
+                                set_ea_font(run, FONT_EA)
+                cx += cw
+            # Row separator line
+            add_hline(s, table_x, ry + row_h, table_w, LINE_GRAY)
+
+        # ── Middle: double-chevron arrow icon ──
+        # Vertically centered in the content area, between table and insights
+        content_mid_y = CONTENT_TOP + avail_h * 0.42
+        chev_size = Inches(0.5)
+        chev_shape = s.shapes.add_shape(
+            MSO_SHAPE.CHEVRON,
+            chevron_x + (chevron_zone - chev_size) // 2,
+            content_mid_y,
+            chev_size, chev_size)
+        chev_shape.fill.solid()
+        chev_shape.fill.fore_color.rgb = DARK_GRAY
+        chev_shape.line.fill.background()
+        _clean_shape(chev_shape)
+
+        # ── Right insight panel ──
+        n_insights = len(insights)
+        if n_insights > 0:
+            insight_area_top = CONTENT_TOP + Inches(0.1)
+
+            # Gray background rectangle for the entire insight panel
+            bg_pad = Inches(0.1)  # small padding around the bg
+            bg_bottom = bottom_limit + Inches(0.05)
+            add_rect(s, insight_x - bg_pad, insight_area_top - bg_pad,
+                     insight_w + bg_pad * 2, bg_bottom - insight_area_top + bg_pad * 2,
+                     BG_GRAY)
+
+            # "启示：" title (no decorative line above)
+            title_y = insight_area_top + Inches(0.1)
+            add_text(s, insight_x, title_y, insight_w, Inches(0.45),
+                     insight_title,
+                     font_size=SUB_HEADER_SIZE, font_color=BLACK, bold=True)
+
+            # Bullet insights — compact, with round bullet •
+            bullet_start_y = title_y + Inches(0.55)
+            bullet_spacing = Inches(0.15)  # gap between bullets
+            # Calculate available height for all insights
+            insight_bottom = bottom_limit
+            insight_avail = insight_bottom - bullet_start_y
+            block_h = (insight_avail - bullet_spacing * (n_insights - 1)) / n_insights if n_insights > 1 else insight_avail
+
+            for ii, ins in enumerate(insights):
+                by = bullet_start_y + ii * (block_h + bullet_spacing)
+
+                # Round bullet •
+                add_text(s, insight_x, by,
+                         Inches(0.25), block_h, '•',
+                         font_size=BODY_SIZE, font_color=BLACK, bold=True)
+                # Insight text
+                add_text(s, insight_x + Inches(0.3), by,
+                         insight_w - Inches(0.35), block_h, ins,
+                         font_size=BODY_SIZE, font_color=DARK_GRAY,
+                         line_spacing=Pt(8))
+
         if bottom_bar:
             add_bottom_bar(s, bottom_bar[0], bottom_bar[1])
         self._footer(s, source)
@@ -297,7 +462,7 @@ class MckEngine:
         return s
 
     # ═══════════════════════════════════════════
-    # FRAMEWORK LAYOUTS (#13, #14, #15, #16, #18)
+    # FRAMEWORK LAYOUTS (#13, #15, #16, #18)
     # ═══════════════════════════════════════════
 
     def matrix_2x2(self, title, quadrants, axis_labels=None, source='',
@@ -331,32 +496,6 @@ class MckEngine:
                      desc, font_size=SMALL_SIZE, font_color=DARK_GRAY)
         if bottom_bar:
             add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=Inches(5.8) if not axis_labels else Inches(6.2))
-        self._footer(s, source)
-        return s
-
-    def three_pillar(self, title, pillars, source=''):
-        """#14 Three-Pillar Framework — 3 accent-colored columns.
-        pillars: list of (name, points:list[str]) or (name, points, accent, light_bg).
-        """
-        s = self._ns()
-        add_action_title(s, title)
-        n = len(pillars)
-        pw = (CW - Inches(0.2) * (n - 1)) / n
-        pg = Inches(0.2)
-        for i, p in enumerate(pillars):
-            if len(p) == 4:
-                name, points, accent, light = p
-            else:
-                name, points = p[0], p[1]
-                accent, light = ACCENT_PAIRS[i % len(ACCENT_PAIRS)]
-            px = LM + (pw + pg) * i
-            add_rect(s, px, CONTENT_TOP + Inches(0.1), pw, Inches(0.6), accent)
-            add_text(s, px + Inches(0.15), CONTENT_TOP + Inches(0.1), pw - Inches(0.3), Inches(0.6),
-                     name, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-                     anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-            add_rect(s, px, CONTENT_TOP + Inches(0.7), pw, Inches(4.0), light)
-            add_text(s, px + Inches(0.2), CONTENT_TOP + Inches(0.9), pw - Inches(0.4), Inches(3.5),
-                     points, font_size=BODY_SIZE, line_spacing=Pt(8))
         self._footer(s, source)
         return s
 
@@ -474,29 +613,254 @@ class MckEngine:
         return s
 
     def before_after(self, title, before_title, before_points,
-                     after_title, after_points, source=''):
-        """#20 Before/After — gray (before) + navy (after) with arrow."""
+                     after_title, after_points, source='',
+                     corner_label='', bottom_bar=None,
+                     left_summary='', right_summary='',
+                     right_summary_color=None):
+        """#20 Before/After — vertical divider with black circle arrow.
+
+        Layout: left half + black vertical line with > circle + right half.
+        No background color blocks — clean white layout with data rows.
+
+        Parameters
+        ----------
+        title : str
+            Slide action title.
+        before_title : str
+            Left section subtitle.
+        before_points : list[dict] or list[str]
+            Left section content. If list[dict], each dict has keys:
+              - 'label': str — row label (bold black, left column)
+              - 'brand1': str — first brand/description (gray small text)
+              - 'val1': str — first value (red bold large text)
+              - 'brand2': str — second brand (optional)
+              - 'val2': str — second value (optional)
+              - 'extra': str — supplementary note below val1 (optional, gray small text)
+            If list[str], falls back to simple bullet points.
+        after_title : str
+            Right section subtitle.
+        after_points : list[dict] or list[str]
+            Right section content. If list[dict], each dict has keys:
+              - 'title': str — numbered title (e.g. '1. xxx', bold black)
+              - 'desc': str — description text (gray)
+              - 'cases': list[tuple(str, str)] — (name, performance) pairs,
+                performance shown in black bold + underline
+            If list[str], falls back to simple bullet points.
+        source : str
+            Source footnote text.
+        corner_label : str
+            Optional dashed corner label (e.g. 'Part II > 退潮').
+        bottom_bar : tuple(str, str) or None
+            Optional bottom bar (label, text), e.g. ('关键洞察', '...').
+        left_summary : str
+            Optional summary text below left section (dark gray bold).
+        right_summary : str
+            Optional summary text below right section (red bold).
+        right_summary_color : RGBColor or None
+            Color for right summary. Defaults to ACCENT_RED.
+        """
+        from pptx.enum.dml import MSO_LINE_DASH_STYLE
+
         s = self._ns()
         add_action_title(s, title)
-        hw = Inches(5.0)
-        # Before
-        add_rect(s, LM, CONTENT_TOP + Inches(0.1), hw, Inches(4.8), BG_GRAY)
-        add_text(s, LM + Inches(0.3), CONTENT_TOP + Inches(0.2), hw - Inches(0.6), Inches(0.5),
-                 before_title, font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
-        add_hline(s, LM + Inches(0.3), CONTENT_TOP + Inches(0.8), hw - Inches(0.6), LINE_GRAY)
-        add_text(s, LM + Inches(0.3), CONTENT_TOP + Inches(1.0), hw - Inches(0.6), Inches(3.5),
-                 before_points, font_size=BODY_SIZE, line_spacing=Pt(10))
-        # Arrow
-        add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
-                 '→', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-        # After
-        ax = LM + hw + Inches(1.733)
-        add_rect(s, ax, CONTENT_TOP + Inches(0.1), hw, Inches(4.8), NAVY)
-        add_text(s, ax + Inches(0.3), CONTENT_TOP + Inches(0.2), hw - Inches(0.6), Inches(0.5),
-                 after_title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
-        add_hline(s, ax + Inches(0.3), CONTENT_TOP + Inches(0.8), hw - Inches(0.6), WHITE)
-        add_text(s, ax + Inches(0.3), CONTENT_TOP + Inches(1.0), hw - Inches(0.6), Inches(3.5),
-                 after_points, font_size=BODY_SIZE, font_color=WHITE, line_spacing=Pt(10))
+
+        if right_summary_color is None:
+            right_summary_color = ACCENT_RED
+
+        # ── Optional dashed corner label ──
+        if corner_label:
+            _corner_x = Inches(11.2)
+            _corner_y = Inches(0.15)
+            _corner_w = Inches(1.8)
+            _corner_h = Inches(0.45)
+            _corner_shape = s.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, _corner_x, _corner_y, _corner_w, _corner_h)
+            _corner_shape.fill.background()
+            _corner_shape.line.color.rgb = MED_GRAY
+            _corner_shape.line.width = Pt(1.0)
+            _corner_shape.line.dash_style = MSO_LINE_DASH_STYLE.DASH
+            _clean_shape(_corner_shape)
+            add_text(s, _corner_x, _corner_y, _corner_w, _corner_h,
+                     corner_label, font_size=SMALL_SIZE, font_color=MED_GRAY,
+                     alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+
+        # ── Layout parameters ──
+        ct = CONTENT_TOP + Inches(0.15)
+        left_x = LM
+        left_w = Inches(5.5)
+        divider_x = left_x + left_w
+        divider_w = Inches(0.733)
+        right_x = divider_x + divider_w
+        right_w = Inches(5.5)
+
+        # ── Vertical divider line + black circle with > ──
+        line_center_x = divider_x + divider_w / 2
+        vline_top = ct
+        vline_bottom = Inches(6.1)
+        vline_h = vline_bottom - vline_top
+
+        # Vertical line (thin rectangle)
+        add_rect(s, line_center_x - Pt(0.5), vline_top, Pt(1.0), vline_h, BLACK)
+
+        # Black circle with > arrow (text in oval text_frame, 0 margins, Arial)
+        circle_size = Inches(0.5)
+        circle_y = vline_top + (vline_h - circle_size) / 2
+        circle_x = line_center_x - circle_size / 2
+        circle = s.shapes.add_shape(
+            MSO_SHAPE.OVAL, circle_x, circle_y, circle_size, circle_size)
+        circle.fill.solid()
+        circle.fill.fore_color.rgb = BLACK
+        circle.line.fill.background()
+        _clean_shape(circle)
+        ctf = circle.text_frame
+        ctf.paragraphs[0].text = '>'
+        ctf.paragraphs[0].font.size = Pt(22)
+        ctf.paragraphs[0].font.name = 'Arial'
+        ctf.paragraphs[0].font.color.rgb = WHITE
+        ctf.paragraphs[0].font.bold = True
+        ctf.paragraphs[0].alignment = PP_ALIGN.CENTER
+        for run in ctf.paragraphs[0].runs:
+            set_ea_font(run, 'Arial')
+        cbodyPr = ctf._txBody.find(qn('a:bodyPr'))
+        cbodyPr.set('anchor', 'ctr')
+        for attr in ['lIns', 'tIns', 'rIns', 'bIns']:
+            cbodyPr.set(attr, '0')
+
+        # ══════════════════════════════════
+        # LEFT HALF
+        # ══════════════════════════════════
+        add_text(s, left_x, ct, left_w, Inches(0.5),
+                 before_title, font_size=Pt(16), font_color=BLACK, bold=True)
+
+        if before_points and isinstance(before_points[0], dict):
+            # ── Structured data rows ──
+            table_top = ct + Inches(0.6)
+            label_w = Inches(0.8)
+            data_x = left_x + label_w + Inches(0.15)
+            data_w = left_w - label_w - Inches(0.15)
+            row_h = Inches(1.0)
+
+            for ri, row in enumerate(before_points):
+                ry = table_top + row_h * ri
+
+                # Row label (bold black text, no background, vertically centered)
+                add_text(s, left_x, ry, label_w, row_h,
+                         row.get('label', ''), font_size=Pt(13),
+                         font_color=BLACK, bold=True,
+                         alignment=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
+
+                # First group: brand name (gray) + value (red bold)
+                brand_y = ry + Inches(0.1)
+                add_text(s, data_x, brand_y, Inches(2.2), Inches(0.22),
+                         row.get('brand1', ''), font_size=Pt(11),
+                         font_color=DARK_GRAY)
+                add_text(s, data_x, brand_y + Inches(0.22), Inches(2.2), Inches(0.35),
+                         row.get('val1', ''), font_size=Pt(18),
+                         font_color=ACCENT_RED, bold=True)
+
+                # Second group (optional)
+                if row.get('brand2'):
+                    col2_x = data_x + Inches(2.4)
+                    add_text(s, col2_x, brand_y, Inches(2.0), Inches(0.22),
+                             row['brand2'], font_size=Pt(11),
+                             font_color=DARK_GRAY)
+                    add_text(s, col2_x, brand_y + Inches(0.22),
+                             Inches(2.0), Inches(0.35),
+                             row.get('val2', ''), font_size=Pt(18),
+                             font_color=ACCENT_RED, bold=True)
+
+                # Extra note (optional, gray small text)
+                if row.get('extra'):
+                    add_text(s, data_x, brand_y + Inches(0.55),
+                             data_w, Inches(0.2),
+                             row['extra'], font_size=Pt(10),
+                             font_color=MED_GRAY)
+
+                # Row separator line
+                if ri < len(before_points) - 1:
+                    add_hline(s, left_x, ry + row_h, left_w, LINE_GRAY, Pt(0.5))
+
+            # Left summary
+            if left_summary:
+                summary_y = table_top + row_h * len(before_points) + Inches(0.1)
+                add_text(s, left_x, summary_y, left_w, Inches(0.35),
+                         left_summary, font_size=Pt(12),
+                         font_color=DARK_GRAY, bold=True)
+        else:
+            # ── Simple bullet points fallback ──
+            add_text(s, left_x, ct + Inches(0.6), left_w, Inches(4.5),
+                     before_points, font_size=SMALL_SIZE,
+                     font_color=DARK_GRAY, line_spacing=Pt(8))
+            if left_summary:
+                add_text(s, left_x, Inches(5.8), left_w, Inches(0.35),
+                         left_summary, font_size=Pt(12),
+                         font_color=DARK_GRAY, bold=True)
+
+        # ══════════════════════════════════
+        # RIGHT HALF
+        # ══════════════════════════════════
+        add_text(s, right_x, ct, right_w, Inches(0.5),
+                 after_title, font_size=Pt(16), font_color=BLACK, bold=True)
+
+        if after_points and isinstance(after_points[0], dict):
+            # ── Structured formula cards ──
+            r_top = ct + Inches(0.65)
+            fy = r_top
+            for fi, f in enumerate(after_points):
+                # Formula title (bold black)
+                add_text(s, right_x, fy, right_w, Inches(0.35),
+                         f.get('title', ''), font_size=Pt(14),
+                         font_color=BLACK, bold=True)
+
+                # Description (gray)
+                add_text(s, right_x + Inches(0.15), fy + Inches(0.35),
+                         right_w - Inches(0.15), Inches(0.3),
+                         f.get('desc', ''), font_size=Pt(11),
+                         font_color=DARK_GRAY)
+
+                # Case data (name in gray bold, performance in black bold + underline)
+                case_x = right_x + Inches(0.15)
+                for ci, (name, perf) in enumerate(f.get('cases', [])):
+                    cx = case_x + Inches(2.5) * ci
+                    add_text(s, cx, fy + Inches(0.65), Inches(1.0), Inches(0.3),
+                             name, font_size=Pt(11),
+                             font_color=DARK_GRAY, bold=True)
+                    perf_box = add_text(
+                        s, cx + Inches(1.0), fy + Inches(0.6),
+                        Inches(1.4), Inches(0.35),
+                        perf, font_size=Pt(16),
+                        font_color=BLACK, bold=True)
+                    # Add underline
+                    for p in perf_box.text_frame.paragraphs:
+                        for r in p.runs:
+                            r.font.underline = True
+
+                fy += Inches(1.15)
+
+                # Formula separator line
+                if fi < len(after_points) - 1:
+                    add_hline(s, right_x, fy - Inches(0.2), right_w,
+                              LINE_GRAY, Pt(0.5))
+
+            # Right summary
+            if right_summary:
+                add_text(s, right_x, fy, right_w, Inches(0.35),
+                         right_summary, font_size=Pt(12),
+                         font_color=right_summary_color, bold=True)
+        else:
+            # ── Simple bullet points fallback ──
+            add_text(s, right_x, ct + Inches(0.65), right_w, Inches(4.5),
+                     after_points, font_size=SMALL_SIZE,
+                     font_color=DARK_GRAY, line_spacing=Pt(8))
+            if right_summary:
+                add_text(s, right_x, Inches(5.8), right_w, Inches(0.35),
+                         right_summary, font_size=Pt(12),
+                         font_color=right_summary_color, bold=True)
+
+        # ── Bottom bar ──
+        if bottom_bar:
+            add_bottom_bar(s, bottom_bar[0], bottom_bar[1])
+
         self._footer(s, source)
         return s
 
@@ -629,17 +993,26 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        iy = CONTENT_TOP + Inches(0.1)
-        for num, stitle, desc in steps:
+        # --- adaptive step spacing ---
+        n_steps = len(steps)
+        start_y = CONTENT_TOP + Inches(0.1)
+        bottom_limit = (BOTTOM_BAR_Y - Inches(0.15)) if bottom_bar else (SOURCE_Y - Inches(0.1))
+        avail = bottom_limit - start_y
+        step_h = min(Inches(1.1), avail / n_steps) if n_steps > 0 else Inches(1.1)
+        row_h = step_h * 0.55   # text row portion
+        gap_h = step_h * 0.45   # gap + hline portion
+        use_small = step_h < Inches(0.85)
+        for i, (num, stitle, desc) in enumerate(steps):
+            iy = start_y + step_h * i
             add_oval(s, LM, iy + Inches(0.05), str(num))
-            add_text(s, LM + Inches(0.6), iy, Inches(3.0), Inches(0.4),
-                     stitle, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-            add_text(s, Inches(4.5), iy, Inches(8.0), Inches(0.4), desc, font_size=BODY_SIZE)
-            iy += Inches(0.6)
-            add_hline(s, LM, iy, CW, LINE_GRAY)
-            iy += Inches(0.5)
+            add_text(s, LM + Inches(0.6), iy, Inches(3.0), row_h,
+                     stitle, font_size=SUB_HEADER_SIZE if not use_small else BODY_SIZE,
+                     font_color=NAVY, bold=True)
+            add_text(s, Inches(4.5), iy, Inches(8.0), row_h, desc,
+                     font_size=BODY_SIZE if not use_small else SMALL_SIZE)
+            add_hline(s, LM, iy + row_h + gap_h * 0.5, CW, LINE_GRAY)
         if bottom_bar:
-            add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=max(iy + Inches(0.2), BOTTOM_BAR_Y))
+            add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=BOTTOM_BAR_Y)
         self._footer(s, source)
         return s
 
@@ -2341,6 +2714,266 @@ class MckEngine:
                          font_color=RGBColor(0xAA, 0xAA, 0xAA))
                 add_text(s, nrx + Inches(0.3), my + Inches(0.3), nrw - Inches(0.6), Inches(0.3),
                          val, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
+        self._footer(s, source)
+        return s
+
+    # ═══════════════════════════════════════════
+    # MULTI-BAR-PANEL CHART (#71 — McKinsey editorial bar chart panels)
+    # ═══════════════════════════════════════════
+
+    def multi_bar_panel(self, title, panels, connectors=None, footnotes=None, source=''):
+        """#71 Multi-Bar-Panel Chart — 2-3 side-by-side bar chart panels with
+        CAGR trend arrows and value labels on each bar.
+        McKinsey / BCG editorial chart style.
+
+        Parameters
+        ----------
+        title : str
+            Action title (top of slide).
+        panels : list[dict]
+            Each panel dict has:
+              - 'title': str — panel headline (supports **bold** markup for key numbers)
+              - 'unit': str — Y-axis unit label, e.g. '万人'
+              - 'legend': str — legend text, e.g. '15-64岁人口数量'
+              - 'categories': list[str] — X-axis labels (years)
+              - 'values': list[int|float] — bar heights
+              - 'bar_color': RGBColor (optional, default NAVY)
+              - 'cagr': list[dict] (optional) — CAGR annotations, each dict:
+                  {'rate': str, 'start': int, 'end': int}  # index into categories
+              - 'highlight_idx': list[int] (optional) — indices of bars to highlight
+              - 'highlight_color': RGBColor (optional, default ACCENT_BLUE)
+              - 'value_format': str (optional) — f-string format, e.g. '{:,.0f}'
+        connectors : list[str] or None
+            (Kept for API compat — ignored in v2. Panels are flush side-by-side.)
+        footnotes : list[str] or None
+            Footnote lines below the chart area.
+        source : str
+            Source attribution.
+        """
+        import re
+        s = self._ns()
+        add_action_title(s, title)
+
+        n_panels = len(panels)
+
+        # --- Layout: panels flush side-by-side, no connector circles ---
+        # CRITICAL: all coordinates must be int (EMU) to avoid XML float errors
+        _I = lambda v: int(v)  # shorthand for int coercion
+        panel_gap = Inches(0.25)               # gap between panels
+        total_gap = panel_gap * max(n_panels - 1, 0)
+        pw = _I((CW - total_gap) / n_panels)   # panel width
+
+        title_area_top = CONTENT_TOP
+        title_area_h = Inches(0.65)
+        unit_row_y = title_area_top + title_area_h + Inches(0.02)
+        cagr_row_y = unit_row_y + Inches(0.28)      # CAGR rate text
+        cagr_arrow_y = cagr_row_y + Inches(0.22)    # CAGR arrow line
+        chart_top = cagr_arrow_y + Inches(0.08)      # bars start
+        chart_bot = Inches(5.85)                     # bars bottom
+        chart_h = chart_bot - chart_top
+        xaxis_y = chart_bot + Inches(0.02)           # X-axis label y
+
+        footnote_y = Inches(6.25)
+
+        for pi, panel in enumerate(panels):
+            px = _I(LM + pi * (pw + panel_gap))
+
+            bar_color = panel.get('bar_color', NAVY)
+            hl_color = panel.get('highlight_color', ACCENT_BLUE)
+            hl_idx = set(panel.get('highlight_idx', []))
+            values = panel['values']
+            categories = panel['categories']
+            n_bars = len(values)
+            max_val = max(values) if values else 1
+            vfmt = panel.get('value_format', '{:,.0f}')
+
+            # --- Panel title with number prefix: "1. xxx **bold** xxx" ---
+            ptitle = panel['title']
+            txBox = s.shapes.add_textbox(px, title_area_top, pw, title_area_h)
+            tf = txBox.text_frame
+            tf.word_wrap = True
+            tf.auto_size = None
+            bodyPr = tf._txBody.find(qn('a:bodyPr'))
+            bodyPr.set('anchor', 't')
+            for attr in ['lIns', 'tIns', 'rIns', 'bIns']:
+                bodyPr.set(attr, '36576')
+            p = tf.paragraphs[0]
+            p.space_before = Pt(0)
+            p.space_after = Pt(0)
+            p.line_spacing = 1.05
+
+            # Add number prefix: "1. " in bold
+            num_run = p.add_run()
+            num_run.text = f'{pi + 1}. '
+            num_run.font.size = SUB_HEADER_SIZE
+            num_run.font.name = FONT_BODY
+            num_run.font.color.rgb = BLACK
+            num_run.font.bold = True
+            set_ea_font(num_run, FONT_EA)
+
+            # Parse **bold** segments in title
+            segments = re.split(r'(\*\*.*?\*\*)', ptitle)
+            for seg in segments:
+                if seg.startswith('**') and seg.endswith('**'):
+                    run = p.add_run()
+                    run.text = seg[2:-2]
+                    run.font.size = SUB_HEADER_SIZE
+                    run.font.name = FONT_BODY
+                    run.font.color.rgb = BLACK
+                    run.font.bold = True
+                    set_ea_font(run, FONT_EA)
+                elif seg:
+                    run = p.add_run()
+                    run.text = seg
+                    run.font.size = SUB_HEADER_SIZE
+                    run.font.name = FONT_BODY
+                    run.font.color.rgb = BLACK
+                    run.font.bold = False
+                    set_ea_font(run, FONT_EA)
+
+            # --- Unit + legend row (plain text, no color square) ---
+            unit = panel.get('unit', '')
+            legend = panel.get('legend', '')
+            unit_legend_text = unit
+            if legend:
+                unit_legend_text = f'{unit}          {legend}'
+            if unit_legend_text:
+                add_text(s, px, unit_row_y, pw, Inches(0.25),
+                         unit_legend_text, font_size=SMALL_SIZE, font_color=MED_GRAY)
+
+            # --- Pre-calculate bar geometry (needed for both CAGR arrows and bars) ---
+            cagr_list = panel.get('cagr', [])
+            bar_area_w = _I(pw - Inches(0.15))
+            bar_x_start = _I(px + Inches(0.05))
+            bar_spacing = _I(bar_area_w / n_bars)
+            bar_w = _I(bar_spacing * 0.72)       # wider bars, tighter gaps
+            bar_gap_w = _I(bar_spacing * 0.28)
+
+            scale_min = 0
+            scale_range = max_val - scale_min if max_val > scale_min else 1
+            usable_h = _I(chart_h * 0.82)  # leave headroom for value labels
+
+            # --- CAGR trend annotations (slope follows bar tops) ---
+            import math
+            for ci, cagr in enumerate(cagr_list):
+                rate = cagr['rate']
+                c_start = cagr['start']
+                c_end = cagr['end']
+                rate_color = ACCENT_RED if rate.lstrip().startswith('-') else ACCENT_GREEN
+
+                # Compute bar-top Y for start and end bars
+                def _bar_top_y(idx):
+                    v = values[idx]
+                    ratio = (v - scale_min) / scale_range if scale_range > 0 else 0
+                    bh = _I(usable_h * ratio)
+                    if bh < Inches(0.05):
+                        bh = Inches(0.05)
+                    return _I(chart_bot - bh)
+
+                start_top_y = _bar_top_y(c_start)
+                end_top_y = _bar_top_y(c_end)
+
+                # Arrow line X: from center of start bar to center of end bar
+                sx_center = _I(bar_x_start + bar_spacing * c_start + bar_gap_w / 2 + bar_w * 0.5)
+                ex_center = _I(bar_x_start + bar_spacing * c_end + bar_gap_w / 2 + bar_w * 0.5)
+
+                # Arrow line Y: offset above bar tops
+                arrow_y_offset = Inches(0.27)  # gap above bar top (closer to bars)
+                sy = _I(start_top_y - arrow_y_offset)
+                ey = _I(end_top_y - arrow_y_offset)
+
+                # Rate label: centered horizontally, at the higher (min-Y) point minus offset
+                mid_x = _I((sx_center + ex_center) / 2)
+                label_ref_y = _I(min(sy, ey) - Inches(0.28))
+                rate_label_w = Inches(1.8)
+                add_text(s, _I(mid_x - rate_label_w / 2), label_ref_y,
+                         rate_label_w, Inches(0.25), rate,
+                         font_size=EMPHASIS_SIZE, font_color=rate_color, bold=True,
+                         alignment=PP_ALIGN.CENTER)
+
+                # Draw sloped arrow using a single RIGHT_ARROW shape
+                # (no tail notch, arrowhead and line unified)
+                dx = ex_center - sx_center
+                dy = ey - sy  # positive dy = line goes down, negative = goes up
+                line_len = _I(math.sqrt(dx * dx + dy * dy))
+                if line_len > 0:
+                    angle_rad = math.atan2(dy, dx)
+                    angle_deg = math.degrees(angle_rad)
+                    # Arrow shape: height controls head spread; shaft thinness via adj1
+                    # We want shaft ~1.5px but need enough height for visible arrowhead
+                    arrow_h = Inches(0.13)  # overall height (arrowhead spread)
+                    # Place at center of the line (rotation is around shape center)
+                    cx = _I((sx_center + ex_center) / 2)
+                    cy = _I((sy + ey) / 2)
+                    arrow_shape = s.shapes.add_shape(
+                        MSO_SHAPE.RIGHT_ARROW,
+                        _I(cx - line_len / 2), _I(cy - arrow_h / 2),
+                        line_len, arrow_h)
+                    arrow_shape.fill.solid()
+                    arrow_shape.fill.fore_color.rgb = rate_color
+                    arrow_shape.line.fill.background()
+                    _clean_shape(arrow_shape)
+                    arrow_shape.rotation = angle_deg
+                    # Adjust arrow proportions via XML adj handles:
+                    # RIGHT_ARROW adj handles:
+                    #   adj1 = shaft width as % of shape height (50000 = 50%)
+                    #   adj2 = arrowhead length as % of shape width
+                    # Target: shaft ~1.5px thin, arrowhead 1.5x longer
+                    from lxml import etree
+                    avLst = arrow_shape._element.find(
+                        './/{http://schemas.openxmlformats.org/drawingml/2006/main}avLst')
+                    if avLst is not None:
+                        for child in list(avLst):
+                            avLst.remove(child)
+                        ns = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+                        # adj1: shaft width ratio — very thin shaft (~1.5px)
+                        # shape height is 0.13" ≈ 9.36pt, 1.5px ≈ 1.125pt
+                        # ratio = 1.125 / 9.36 ≈ 12%, so val ~12000
+                        gd1 = etree.SubElement(avLst, f'{{{ns}}}gd')
+                        gd1.set('name', 'adj1')
+                        gd1.set('fmla', 'val 12000')  # ~12% = ultra-thin shaft
+                        # adj2: arrowhead length — 1.5x default
+                        # default arrowhead length ≈ 50000 (50% of height as width)
+                        # 1.5x → 75000
+                        gd2 = etree.SubElement(avLst, f'{{{ns}}}gd')
+                        gd2.set('name', 'adj2')
+                        gd2.set('fmla', 'val 75000')  # 1.5x longer arrowhead
+
+            # --- Bar chart ---
+
+            for bi, val in enumerate(values):
+                bx = _I(bar_x_start + bar_spacing * bi + bar_gap_w / 2)
+                ratio = (val - scale_min) / scale_range if scale_range > 0 else 0
+                bh = _I(usable_h * ratio)
+                if bh < Inches(0.05):
+                    bh = Inches(0.05)
+                by = _I(chart_bot - bh)
+                bc = hl_color if bi in hl_idx else bar_color
+                add_rect(s, bx, by, bar_w, bh, bc)
+
+                # Value label — tight above bar
+                val_text = vfmt.format(val)
+                val_font = SMALL_SIZE
+                label_h = Inches(0.22)
+                add_text(s, _I(bx - Inches(0.08)), _I(by - label_h - Inches(0.02)),
+                         _I(bar_w + Inches(0.16)), label_h,
+                         val_text, font_size=val_font, font_color=BLACK, bold=False,
+                         alignment=PP_ALIGN.CENTER)
+
+            # --- X-axis labels ---
+            for bi, cat in enumerate(categories):
+                bx = _I(bar_x_start + bar_spacing * bi + bar_gap_w / 2)
+                add_text(s, _I(bx - Inches(0.05)), xaxis_y,
+                         _I(bar_w + Inches(0.1)), Inches(0.22),
+                         cat, font_size=SMALL_SIZE, font_color=DARK_GRAY,
+                         alignment=PP_ALIGN.CENTER)
+
+        # --- Footnotes ---
+        if footnotes:
+            for fi, fn in enumerate(footnotes):
+                add_text(s, LM, footnote_y + Inches(0.18) * fi, CW, Inches(0.18),
+                         fn, font_size=FOOTNOTE_SIZE, font_color=MED_GRAY)
+
         self._footer(s, source)
         return s
 
