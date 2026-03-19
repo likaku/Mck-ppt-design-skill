@@ -2,21 +2,21 @@
 name: mck-ppt-design
 description: >-
   Create professional, consultant-grade PowerPoint presentations from scratch
-  using python-pptx with McKinsey-style design. Use when user asks to create
-  slides, pitch decks, business presentations, strategy decks, quarterly
-  reviews, board meeting slides, or any professional PPTX. Generates clean,
-  flat-design presentations with 70 layout patterns across 12 categories
-  (structure, data, framework, comparison, narrative, timeline, team, charts,
-  images, advanced viz, dashboards, visual storytelling), consistent
-  typography, zero file-corruption issues, BLOCK_ARC native shapes for
-  circular charts (donut, pie, gauge), and production-hardened guard rails
+  using MckEngine (python-pptx wrapper) with McKinsey-style design. Use when
+  user asks to create slides, pitch decks, business presentations, strategy
+  decks, quarterly reviews, board meeting slides, or any professional PPTX.
+  AI calls eng.cover(), eng.donut(), eng.timeline() etc — 67 high-level methods
+  across 12 categories (structure, data, framework, comparison, narrative,
+  timeline, team, charts, images, advanced viz, dashboards, visual storytelling),
+  consistent typography, zero file-corruption issues, BLOCK_ARC native shapes
+  for circular charts (donut, pie, gauge), and production-hardened guard rails
   for spacing, overflow, legend consistency, title style uniformity,
   dynamic sizing for variable-count layouts, and chart rendering.
 ---
 
 # McKinsey PPT Design Framework
 
-> **Version**: 1.10.4 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 2.1.0 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: python3, pip
 
@@ -48,6 +48,101 @@ Use this skill when users ask to:
 4. **Build specific slide types** — cover pages, data dashboards, 2x2 matrices, timelines, funnels, team introductions, executive summaries, comparison layouts
 5. **Fix PPT issues** — file corruption ("needs repair"), shadow/3D artifacts, inconsistent fonts, Chinese text rendering problems
 6. **Maintain design consistency** — unified color palette, font hierarchy, spacing, and line treatments across all slides
+
+---
+
+
+---
+
+## MckEngine Quick Start (v2.0)
+
+v2.0 introduces a **Python runtime engine** (`mck_ppt/`) that encapsulates all 67 layout methods. Instead of writing raw `add_shape()` / `add_text()` coordinate code, the AI calls high-level methods like `eng.cover()`, `eng.donut()`, `eng.timeline()`.
+
+### Why Use MckEngine
+
+| | v1.x (inline code) | v2.0 (MckEngine) |
+|---|---|---|
+| Code generation | AI writes `add_shape()` + coordinate math per slide | AI calls `eng.cover()`, `eng.donut()` etc. |
+| Output tokens per 30-slide deck | 40,000–60,000 | 9,000–12,000 |
+| Rounds per deck | 10–15 | 3–4 |
+| Chart rendering | `add_rect()` stacking (100–2,800 shapes) | `BLOCK_ARC` native arcs (3–4 shapes) |
+| File corruption risk | Manual cleanup needed | Automatic three-layer defense |
+
+### Setup
+
+```bash
+pip install python-pptx lxml
+```
+
+The `mck_ppt/` package lives inside the skill directory. Before generating any presentation, the AI MUST:
+
+```python
+import sys, os
+sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))
+from mck_ppt import MckEngine
+```
+
+### Complete Generation Pattern
+
+Every presentation script follows this exact pattern:
+
+```python
+import sys, os
+sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))
+from mck_ppt import MckEngine
+from mck_ppt.constants import *  # NAVY, ACCENT_BLUE, etc.
+from pptx.util import Inches
+
+eng = MckEngine(total_slides=12)  # Set total for page numbering
+
+# ── Structure ──
+eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月')
+eng.toc(items=[('1', '市场概览', '当前竞争格局'),
+               ('2', '财务分析', '营收与利润趋势'),
+               ('3', '战略建议', '三大核心行动')])
+
+# ── Content slides ──
+eng.section_divider(section_label='第一部分', title='市场概览')
+eng.big_number(title='市场规模', number='¥850亿', description='2026年预估市场总量',
+    detail_items=['同比增长23%', '线上渠道占比突破60%'], source='Source: 行业报告 2026')
+eng.donut(title='市场份额分布',
+    segments=[(0.35, NAVY, '我们'), (0.25, ACCENT_BLUE, '竞品A'),
+              (0.20, ACCENT_GREEN, '竞品B'), (0.20, ACCENT_ORANGE, '其他')],
+    center_label='35%', center_sub='市占率', source='Source: 市场调研 2026')
+
+eng.section_divider(section_label='第二部分', title='财务分析')
+eng.grouped_bar(title='季度营收趋势',
+    categories=['Q1', 'Q2', 'Q3', 'Q4'],
+    series=[('产品', NAVY), ('服务', ACCENT_BLUE)],
+    data=[[120, 80], [145, 95], [160, 110], [180, 130]],
+    max_val=200, source='Source: 财务部')
+
+eng.section_divider(section_label='第三部分', title='战略建议')
+eng.three_pillar(title='三大战略方向',
+    pillars=[('产品创新', ['AI赋能', '用户体验升级']),
+             ('市场拓展', ['进入3个新行业', '海外布局']),
+             ('运营卓越', ['成本优化20%', '数字化覆盖85%'])],
+    source='Source: 战略部')
+eng.timeline(title='执行路线图',
+    milestones=[('Q1', '方案设计'), ('Q2', '试点验证'),
+                ('Q3', '规模推广'), ('Q4', '效果评估')],
+    source='Source: PMO')
+
+# ── Closing ──
+eng.closing(title='谢谢', message='期待与您进一步交流')
+
+# ── Save (auto cleanup) ──
+eng.save('output/q1_strategy_review.pptx')
+print('Done! 12 slides generated.')
+```
+
+### Key Rules
+
+1. **One method = one slide**. `eng.cover()` creates slide 1, `eng.toc()` creates slide 2, etc.
+2. **`eng.save()` handles everything** — XML cleanup, shadow removal, p:style sanitization. No manual `full_cleanup()` needed.
+3. **Page numbers are automatic** — the engine tracks `_page` internally.
+4. **All guard rails are built-in** — dynamic sizing, overflow protection, CJK font handling.
+5. **Use constants from `mck_ppt.constants`** — `NAVY`, `ACCENT_BLUE`, `BG_GRAY`, `BODY_SIZE`, etc.
 
 ---
 
@@ -726,29 +821,7 @@ Layout:
 
 Code template:
 ```python
-s1 = prs.slides.add_slide(prs.slide_layouts[6])
-add_rect(s1, 0, 0, prs.slide_width, Inches(0.05), NAVY)
-
-# Dynamic title height based on line count
-lines = title.split('\n') if isinstance(title, str) else title
-n_lines = len(lines) if isinstance(lines, list) else title.count('\n') + 1
-title_h = Inches(0.8 + 0.65 * max(n_lines - 1, 0))
-
-add_text(s1, Inches(1), Inches(1.2), Inches(11), title_h,
-         '项目名称', font_size=Pt(44), font_name='Georgia',
-         font_color=NAVY, bold=True, ea_font='KaiTi')
-
-# Position elements BELOW title dynamically — never use fixed y
-sub_y = Inches(1.2) + title_h + Inches(0.3)
-add_text(s1, Inches(1), sub_y, Inches(11), Inches(0.8),
-         '副标题描述', font_size=Pt(24),
-         font_color=DARK_GRAY, ea_font='KaiTi')
-sub_y += Inches(1.0)
-
-add_text(s1, Inches(1), sub_y + Inches(0.3), Inches(11), Inches(0.5),
-         '演示文稿  |  2026年3月', font_size=BODY_SIZE,
-         font_color=MED_GRAY, ea_font='KaiTi')
-add_hline(s1, Inches(1), Inches(6.8), Inches(4), NAVY, Pt(2))
+eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月')
 ```
 
 #### 2. Action Title Slide (Most Content Slides)
@@ -860,14 +933,7 @@ add_text(s5, takeaway_left + Inches(0.15), Inches(1.9), takeaway_width - Inches(
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_rect(s, 0, 0, Inches(0.6), SH, NAVY)
-add_text(s, Inches(1.2), Inches(2.0), Inches(10), Inches(0.8),
-         '第一部分', font_size=SUB_HEADER_SIZE, font_color=MED_GRAY, font_name='Georgia')
-add_text(s, Inches(1.2), Inches(2.8), Inches(10), Inches(1.2),
-         '章节标题', font_size=HEADER_SIZE, font_color=NAVY, bold=True, font_name='Georgia')
-add_text(s, Inches(1.2), Inches(4.2), Inches(10), Inches(0.6),
-         '副标题说明文字', font_size=BODY_SIZE, font_color=DARK_GRAY)
+eng.section_divider(section_label='第一部分', title='市场分析', subtitle='当前格局与核心机会')
 ```
 
 #### 6. Table of Contents / Agenda (目录/议程页)
@@ -889,21 +955,7 @@ add_text(s, Inches(1.2), Inches(4.2), Inches(10), Inches(0.6),
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '目录')
-items = [('1', '引言与背景', '项目起源与核心问题'),
-         ('2', '市场分析', '竞争格局与机会识别'),
-         ('3', '战略建议', '三大核心行动方案')]
-iy = Inches(1.6)
-for num, title, desc in items:
-    add_oval(s, LM, iy, num, size=Inches(0.5))
-    add_text(s, LM + Inches(0.7), iy, Inches(4.0), Inches(0.4),
-             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-    add_text(s, Inches(5.5), iy + Inches(0.05), Inches(6.5), Inches(0.4),
-             desc, font_size=BODY_SIZE, font_color=MED_GRAY)
-    iy += Inches(0.7)
-    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
-    iy += Inches(0.3)
+eng.toc(items=[('1', '市场概览', '当前竞争格局'), ('2', '战略方向', '三大核心举措'), ('3', '执行路线', '时间表与责任人')])
 ```
 
 #### 7. Appendix Title (附录标题页)
@@ -923,15 +975,7 @@ for num, title, desc in items:
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
-add_text(s, Inches(1), Inches(2.5), Inches(11.3), Inches(1.0),
-         '附录', font_size=Pt(36), font_color=NAVY, bold=True,
-         font_name='Georgia', alignment=PP_ALIGN.CENTER)
-add_hline(s, Inches(5.5), Inches(3.8), Inches(2.3), NAVY, Pt(1.5))
-add_text(s, Inches(1), Inches(4.2), Inches(11.3), Inches(0.5),
-         '补充数据与参考资料', font_size=BODY_SIZE, font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
+eng.appendix_title(title='附录', subtitle='补充数据与参考资料')
 ```
 
 ---
@@ -959,22 +1003,8 @@ add_text(s, Inches(1), Inches(4.2), Inches(11.3), Inches(0.5),
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '关键发现标题')
-add_rect(s, LM, Inches(1.4), Inches(3.5), Inches(1.8), NAVY)
-add_text(s, LM + Inches(0.2), Inches(1.5), Inches(3.1), Inches(0.8),
-         '95%', font_size=Pt(44), font_color=WHITE, bold=True,
-         font_name='Georgia', alignment=PP_ALIGN.CENTER)
-add_text(s, LM + Inches(0.2), Inches(2.3), Inches(3.1), Inches(0.7),
-         '描述数据含义', font_size=Pt(12), font_color=WHITE, alignment=PP_ALIGN.CENTER)
-add_text(s, Inches(5.0), Inches(1.5), Inches(7.5), Inches(2.0),
-         '上下文说明与详细解释', font_size=BODY_SIZE)
-add_rect(s, LM, Inches(4.5), CONTENT_W, Inches(2.2), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(4.6), Inches(1.5), Inches(0.4),
-         '关键洞见', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_text(s, LM + Inches(0.3), Inches(5.1), CONTENT_W - Inches(0.6), Inches(1.4),
-              ['洞见要点一', '洞见要点二', '洞见要点三'], line_spacing=Pt(8))
-add_source(s, 'Source: ...')
+eng.big_number(title='关键发现标题', number='95%', unit='', description='描述数据含义',
+    detail_items=['洞见要点一', '洞见要点二', '洞见要点三'], source='Source: ...')
 ```
 
 #### 9. Two-Stat Comparison (双数据对比页)
@@ -996,25 +1026,9 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '对比标题')
-stats = [('$2.4B', '2026年目标', True), ('$1.8B', '2025年实际', False)]
-sw = Inches(5.5)
-sg = Inches(0.733)
-for i, (big, small, is_navy) in enumerate(stats):
-    sx = LM + (sw + sg) * i
-    fill = NAVY if is_navy else BG_GRAY
-    bc = WHITE if is_navy else NAVY
-    sc = WHITE if is_navy else DARK_GRAY
-    add_rect(s, sx, Inches(1.8), sw, Inches(2.5), fill)
-    add_text(s, sx + Inches(0.3), Inches(2.0), sw - Inches(0.6), Inches(1.0),
-             big, font_size=Pt(44), font_color=bc, bold=True,
-             font_name='Georgia', alignment=PP_ALIGN.CENTER)
-    add_text(s, sx + Inches(0.3), Inches(3.2), sw - Inches(0.6), Inches(0.5),
-             small, font_size=BODY_SIZE, font_color=sc, alignment=PP_ALIGN.CENTER)
-add_text(s, LM, Inches(5.0), CONTENT_W, Inches(1.5),
-         '分析说明文字', font_size=BODY_SIZE)
-add_source(s, 'Source: ...')
+eng.two_stat(title='对比标题',
+    stats=[('$2.4B', '2026年目标', True), ('$1.8B', '2025年实际', False)],
+    source='Source: ...')
 ```
 
 #### 10. Three-Stat Dashboard (三指标仪表盘)
@@ -1035,25 +1049,9 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '三大关键指标')
-stats = [('87%', '客户满意度', True),
-         ('+23%', '同比增长', False),
-         ('4.2x', '投资回报率', False)]
-sw = Inches(3.5)
-sg = (CONTENT_W - sw * 3) / 2
-for i, (big, small, is_navy) in enumerate(stats):
-    sx = LM + (sw + sg) * i
-    fill = NAVY if is_navy else BG_GRAY
-    bc = WHITE if is_navy else NAVY
-    sc = WHITE if is_navy else DARK_GRAY
-    add_rect(s, sx, Inches(1.4), sw, Inches(1.8), fill)
-    add_text(s, sx + Inches(0.2), Inches(1.5), sw - Inches(0.4), Inches(0.7),
-             big, font_size=Pt(28), font_color=bc, bold=True,
-             font_name='Georgia', alignment=PP_ALIGN.CENTER)
-    add_text(s, sx + Inches(0.2), Inches(2.25), sw - Inches(0.4), Inches(0.6),
-             small, font_size=Pt(12), font_color=sc, alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.three_stat(title='核心运营指标',
+    stats=[('98.5%', '系统可用性', True), ('12ms', '平均响应时间', False), ('4.8', '用户满意度', True)],
+    source='Source: ...')
 ```
 
 #### 11. Data Table with Headers (数据表格页)
@@ -1075,28 +1073,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '数据概览')
-headers = ['模块', '功能', '状态', '负责人']
-col_widths = [Inches(2.5), Inches(4.0), Inches(2.5), Inches(2.7)]
-hdr_y = Inches(1.5)
-cx = LM
-for hdr, cw in zip(headers, col_widths):
-    add_text(s, cx, hdr_y, cw, Inches(0.4), hdr,
-             font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
-    cx += cw
-add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
-# Data rows
-rows = [['模块A', '核心功能描述', '已上线', '张三'], ...]
-row_h = Inches(0.8)
-for ri, row in enumerate(rows):
-    ry = Inches(2.1) + row_h * ri
-    cx = LM
-    for val, cw in zip(row, col_widths):
-        add_text(s, cx, ry, cw, row_h, val, font_size=BODY_SIZE)
-        cx += cw
-    add_hline(s, LM, ry + row_h, CONTENT_W, LINE_GRAY)
-add_source(s, 'Source: ...')
+eng.data_table(title='五大核心能力',
+    headers=['模块', '功能描述', '应用场景'],
+    rows=[['AI Agent', '自主决策与执行', '客服自动化'],
+          ['数据引擎', '实时数据处理', '风控决策']],
+    source='Source: ...')
 ```
 
 #### 12. Metric Cards Row (指标卡片行)
@@ -1117,25 +1098,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '核心指标概览')
-cards = [('A', '用户增长', '月活用户达到 120 万\n同比增长 35%'),
-         ('B', '营收表现', '季度营收 ¥8,500 万\n超出预期 12%'),
-         ('C', '运营效率', '客诉响应时间 < 2h\n满意度 94%')]
-cw = Inches(3.5)
-cg = (CONTENT_W - cw * 3) / 2
-for i, (letter, title, desc) in enumerate(cards):
-    cx = LM + (cw + cg) * i
-    cy = Inches(1.5)
-    add_rect(s, cx, cy, cw, Inches(4.5), BG_GRAY)
-    add_oval(s, cx + Inches(1.5), cy + Inches(0.2), letter)
-    add_text(s, cx + Inches(0.2), cy + Inches(0.8), cw - Inches(0.4), Inches(0.4),
-             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_hline(s, cx + Inches(0.4), cy + Inches(1.3), cw - Inches(0.8), LINE_GRAY)
-    add_text(s, cx + Inches(0.2), cy + Inches(1.5), cw - Inches(0.4), Inches(2.5),
-                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.metric_cards(title='月度运营仪表盘',
+    cards=[('98.5%', '可用性', '超越SLA目标'),
+           ('¥2.3亿', '月营收', '同比+18%'),
+           ('4.8/5', '满意度', '连续3月提升')],
+    source='Source: ...')
 ```
 
 ---
@@ -1162,27 +1129,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '战略优先级矩阵')
-mx = LM + Inches(1.5)
-my = Inches(1.8)
-cw = Inches(4.5)
-ch = Inches(2.5)
-# Axis labels
-add_text(s, mx - Inches(1.3), my + Inches(0.8), Inches(1.1), Inches(0.4),
-         '高影响', font_size=BODY_SIZE, font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-add_text(s, mx + Inches(0.8), my - Inches(0.5), Inches(3.0), Inches(0.4),
-         '高可行性', font_size=BODY_SIZE, font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-# Quadrants
-add_rect(s, mx, my, cw, ch, NAVY)  # best quadrant
-add_rect(s, mx + cw + Inches(0.15), my, cw, ch, BG_GRAY)
-add_rect(s, mx, my + ch + Inches(0.15), cw, ch, BG_GRAY)
-add_rect(s, mx + cw + Inches(0.15), my + ch + Inches(0.15), cw, ch, BG_GRAY)
-# Quadrant titles + descriptions
-add_text(s, mx + Inches(0.3), my + Inches(0.3), cw - Inches(0.6), Inches(0.5),
-         '立即执行', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
-# ... repeat for other 3 quadrants with DARK_GRAY text
-add_source(s, 'Source: ...')
+eng.matrix_2x2(title='战略优先级矩阵',
+    quadrants=[('高价值 / 低难度', ['快速推进项目A', '立即启动项目B']),
+               ('高价值 / 高难度', ['重点攻关项目C']),
+               ('低价值 / 低难度', ['委托执行项目D']),
+               ('低价值 / 高难度', ['暂缓或放弃'])],
+    source='Source: ...')
 ```
 
 #### 14. Three-Pillar Framework (三支柱框架)
@@ -1204,23 +1156,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '三大核心战略')
-pillars = [('数字化转型', ['建设数据中台', '打通全渠道', '自动化运营']),
-           ('组织升级', ['扁平化管理', '敏捷团队', '人才梯队']),
-           ('客户深耕', ['精细化运营', '会员体系', 'LTV 提升'])]
-pw = Inches(3.5)
-pg = (CONTENT_W - pw * 3) / 2
-for i, (title, points) in enumerate(pillars):
-    px = LM + (pw + pg) * i
-    add_rect(s, px, Inches(1.5), pw, Inches(0.6), NAVY)
-    add_text(s, px + Inches(0.15), Inches(1.5), pw - Inches(0.3), Inches(0.6),
-             title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_rect(s, px, Inches(2.1), pw, Inches(4.0), BG_GRAY)
-    add_text(s, px + Inches(0.2), Inches(2.3), pw - Inches(0.4), Inches(3.5),
-                  [f'• {p}' for p in points], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.three_pillar(title='数字化转型三大支柱',
+    pillars=[('技术基座', ['云原生架构', '微服务改造', '数据中台']),
+             ('组织能力', ['敏捷团队', '数字人才', '创新文化']),
+             ('业务重塑', ['客户体验', '供应链优化', '智能决策'])],
+    source='Source: ...')
 ```
 
 #### 15. Pyramid / Hierarchy (金字塔/层级图)
@@ -1242,25 +1182,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '战略层级框架')
-levels = [('愿景', '成为行业第一', Inches(3.5)),
-          ('战略目标', '三年收入翻倍', Inches(5.0)),
-          ('执行措施', '渠道+产品+组织', Inches(6.5))]
-for i, (label, desc, w) in enumerate(levels):
-    lx = Inches(6.666) - w / 2  # centered
-    ly = Inches(1.8) + Inches(1.5) * i
-    h = Inches(1.2)
-    fill = NAVY if i == 0 else BG_GRAY
-    tc = WHITE if i == 0 else NAVY
-    add_rect(s, lx, ly, w, h, fill)
-    add_text(s, lx + Inches(0.2), ly + Inches(0.1), w - Inches(0.4), Inches(0.4),
-             label, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_text(s, lx + Inches(0.2), ly + Inches(0.55), w - Inches(0.4), Inches(0.5),
-             desc, font_size=BODY_SIZE, font_color=tc if i == 0 else DARK_GRAY,
-             alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.pyramid(title='价值金字塔',
+    layers=[('愿景', '成为行业领导者'),
+            ('战略', '三大核心战略方向'),
+            ('执行', '12个关键项目'),
+            ('基础', '技术平台 + 组织能力')],
+    source='Source: ...')
 ```
 
 #### 16. Process Chevron (流程箭头页)
@@ -1281,30 +1208,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '实施路径')
-steps = [('诊断', '现状评估\n痛点识别'),
-         ('设计', '方案制定\n资源规划'),
-         ('实施', '分阶段落地\n快速迭代'),
-         ('优化', '效果追踪\n持续改进')]
-sw = Inches(2.5)
-sg = (CONTENT_W - sw * len(steps)) / (len(steps) - 1)
-for i, (title, desc) in enumerate(steps):
-    sx = LM + (sw + sg) * i
-    fill = NAVY if i == 0 else BG_GRAY
-    tc = WHITE if i == 0 else NAVY
-    add_rect(s, sx, Inches(2.0), sw, Inches(1.2), fill)
-    add_oval(s, sx + Inches(0.1), Inches(2.1), str(i + 1),
-             bg=WHITE if i == 0 else NAVY, fg=NAVY if i == 0 else WHITE)
-    add_text(s, sx + Inches(0.6), Inches(2.1), sw - Inches(0.8), Inches(1.0),
-             title, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, sx + Inches(0.1), Inches(3.4), sw - Inches(0.2), Inches(1.5),
-             desc, font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER)
-    if i < len(steps) - 1:
-        add_text(s, sx + sw + Inches(0.05), Inches(2.3), Inches(0.4), Inches(0.5),
-                 '->', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-add_source(s, 'Source: ...')
+eng.process_chevron(title='客户旅程五步法',
+    steps=['需求识别', '方案设计', '实施交付', '运营优化', '持续创新'],
+    bottom_bar=('关键洞见', '端到端数字化覆盖率从30%提升至85%'),
+    source='Source: ...')
 ```
 
 #### 17. Venn Diagram Concept (维恩图概念页)
@@ -1326,24 +1233,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '核心能力交叉')
-# Use overlapping rectangles to represent Venn concept
-add_rect(s, Inches(1.5), Inches(1.8), Inches(4.5), Inches(4.0), BG_GRAY)
-add_text(s, Inches(1.7), Inches(2.0), Inches(2.0), Inches(0.4),
-         '技术能力', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-add_rect(s, Inches(3.5), Inches(2.8), Inches(4.5), Inches(4.0), BG_GRAY)
-add_text(s, Inches(5.5), Inches(5.5), Inches(2.0), Inches(0.4),
-         '业务洞察', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-# Intersection area
-add_rect(s, Inches(3.5), Inches(2.8), Inches(2.5), Inches(3.0), NAVY)
-add_text(s, Inches(3.7), Inches(3.5), Inches(2.1), Inches(0.8),
-         '核心\n竞争力', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER)
-# Right explanation
-add_text(s, Inches(9.0), Inches(2.0), Inches(3.5), Inches(4.0),
-         '当技术能力与业务洞察交叉时...', font_size=BODY_SIZE)
-add_source(s, 'Source: ...')
+eng.venn(title='能力交叉模型',
+    circles=[('技术', ['云计算', 'AI/ML'], 0.8, 1.5, 4.5, 3.5),
+             ('业务', ['行业Know-how', '流程优化'], 3.5, 1.5, 4.5, 3.5)],
+    overlap_label='数字化创新',
+    source='Source: ...')
 ```
 
 #### 18. Temple / House Framework (殿堂框架)
@@ -1365,31 +1259,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '企业能力架构')
-# Roof
-add_rect(s, LM, Inches(1.5), CONTENT_W, Inches(0.8), NAVY)
-add_text(s, LM + Inches(0.3), Inches(1.5), CONTENT_W - Inches(0.6), Inches(0.8),
-         '企业愿景：成为行业领先的数字化平台',
-         font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-# Pillars
-pillars = ['产品力', '技术力', '运营力', '品牌力']
-pw = Inches(2.5)
-pg = (CONTENT_W - pw * 4) / 3
-for i, name in enumerate(pillars):
-    px = LM + (pw + pg) * i
-    add_rect(s, px, Inches(2.5), pw, Inches(3.0), BG_GRAY)
-    add_text(s, px + Inches(0.15), Inches(2.6), pw - Inches(0.3), Inches(0.5),
-             name, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-# Foundation
-add_rect(s, LM, Inches(5.7), CONTENT_W, Inches(0.8), NAVY)
-add_text(s, LM + Inches(0.3), Inches(5.7), CONTENT_W - Inches(0.6), Inches(0.8),
-         '基座：数据驱动 + 人才体系 + 企业文化',
-         font_size=BODY_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.temple(title='企业架构框架',
+    roof_text='企业愿景：成为全球领先的科技公司',
+    pillar_names=['产品创新', '客户体验', '运营卓越', '人才发展'],
+    foundation_text='数据驱动 · 敏捷组织 · 开放生态',
+    source='Source: ...')
 ```
 
 ---
@@ -1415,22 +1289,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '方案对比分析')
-cw = Inches(5.5)
-cg = Inches(0.733)
-options = [('方案 A：自建团队', ['投入可控', '周期较长', '成本 ¥500万/年']),
-           ('方案 B：外部合作', ['快速启动', '依赖供应商', '成本 ¥300万/年'])]
-for i, (title, points) in enumerate(options):
-    cx = LM + (cw + cg) * i
-    add_rect(s, cx, Inches(1.5), cw, Inches(0.6), NAVY)
-    add_text(s, cx + Inches(0.15), Inches(1.5), cw - Inches(0.3), Inches(0.6),
-             title, font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_rect(s, cx, Inches(2.1), cw, Inches(4.0), BG_GRAY)
-    add_text(s, cx + Inches(0.3), Inches(2.3), cw - Inches(0.6), Inches(3.5),
-                  [f'• {p}' for p in points], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.side_by_side(title='方案A vs 方案B',
+    options=[('方案A：自建', ['完全自主可控', '前期投入¥500万', '上线周期6个月']),
+             ('方案B：SaaS', ['快速上线2周', '年费¥80万', '依赖供应商'])],
+    source='Source: ...')
 ```
 
 #### 20. Before / After (前后对比页)
@@ -1450,28 +1312,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '从现状到目标')
-hw = Inches(5.0)
-# Before
-add_rect(s, LM, Inches(1.5), hw, Inches(4.5), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
-         'X  现状（Before）', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
-add_hline(s, LM + Inches(0.3), Inches(2.2), hw - Inches(0.6), LINE_GRAY)
-add_text(s, LM + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['痛点一', '痛点二', '痛点三'], line_spacing=Pt(10))
-# Arrow
-add_text(s, LM + hw + Inches(0.1), Inches(3.2), Inches(1.5), Inches(0.5),
-         '->', font_size=Pt(36), font_color=NAVY, bold=True, alignment=PP_ALIGN.CENTER)
-# After
-ax = LM + hw + Inches(1.733)
-add_rect(s, ax, Inches(1.5), hw, Inches(4.5), NAVY)
-add_text(s, ax + Inches(0.3), Inches(1.6), hw - Inches(0.6), Inches(0.5),
-         'V  目标（After）', font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True)
-add_hline(s, ax + Inches(0.3), Inches(2.2), hw - Inches(0.6), WHITE)
-add_text(s, ax + Inches(0.3), Inches(2.4), hw - Inches(0.6), Inches(3.0),
-              ['改进一', '改进二', '改进三'], font_color=WHITE, line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.before_after(title='流程优化效果',
+    before_title='优化前', before_points=['人工审批 3-5天', '错误率 8%', '满意度 65分'],
+    after_title='优化后', after_points=['自动审批 2小时', '错误率 0.5%', '满意度 92分'],
+    source='Source: ...')
 ```
 
 #### 21. Pros and Cons (优劣分析页)
@@ -1493,29 +1337,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '方案评估：优势与风险')
-hw = Inches(5.5)
-# Pros column
-add_text(s, LM, Inches(1.5), hw, Inches(0.4),
-         'V  优势', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-add_hline(s, LM, Inches(2.0), hw, NAVY)
-add_text(s, LM, Inches(2.2), hw, Inches(2.5),
-              ['• 优势要点一', '• 优势要点二', '• 优势要点三'], line_spacing=Pt(10))
-# Cons column
-cx = LM + hw + Inches(0.733)
-add_text(s, cx, Inches(1.5), hw, Inches(0.4),
-         'X  风险', font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, bold=True)
-add_hline(s, cx, Inches(2.0), hw, DARK_GRAY)
-add_text(s, cx, Inches(2.2), hw, Inches(2.5),
-              ['• 风险要点一', '• 风险要点二', '• 风险要点三'], line_spacing=Pt(10))
-# Bottom conclusion
-add_rect(s, LM, Inches(5.2), CONTENT_W, Inches(1.5), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.3), Inches(1.5), Inches(0.4),
-         '结论', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_text(s, LM + Inches(0.3), Inches(5.8), CONTENT_W - Inches(0.6), Inches(0.6),
-         '综合评估建议文字', font_size=BODY_SIZE)
-add_source(s, 'Source: ...')
+eng.pros_cons(title='并购方案评估',
+    pros_title='优势', pros=['快速获取市场份额', '技术团队整合', '品牌协同效应'],
+    cons_title='风险', cons=['整合成本高', '文化冲突', '监管审批不确定'],
+    source='Source: ...')
 ```
 
 #### 22. Traffic Light / RAG Status (红绿灯状态页)
@@ -1537,33 +1362,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '项目状态总览')
-# Header
-headers = ['项目', '状态', '进度', '备注']
-widths = [Inches(3.0), Inches(1.5), Inches(2.0), Inches(5.233)]
-hx = LM
-for hdr, w in zip(headers, widths):
-    add_text(s, hx, Inches(1.5), w, Inches(0.4), hdr,
-             font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
-    hx += w
-add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
-# Rows with status indicators
-rows = [('产品研发', 'NAVY', '85%', '按计划推进'),
-        ('市场推广', 'MED_GRAY', '60%', '需关注预算'),
-        ('团队扩招', 'DARK_GRAY', '30%', '存在阻塞')]
-color_map = {'NAVY': NAVY, 'MED_GRAY': MED_GRAY, 'DARK_GRAY': DARK_GRAY}
-ry = Inches(2.2)
-for name, status_color, pct, note in rows:
-    add_text(s, LM, ry, Inches(3.0), Inches(0.6), name, font_size=BODY_SIZE)
-    add_oval(s, LM + Inches(3.3), ry + Inches(0.05), '', size=Inches(0.35),
-             bg=color_map[status_color])
-    add_text(s, LM + Inches(4.5), ry, Inches(2.0), Inches(0.6), pct, font_size=BODY_SIZE)
-    add_text(s, LM + Inches(6.5), ry, Inches(5.233), Inches(0.6), note, font_size=BODY_SIZE)
-    ry += Inches(0.7)
-    add_hline(s, LM, ry, CONTENT_W, LINE_GRAY)
-    ry += Inches(0.15)
-add_source(s, 'Source: ...')
+eng.rag_status(title='项目健康度仪表盘',
+    headers=['项目', '进度', '预算', '质量', '负责人'],
+    rows=[('CRM升级', '🟢', '🟡', '🟢', '张三'),
+          ('ERP迁移', '🟡', '🔴', '🟢', '李四')],
+    source='Source: ...')
 ```
 
 #### 23. Scorecard (计分卡页)
@@ -1584,30 +1387,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '综合评估计分卡')
-headers = ['评估维度', '得分', '评级']
-add_text(s, LM, Inches(1.5), Inches(4.0), Inches(0.4), headers[0],
-         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
-add_text(s, Inches(5.0), Inches(1.5), Inches(1.5), Inches(0.4), headers[1],
-         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
-add_text(s, Inches(7.0), Inches(1.5), Inches(5.5), Inches(0.4), headers[2],
-         font_size=BODY_SIZE, font_color=MED_GRAY, bold=True)
-add_hline(s, LM, Inches(2.0), CONTENT_W, BLACK, Pt(1.0))
-items = [('客户满意度', '92', 0.92), ('产品质量', '85', 0.85),
-         ('交付速度', '78', 0.78), ('创新能力', '65', 0.65)]
-ry = Inches(2.2)
-bar_max = Inches(5.0)
-for name, score, pct in items:
-    add_text(s, LM, ry, Inches(4.0), Inches(0.5), name, font_size=BODY_SIZE)
-    add_text(s, Inches(5.0), ry, Inches(1.5), Inches(0.5), score,
-             font_size=BODY_SIZE, font_color=NAVY, bold=True)
-    add_rect(s, Inches(7.0), ry + Inches(0.1), bar_max, Inches(0.3), BG_GRAY)
-    add_rect(s, Inches(7.0), ry + Inches(0.1), Inches(5.0 * pct), Inches(0.3), NAVY)
-    ry += Inches(0.7)
-    add_hline(s, LM, ry, CONTENT_W, LINE_GRAY)
-    ry += Inches(0.15)
-add_source(s, 'Source: ...')
+eng.scorecard(title='数字化成熟度评估',
+    items=[('数据治理', 85, '已建立完整数据标准'),
+           ('流程自动化', 62, 'RPA覆盖40%核心流程'),
+           ('AI应用', 45, '试点阶段，3个场景落地')],
+    source='Source: ...')
 ```
 
 ---
@@ -1633,27 +1417,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '执行摘要')
-add_rect(s, LM, Inches(1.4), CONTENT_W, Inches(1.0), NAVY)
-add_text(s, LM + Inches(0.3), Inches(1.4), CONTENT_W - Inches(0.6), Inches(1.0),
-         '核心结论：一句话概括最重要的发现或建议',
-         font_size=SUB_HEADER_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-points = [('1', '论点一标题', '支撑论点的详细说明文字'),
-          ('2', '论点二标题', '支撑论点的详细说明文字'),
-          ('3', '论点三标题', '支撑论点的详细说明文字')]
-iy = Inches(2.8)
-for num, title, desc in points:
-    add_oval(s, LM, iy, num)
-    add_text(s, LM + Inches(0.6), iy, Inches(3.5), Inches(0.4),
-             title, font_size=BODY_SIZE, font_color=NAVY, bold=True)
-    add_text(s, Inches(5.0), iy, Inches(7.5), Inches(0.4),
-             desc, font_size=BODY_SIZE)
-    iy += Inches(0.6)
-    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
-    iy += Inches(0.3)
-add_source(s, 'Source: ...')
+eng.executive_summary(title='执行摘要',
+    headline='本季度实现营收¥8.5亿，同比增长23%，超额完成年度目标的52%',
+    items=[('市场拓展', '新增客户127家，覆盖3个新行业'),
+           ('产品迭代', '发布V3.0版本，NPS提升15个百分点'),
+           ('运营效率', '人效比提升18%，交付周期缩短40%')],
+    source='Source: ...')
 ```
 
 #### 25. Key Takeaway with Detail (核心洞见页)
@@ -1674,24 +1443,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '核心发现')
-# Left content
-add_text(s, LM, Inches(1.5), Inches(7.5), Inches(0.4),
-         '分析标题', font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-add_hline(s, LM, Inches(2.0), Inches(7.5), LINE_GRAY)
-add_text(s, LM, Inches(2.2), Inches(7.5), Inches(4.0),
-              ['详细分析段落一', '', '详细分析段落二'], line_spacing=Pt(8))
-# Right takeaway
-tk_x = Inches(9.0)
-tk_w = Inches(3.5)
-add_rect(s, tk_x, Inches(1.5), tk_w, Inches(5.0), BG_GRAY)
-add_text(s, tk_x + Inches(0.2), Inches(1.7), tk_w - Inches(0.4), Inches(0.4),
-         'Key Takeaways', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_hline(s, tk_x + Inches(0.2), Inches(2.2), tk_w - Inches(0.4), LINE_GRAY)
-add_text(s, tk_x + Inches(0.2), Inches(2.4), tk_w - Inches(0.4), Inches(3.8),
-              ['1. 要点一', '2. 要点二', '3. 要点三'], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.key_takeaway(title='核心洞见',
+    takeaway='数字化转型的关键不在技术，而在组织能力的重塑',
+    details=['技术是enabler，组织是driver', '自上而下的战略共识是前提', '小步快跑优于大规模重构'],
+    source='Source: ...')
 ```
 
 #### 26. Quote / Insight Page (引言/洞见页)
@@ -1713,16 +1468,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
-add_hline(s, Inches(5.5), Inches(2.0), Inches(2.3), NAVY, Pt(1.5))
-add_text(s, Inches(1.5), Inches(2.5), Inches(10.3), Inches(2.5),
-         '"引言内容，用于强调某个核心观点或专家洞见"',
-         font_size=Pt(24), font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
-add_hline(s, Inches(5.5), Inches(5.3), Inches(2.3), NAVY, Pt(1.5))
-add_text(s, Inches(1.5), Inches(5.6), Inches(10.3), Inches(0.5),
-         '— 作者姓名，来源',
-         font_size=BODY_SIZE, font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
+eng.quote(title='客户反馈',
+    quote_text='这是我们见过的最专业、最高效的数字化转型方案。',
+    attribution='张总, XX集团CEO',
+    source='Source: ...')
 ```
 
 #### 27. Two-Column Text (双栏文本页)
@@ -1742,21 +1491,10 @@ add_text(s, Inches(1.5), Inches(5.6), Inches(10.3), Inches(0.5),
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '双维度分析')
-cw = Inches(5.5)
-cg = Inches(0.733)
-cols = [('A', '维度一标题', ['分析要点一', '分析要点二', '分析要点三']),
-        ('B', '维度二标题', ['分析要点一', '分析要点二', '分析要点三'])]
-for i, (letter, title, points) in enumerate(cols):
-    cx = LM + (cw + cg) * i
-    add_oval(s, cx, Inches(1.5), letter)
-    add_text(s, cx + Inches(0.6), Inches(1.5), cw - Inches(0.6), Inches(0.4),
-             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-    add_hline(s, cx, Inches(2.0), cw, LINE_GRAY)
-    add_text(s, cx, Inches(2.2), cw, Inches(4.0),
-                  [f'• {p}' for p in points], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.two_column_text(title='能力对比分析',
+    columns=[('A', '核心能力', ['云原生架构设计', '大规模分布式系统', 'AI/ML工程化']),
+             ('B', '待提升领域', ['前端体验设计', '国际化运营', '生态合作伙伴'])],
+    source='Source: ...')
 ```
 
 #### 28. Four-Column Overview (四栏概览页)
@@ -1775,25 +1513,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '四大业务板块')
-items = [('1', '板块一', '描述内容\n关键数据'),
-         ('2', '板块二', '描述内容\n关键数据'),
-         ('3', '板块三', '描述内容\n关键数据'),
-         ('4', '板块四', '描述内容\n关键数据')]
-cw = Inches(2.7)
-cg = (CONTENT_W - cw * 4) / 3
-for i, (num, title, desc) in enumerate(items):
-    cx = LM + (cw + cg) * i
-    add_rect(s, cx, Inches(1.5), cw, Inches(4.8), BG_GRAY)
-    add_oval(s, cx + Inches(1.1), Inches(1.65), num)
-    add_text(s, cx + Inches(0.15), Inches(2.3), cw - Inches(0.3), Inches(0.4),
-             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_hline(s, cx + Inches(0.3), Inches(2.8), cw - Inches(0.6), LINE_GRAY)
-    add_text(s, cx + Inches(0.15), Inches(3.0), cw - Inches(0.3), Inches(3.0),
-                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.four_column(title='四大战略方向',
+    items=[('产品创新', '持续迭代核心产品线'),
+           ('市场拓展', '进入3个新垂直行业'),
+           ('运营卓越', '全流程数字化覆盖'),
+           ('人才战略', '关键岗位100%到位')],
+    source='Source: ...')
 ```
 
 ---
@@ -1817,22 +1542,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '2026 年度路线图')
-# Timeline bar
-add_hline(s, LM + Inches(0.5), Inches(3.0), Inches(10.7), LINE_GRAY, Pt(2))
-milestones = [('Q1', '产品 MVP\n发布'), ('Q2', '用户增长\n达到10万'),
-              ('Q3', '盈利\n突破'), ('Q4', '国际化\n拓展')]
-spacing = Inches(10.7) / (len(milestones) - 1)
-for i, (label, desc) in enumerate(milestones):
-    mx = LM + Inches(0.5) + spacing * i
-    add_oval(s, mx - Inches(0.225), Inches(2.775), str(i + 1))
-    add_text(s, mx - Inches(1.0), Inches(2.0), Inches(2.0), Inches(0.5),
-             label, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_text(s, mx - Inches(1.0), Inches(3.5), Inches(2.0), Inches(1.5),
-             desc, font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.timeline(title='项目路线图 2026',
+    milestones=[('Q1', '需求调研与方案设计'),
+                ('Q2', '核心功能开发与测试'),
+                ('Q3', '灰度发布与用户反馈'),
+                ('Q4', '全量上线与效果评估')],
+    source='Source: ...')
 ```
 
 #### 30. Vertical Steps (垂直步骤页)
@@ -1854,23 +1569,13 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '实施步骤')
-steps = [('1', '需求分析', '深入调研用户需求与业务痛点'),
-         ('2', '方案设计', '制定技术架构与实施计划'),
-         ('3', '开发实施', '分阶段迭代交付核心功能'),
-         ('4', '上线运营', '监控效果并持续优化')]
-iy = Inches(1.5)
-for num, title, desc in steps:
-    add_oval(s, LM, iy, num)
-    add_text(s, LM + Inches(0.6), iy, Inches(3.5), Inches(0.4),
-             title, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True)
-    add_text(s, Inches(5.0), iy, Inches(7.5), Inches(0.4),
-             desc, font_size=BODY_SIZE)
-    iy += Inches(0.6)
-    add_hline(s, LM, iy, CONTENT_W, LINE_GRAY)
-    iy += Inches(0.5)
-add_source(s, 'Source: ...')
+eng.vertical_steps(title='实施五步法',
+    steps=[('1', '诊断评估', '全面了解现状与痛点'),
+           ('2', '方案设计', '制定分阶段实施方案'),
+           ('3', '试点验证', '选取2-3个场景快速验证'),
+           ('4', '规模推广', '复制成功经验至全业务线'),
+           ('5', '持续优化', '建立数据驱动的迭代机制')],
+    source='Source: ...')
 ```
 
 #### 31. Cycle / Loop (循环图页)
@@ -1892,35 +1597,10 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '持续改进循环（PDCA）')
-phases = [('Plan\n计划', Inches(2.8), Inches(1.5)),
-          ('Do\n执行', Inches(5.0), Inches(3.0)),
-          ('Check\n检查', Inches(2.8), Inches(4.5)),
-          ('Act\n改进', Inches(0.6), Inches(3.0))]
-for i, (label, px, py) in enumerate(phases):
-    fill = NAVY if i == 0 else BG_GRAY
-    tc = WHITE if i == 0 else NAVY
-    add_rect(s, LM + px, py, Inches(2.2), Inches(1.2), fill)
-    add_text(s, LM + px + Inches(0.1), py + Inches(0.1), Inches(2.0), Inches(1.0),
-             label, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-# Arrows between phases (text arrows)
-add_text(s, LM + Inches(4.5), Inches(2.0), Inches(1.0), Inches(0.5),
-         '->', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
-add_text(s, LM + Inches(5.0), Inches(4.0), Inches(1.0), Inches(0.5),
-         'v', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
-add_text(s, LM + Inches(2.0), Inches(5.0), Inches(1.0), Inches(0.5),
-         '<-', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
-add_text(s, LM + Inches(0.8), Inches(2.0), Inches(1.0), Inches(0.5),
-         '^', font_size=Pt(24), font_color=NAVY, alignment=PP_ALIGN.CENTER)
-# Right side explanation
-add_rect(s, Inches(8.5), Inches(1.5), Inches(4.0), Inches(5.0), BG_GRAY)
-add_text(s, Inches(8.8), Inches(1.7), Inches(3.4), Inches(0.4),
-         '循环要点', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_text(s, Inches(8.8), Inches(2.3), Inches(3.4), Inches(3.5),
-              ['每个阶段的说明...'], line_spacing=Pt(10))
-add_source(s, 'Source: ...')
+eng.cycle(title='敏捷开发循环',
+    phases=[('规划', 1.0, 2.0), ('开发', 5.0, 1.0),
+            ('测试', 9.0, 2.0), ('发布', 5.0, 4.0)],
+    source='Source: ...')
 ```
 
 #### 32. Funnel (漏斗图页)
@@ -1944,25 +1624,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '用户转化漏斗')
-stages = [('认知', '100,000', 1.0), ('兴趣', '60,000', 0.6),
-          ('购买', '35,000', 0.35), ('留存', '15,000', 0.15)]
-max_w = Inches(8.0)
-fy = Inches(1.6)
-for i, (name, count, pct) in enumerate(stages):
-    w = max_w * pct
-    fx = Inches(6.666) - w / 2  # center
-    fill = NAVY if i == 0 else BG_GRAY
-    tc = WHITE if i == 0 else NAVY
-    add_rect(s, fx, fy, w, Inches(1.0), fill)
-    add_text(s, fx + Inches(0.2), fy, w - Inches(0.4), Inches(1.0),
-             name, font_size=SUB_HEADER_SIZE, font_color=tc, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_text(s, fx + w + Inches(0.3), fy + Inches(0.2), Inches(2.5), Inches(0.5),
-             f'{count} ({int(pct*100)}%)', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-    fy += Inches(1.2)
-add_source(s, 'Source: ...')
+eng.funnel(title='销售漏斗分析',
+    stages=[('线索获取', '10,000', '100%'),
+            ('需求确认', '3,500', '35%'),
+            ('方案报价', '1,200', '12%'),
+            ('合同签署', '480', '4.8%')],
+    source='Source: ...')
 ```
 
 ---
@@ -1987,26 +1654,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '核心团队')
-members = [('张三', 'CEO', '15年行业经验\n前XX公司VP'),
-           ('李四', 'CTO', '技术架构专家\n前XX公司总监'),
-           ('王五', 'COO', '运营管理专家\n前XX公司负责人')]
-cw = Inches(3.5)
-cg = (CONTENT_W - cw * 3) / 2
-for i, (name, role, bio) in enumerate(members):
-    cx = LM + (cw + cg) * i
-    add_rect(s, cx, Inches(1.5), cw, Inches(5.0), BG_GRAY)
-    add_oval(s, cx + Inches(1.25), Inches(1.7), name[0], size=Inches(1.0))
-    add_text(s, cx + Inches(0.15), Inches(2.9), cw - Inches(0.3), Inches(0.4),
-             name, font_size=SUB_HEADER_SIZE, font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_text(s, cx + Inches(0.15), Inches(3.4), cw - Inches(0.3), Inches(0.4),
-             role, font_size=BODY_SIZE, font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
-    add_hline(s, cx + Inches(0.3), Inches(3.9), cw - Inches(0.6), LINE_GRAY)
-    add_text(s, cx + Inches(0.15), Inches(4.1), cw - Inches(0.3), Inches(2.0),
-                  bio.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.meet_the_team(title='核心团队',
+    members=[('张三', 'CEO', '15年行业经验'),
+             ('李四', 'CTO', '前Google高级工程师'),
+             ('王五', 'VP Sales', '年销售额¥5亿+')],
+    source='Source: ...')
 ```
 
 #### 34. Case Study (案例研究页)
@@ -2027,34 +1679,12 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '案例研究：XX项目')
-sections = [('S', 'Situation\n情境', '客户面临的\n挑战描述'),
-            ('A', 'Approach\n方法', '我们采取的\n解决方案'),
-            ('R', 'Result\n成果', '取得的量化\n成果数据')]
-sw = Inches(3.5)
-sg = (CONTENT_W - sw * 3) / 2
-for i, (letter, title, desc) in enumerate(sections):
-    sx = LM + (sw + sg) * i
-    fill = NAVY if i == 2 else BG_GRAY
-    tc = WHITE if i == 2 else NAVY
-    dc = WHITE if i == 2 else DARK_GRAY
-    add_rect(s, sx, Inches(1.5), sw, Inches(3.0), fill)
-    add_oval(s, sx + Inches(0.15), Inches(1.65), letter,
-             bg=WHITE if i == 2 else NAVY, fg=NAVY if i == 2 else WHITE)
-    add_text(s, sx + Inches(0.15), Inches(2.2), sw - Inches(0.3), Inches(0.8),
-             title, font_size=BODY_SIZE, font_color=tc, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_text(s, sx + Inches(0.15), Inches(3.1), sw - Inches(0.3), Inches(1.0),
-             desc, font_size=BODY_SIZE, font_color=dc, alignment=PP_ALIGN.CENTER)
-# Bottom highlight
-add_rect(s, LM, Inches(5.0), CONTENT_W, Inches(1.5), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.1), Inches(1.5), Inches(0.4),
-         '关键成果', font_size=BODY_SIZE, font_color=NAVY, bold=True)
-add_text(s, LM + Inches(0.3), Inches(5.6), CONTENT_W - Inches(0.6), Inches(0.6),
-         '营收增长 45%  |  客户满意度 92%  |  运营效率提升 30%',
-         font_size=BODY_SIZE, font_color=DARK_GRAY)
-add_source(s, 'Source: ...')
+eng.case_study(title='XX银行数字化转型案例',
+    sections=[('S', '背景', '传统核心系统老化，无法支撑业务增长'),
+              ('A', '行动', '分阶段微服务改造 + 数据中台建设'),
+              ('R', '成果', '交易处理能力提升10倍，故障率下降90%')],
+    result_box=('关键指标', 'ROI 380% | 12个月回本'),
+    source='Source: ...')
 ```
 
 #### 35. Action Items / Next Steps (行动计划页)
@@ -2076,30 +1706,11 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '下一步行动')
-actions = [('建立数据中台', '2026 Q2', '完成核心数据资产盘点\n搭建基础架构', '技术团队'),
-           ('启动用户增长计划', '2026 Q3', '渠道拓展+内容营销\n目标新增50万用户', '市场团队'),
-           ('优化运营流程', '2026 Q4', '自动化率提升至80%\n降本增效', '运营团队')]
-cw = Inches(3.5)
-cg = (CONTENT_W - cw * 3) / 2
-for i, (title, timeline, desc, owner) in enumerate(actions):
-    cx = LM + (cw + cg) * i
-    add_rect(s, cx, Inches(1.5), cw, Inches(0.6), NAVY)
-    add_text(s, cx + Inches(0.15), Inches(1.5), cw - Inches(0.3), Inches(0.6),
-             title, font_size=BODY_SIZE, font_color=WHITE, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_rect(s, cx, Inches(2.1), cw, Inches(0.4), BG_GRAY)
-    add_text(s, cx + Inches(0.15), Inches(2.1), cw - Inches(0.3), Inches(0.4),
-             timeline, font_size=BODY_SIZE, font_color=NAVY, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-    add_text(s, cx + Inches(0.15), Inches(2.7), cw - Inches(0.3), Inches(2.0),
-                  desc.split('\n'), line_spacing=Pt(8), alignment=PP_ALIGN.CENTER)
-    add_hline(s, cx + Inches(0.3), Inches(4.9), cw - Inches(0.6), LINE_GRAY)
-    add_text(s, cx + Inches(0.15), Inches(5.1), cw - Inches(0.3), Inches(0.4),
-             f'负责人：{owner}', font_size=BODY_SIZE, font_color=MED_GRAY,
-             alignment=PP_ALIGN.CENTER)
-add_source(s, 'Source: ...')
+eng.action_items(title='下一步行动计划',
+    actions=[('启动数据治理项目', 'Q2 2026', '建立统一数据标准与质量体系', '张三'),
+             ('招聘AI工程师团队', 'Q1-Q2 2026', '组建10人ML工程团队', '李四'),
+             ('完成ERP云迁移', 'Q3 2026', '核心ERP系统迁移至云原生架构', '王五')],
+    source='Source: ...')
 ```
 
 #### 36. Closing / Thank You (结束页)
@@ -2119,16 +1730,7 @@ add_source(s, 'Source: ...')
 ```
 
 ```python
-s = prs.slides.add_slide(BL)
-add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
-add_text(s, Inches(1.5), Inches(2.0), Inches(10.3), Inches(1.0),
-         '核心总结语句', font_size=Pt(28), font_color=NAVY, bold=True,
-         font_name='Georgia', alignment=PP_ALIGN.CENTER)
-add_hline(s, Inches(5.5), Inches(3.3), Inches(2.3), NAVY, Pt(1.5))
-add_text(s, Inches(1.5), Inches(3.8), Inches(10.3), Inches(2.0),
-         '结束寄语或核心思想的延伸表达',
-         font_size=SUB_HEADER_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
-add_hline(s, LM, Inches(6.8), CW, NAVY, Pt(2))  # Full content width — not Inches(3)
+eng.closing(title='谢谢', message='期待与您进一步交流')
 ```
 
 ---
@@ -2183,94 +1785,12 @@ add_hline(s, LM, Inches(6.8), CW, NAVY, Pt(2))  # Full content width — not Inc
 - 若类别有语义色（如正面=NAVY, 负面=MED_GRAY），优先使用语义色
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '一周舆情演变：情绪分布从中性主导转向正面主导')
-
-# ── 数据定义 ──
-dates = ['3/4', '3/6', '3/8', '3/10', '3/11']
-categories = ['正面', '中性', '负面']
-cat_colors = [NAVY, LINE_GRAY, MED_GRAY]
-# 每行 = 一个日期，每列 = 一个类别的百分比值
-data = [
-    [20, 80, 0],    # 3/4
-    [75, 15, 10],   # 3/6
-    [75, 20, 5],    # 3/8
-    [75, 20, 5],    # 3/10
-    [75, 20, 5],    # 3/11
-]
-
-# ── 图表区域参数 ──
-chart_left = LM + Inches(0.8)         # 柱子起始 X（留 Y 轴标签空间）
-chart_top = Inches(1.6)               # 图表顶部
-chart_bottom = Inches(5.0)            # 图表底部（X 轴位置）
-chart_height = chart_bottom - chart_top
-chart_right = Inches(11.5)            # 图表右侧边界
-chart_width = chart_right - chart_left
-
-n_dates = len(dates)
-n_cats = len(categories)
-group_width = chart_width / n_dates   # 每组占据的总宽度
-bar_width = Inches(0.35)              # 单根柱子宽度
-bar_gap = Inches(0.05)               # 组内柱子间距
-group_bar_width = bar_width * n_cats + bar_gap * (n_cats - 1)  # 一组柱子总宽
-
-max_val = 100  # Y 轴最大值
-
-# ── Y 轴刻度标签 + 水平参考线 ──
-y_ticks = [0, 20, 40, 60, 80, 100]
-for tick in y_ticks:
-    tick_y = chart_bottom - chart_height * (tick / max_val)
-    # Y 轴标签
-    add_text(s, LM, tick_y - Inches(0.15), Inches(0.7), Inches(0.3),
-             f'{tick}%', font_size=Pt(9), font_color=MED_GRAY,
-             alignment=PP_ALIGN.RIGHT)
-    # 水平参考线（极细浅灰色）
-    if tick > 0:
-        add_hline(s, chart_left, tick_y, chart_width, LINE_GRAY, Pt(0.25))
-
-# ── X 轴基线 ──
-add_hline(s, chart_left, chart_bottom, chart_width, BLACK, Pt(0.5))
-
-# ── 绘制柱子 ──
-for di, date in enumerate(dates):
-    group_x = chart_left + group_width * di + (group_width - group_bar_width) / 2
-    for ci, cat in enumerate(categories):
-        val = data[di][ci]
-        bar_h = chart_height * (val / max_val)
-        bar_x = group_x + (bar_width + bar_gap) * ci
-        bar_y = chart_bottom - bar_h
-        if val > 0:
-            add_rect(s, bar_x, bar_y, bar_width, bar_h, cat_colors[ci])
-            # 柱顶数值标签（仅当值 >= 10% 时显示）
-            if val >= 10:
-                add_text(s, bar_x - Inches(0.05), bar_y - Inches(0.25),
-                         bar_width + Inches(0.1), Inches(0.25),
-                         f'{val}%', font_size=Pt(9), font_color=DARK_GRAY,
-                         alignment=PP_ALIGN.CENTER)
-    # X 轴日期标签
-    add_text(s, chart_left + group_width * di, chart_bottom + Inches(0.05),
-             group_width, Inches(0.3), date,
-             font_size=BODY_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
-
-# ── 图例（图表下方居中）──
-legend_y = Inches(5.5)
-legend_start_x = Inches(4.5)
-for ci, cat in enumerate(categories):
-    lx = legend_start_x + Inches(1.8) * ci
-    add_rect(s, lx, legend_y + Inches(0.05), Inches(0.2), Inches(0.2), cat_colors[ci])
-    add_text(s, lx + Inches(0.3), legend_y, Inches(1.2), Inches(0.3),
-             cat, font_size=Pt(12), font_color=DARK_GRAY)
-
-# ── 底部趋势总结区域（可选）──
-add_rect(s, LM, Inches(6.0), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
-         '趋势总结', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(6.0), CONTENT_W - Inches(2.3), Inches(0.8),
-         '舆情情绪从 3/4 的中性主导（80%）迅速转向正面主导（75%），负面情绪始终控制在 10% 以内',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-add_source(s, 'Source: 舆情监测平台数据')
-add_page_number(s, 5, 12)
+eng.grouped_bar(title='季度营收趋势（按产品线）',
+    categories=['Q1', 'Q2', 'Q3', 'Q4'],
+    series=[('产品A', NAVY), ('产品B', ACCENT_BLUE)],
+    data=[[120, 80], [145, 95], [160, 110], [180, 130]],
+    y_max=200, y_step=50, y_unit='万',
+    source='Source: ...')
 ```
 
 #### 38. Stacked Bar Chart（堆叠柱状图 / 百分比占比图）
@@ -2312,102 +1832,11 @@ add_page_number(s, 5, 12)
 - 更多层级：使用 ACCENT_GREEN, ACCENT_ORANGE
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '渠道贡献占比：线上渠道在四个季度内从 30% 增长到 55%')
-
-# ── 数据定义 ──
-periods = ['Q1', 'Q2', 'Q3', 'Q4']
-categories = ['线上直营', '线下门店', '经销商']
-cat_colors = [NAVY, ACCENT_BLUE, LINE_GRAY]
-# 每行 = 一个时间段，值为百分比（总和应为 100）
-data = [
-    [30, 45, 25],   # Q1
-    [38, 40, 22],   # Q2
-    [48, 32, 20],   # Q3
-    [55, 28, 17],   # Q4
-]
-
-# ── 图表区域参数 ──
-chart_left = LM + Inches(0.8)
-chart_top = Inches(1.6)
-chart_bottom = Inches(5.0)
-chart_height = chart_bottom - chart_top
-chart_right = Inches(9.5)
-chart_width = chart_right - chart_left
-
-n_periods = len(periods)
-bar_width = Inches(1.0)              # 堆叠柱宽度
-bar_spacing = chart_width / n_periods
-
-max_val = 100
-
-# ── Y 轴刻度标签 ──
-y_ticks = [0, 25, 50, 75, 100]
-for tick in y_ticks:
-    tick_y = chart_bottom - chart_height * (tick / max_val)
-    add_text(s, LM, tick_y - Inches(0.15), Inches(0.7), Inches(0.3),
-             f'{tick}%', font_size=Pt(9), font_color=MED_GRAY,
-             alignment=PP_ALIGN.RIGHT)
-    if tick > 0:
-        add_hline(s, chart_left, tick_y, chart_width, LINE_GRAY, Pt(0.25))
-
-# ── X 轴基线 ──
-add_hline(s, chart_left, chart_bottom, chart_width, BLACK, Pt(0.5))
-
-# ── 绘制堆叠柱子 ──
-for pi, period in enumerate(periods):
-    bar_x = chart_left + bar_spacing * pi + (bar_spacing - bar_width) / 2
-    cumulative = 0  # 从底部累积
-    for ci in range(len(categories)):
-        val = data[pi][ci]
-        seg_h = chart_height * (val / max_val)
-        seg_y = chart_bottom - chart_height * ((cumulative + val) / max_val)
-        if val > 0:
-            add_rect(s, bar_x, seg_y, bar_width, seg_h, cat_colors[ci])
-            # 段内百分比标签（当段高 >= 0.4" 时显示）
-            if seg_h >= Inches(0.4):
-                label_color = WHITE if ci == 0 else (WHITE if ci == 1 else DARK_GRAY)
-                add_text(s, bar_x, seg_y, bar_width, seg_h,
-                         f'{val}%', font_size=Pt(11), font_color=label_color,
-                         bold=True, alignment=PP_ALIGN.CENTER,
-                         anchor=MSO_ANCHOR.MIDDLE)
-        cumulative += val
-    # X 轴标签
-    add_text(s, chart_left + bar_spacing * pi, chart_bottom + Inches(0.05),
-             bar_spacing, Inches(0.3), period,
-             font_size=BODY_SIZE, font_color=DARK_GRAY, alignment=PP_ALIGN.CENTER)
-
-# ── 右侧直接标签（指向最后一根柱子）──
-last_bar_right = chart_left + bar_spacing * (n_periods - 1) + (bar_spacing + bar_width) / 2
-label_x = last_bar_right + Inches(0.2)
-cumulative = 0
-for ci in range(len(categories)):
-    val = data[-1][ci]
-    mid_y = chart_bottom - chart_height * ((cumulative + val / 2) / max_val)
-    add_text(s, label_x, mid_y - Inches(0.15), Inches(2.5), Inches(0.3),
-             f'{categories[ci]} {val}%', font_size=Pt(11),
-             font_color=cat_colors[ci] if ci < 2 else DARK_GRAY, bold=True)
-    cumulative += val
-
-# ── 图例（图表下方）──
-legend_y = Inches(5.5)
-legend_start_x = Inches(4.0)
-for ci, cat in enumerate(categories):
-    lx = legend_start_x + Inches(2.2) * ci
-    add_rect(s, lx, legend_y + Inches(0.05), Inches(0.2), Inches(0.2), cat_colors[ci])
-    add_text(s, lx + Inches(0.3), legend_y, Inches(1.6), Inches(0.3),
-             cat, font_size=Pt(12), font_color=DARK_GRAY)
-
-# ── 底部关键发现 ──
-add_rect(s, LM, Inches(6.0), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
-         '关键发现', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(6.0), CONTENT_W - Inches(2.3), Inches(0.8),
-         '线上直营渠道占比从 Q1 的 30% 稳步增长至 Q4 的 55%，成为第一大收入来源',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-add_source(s, 'Source: 内部销售数据')
-add_page_number(s, 6, 12)
+eng.stacked_bar(title='营收构成变化趋势',
+    periods=['2023', '2024', '2025', '2026E'],
+    series=[('产品', NAVY), ('服务', ACCENT_BLUE), ('订阅', ACCENT_GREEN)],
+    data=[[40, 35, 25], [35, 35, 30], [30, 35, 35], [25, 35, 40]],
+    source='Source: ...')
 ```
 
 #### 39. Horizontal Bar Chart（水平柱状图 / 排名图）
@@ -2438,61 +1867,10 @@ add_page_number(s, 6, 12)
 - 行间距均匀
 
 ```python
-s = prs.slides.add_slide(BL)
-add_action_title(s, '功能使用率排名：智能推荐以 92% 使用率位居第一')
-
-# ── 数据定义（已排序）──
-items = [
-    ('智能推荐', 92),
-    ('搜索功能', 85),
-    ('个人中心', 78),
-    ('消息通知', 65),
-    ('社区互动', 52),
-    ('数据报表', 38),
-]
-
-# ── 图表区域参数 ──
-label_x = LM
-label_w = Inches(2.0)
-bar_x = LM + Inches(2.2)
-bar_max_w = Inches(7.5)
-value_x = bar_x + bar_max_w + Inches(0.2)
-row_h = Inches(0.65)
-start_y = Inches(1.6)
-max_val = 100
-
-# ── 绘制水平柱子 ──
-for i, (name, val) in enumerate(items):
-    ry = start_y + row_h * i
-    bar_w = bar_max_w * (val / max_val)
-    fill = NAVY if i == 0 else BG_GRAY
-    tc = NAVY if i == 0 else DARK_GRAY
-    # 类别标签
-    add_text(s, label_x, ry, label_w, row_h, name,
-             font_size=BODY_SIZE, font_color=tc, bold=(i == 0),
-             anchor=MSO_ANCHOR.MIDDLE)
-    # 背景轨道（浅灰底）
-    add_rect(s, bar_x, ry + Inches(0.12), bar_max_w, Inches(0.4), RGBColor(0xF2, 0xF2, 0xF2))
-    # 数据柱
-    add_rect(s, bar_x, ry + Inches(0.12), bar_w, Inches(0.4), fill)
-    # 数值标签
-    add_text(s, value_x, ry, Inches(1.0), row_h, f'{val}%',
-             font_size=BODY_SIZE, font_color=tc, bold=(i == 0),
-             anchor=MSO_ANCHOR.MIDDLE)
-    # 行分隔线
-    if i < len(items) - 1:
-        add_hline(s, label_x, ry + row_h, bar_max_w + Inches(2.5), LINE_GRAY, Pt(0.25))
-
-# ── 底部说明 ──
-add_rect(s, LM, Inches(5.8), CONTENT_W, Inches(0.9), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.8), Inches(1.5), Inches(0.9),
-         '分析', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(5.8), CONTENT_W - Inches(2.3), Inches(0.9),
-         '智能推荐和搜索功能是用户最高频使用的两大核心功能，社区互动和数据报表仍有较大提升空间',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-add_source(s, 'Source: 产品埋点数据，2026年2月')
-add_page_number(s, 7, 12)
+eng.horizontal_bar(title='各部门数字化成熟度排名',
+    items=[('研发部', 92, NAVY), ('市场部', 78, ACCENT_BLUE), ('运营部', 65, ACCENT_GREEN),
+           ('财务部', 58, ACCENT_ORANGE), ('HR', 45, MED_GRAY)],
+    source='Source: ...')
 ```
 
 ---
@@ -2503,23 +1881,7 @@ add_page_number(s, 7, 12)
 
 #### Helper: `add_image_placeholder()`
 
-```python
-def add_image_placeholder(slide, left, top, width, height, label='Image'):
-    """Draw a gray placeholder box with crosshair + label for image positions."""
-    PLACEHOLDER_GRAY = RGBColor(0xD9, 0xD9, 0xD9)
-    # Background rect
-    rect = add_rect(slide, left, top, width, height, PLACEHOLDER_GRAY)
-    # Crosshair lines (diagonal from corners)
-    add_hline(slide, left, top + height // 2, width, RGBColor(0xBB, 0xBB, 0xBB), Pt(0.5))
-    # Vertical center line as thin rect
-    vw = Pt(0.5)
-    add_rect(slide, left + width // 2 - vw // 2, top, vw, height, RGBColor(0xBB, 0xBB, 0xBB))
-    # Label
-    add_text(slide, left, top + height // 2 - Inches(0.2), width, Inches(0.4),
-             f'[ {label} ]', font_size=Pt(12), font_color=RGBColor(0x99, 0x99, 0x99),
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    return rect
-```
+The `add_image_placeholder()` helper is available via `from mck_ppt.core import add_image_placeholder`. Image layouts in MckEngine call it automatically — you do not need to invoke it directly.
 
 ---
 
@@ -2543,45 +1905,12 @@ def add_image_placeholder(slide, left, top, width, height, label='Image'):
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '数字化转型的三大核心能力',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Left: text content (55%) ──
-left_w = Inches(6.5)
-ty = Inches(1.1)
-
-add_text(s, LM, ty, left_w, Inches(0.4),
-         '组织需要构建三项关键能力以驱动转型',
-         font_size=Pt(18), font_color=NAVY, bold=True)
-
-bullets = [
-    '• 数据驱动决策：建立端到端数据采集、清洗与分析体系',
-    '• 敏捷运营模式：从瀑布式开发转向双周迭代交付',
-    '• 人才梯队建设：培养兼具业务理解与技术能力的复合型团队'
-]
-add_text(s, LM, ty + Inches(0.5), left_w, Inches(2.4),
-         bullets, font_size=BODY_SIZE, font_color=DARK_GRAY, line_spacing=Pt(8))
-
-# Takeaway box
-add_rect(s, LM, Inches(4.5), left_w, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(4.5), left_w - Inches(0.6), Inches(0.8),
-         '关键洞见：数据能力是三项能力中投资回报率最高的切入点',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Right: image placeholder (45%) ──
-img_x = LM + left_w + Inches(0.3)
-img_w = CONTENT_W - left_w - Inches(0.3)
-add_image_placeholder(s, img_x, Inches(1.1), img_w, Inches(4.2), '产品截图 / 架构图')
-
-add_source(s, 'Source: McKinsey Digital, 2026')
-add_page_number(s, 3, 12)
+eng.content_right_image(title='产品核心功能',
+    subtitle='AI智能分析引擎',
+    bullets=['实时数据处理', '自动异常检测', '智能决策推荐'],
+    takeaway='准确率达到98.5%，领先行业平均水平20个百分点',
+    image_label='产品截图',
+    source='Source: ...')
 ```
 
 ---
@@ -2669,39 +1998,11 @@ add_page_number(s, 4, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '三大标杆项目的实施效果对比',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-items = [
-    ('项目 A：智慧零售', '通过数字化门店改造，客流转化率提升35%，单店日均营收增长28%'),
-    ('项目 B：供应链优化', '端到端库存周转天数从45天缩短至28天，缺货率降低至2.1%'),
-    ('项目 C：会员体系', '会员复购率从22%提升至41%，ARPU值增长56%'),
-]
-col_w = Inches(3.7)
-gap = Inches(0.35)
-img_h = Inches(2.5)
-ty = Inches(1.0)
-
-for i, (title, desc) in enumerate(items):
-    cx = LM + i * (col_w + gap)
-    # Image placeholder
-    add_image_placeholder(s, cx, ty, col_w, img_h, f'项目{chr(65+i)}实景照片')
-    # Title
-    add_text(s, cx, ty + img_h + Inches(0.15), col_w, Inches(0.35),
-             title, font_size=Pt(16), font_color=NAVY, bold=True)
-    # Description
-    add_text(s, cx, ty + img_h + Inches(0.55), col_w, Inches(1.0),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-
-add_source(s, 'Source: 项目实施报告汇总，2025-2026')
-add_page_number(s, 5, 12)
+eng.three_images(title='办公环境',
+    items=[('总部大楼', '位于科技园区核心位置', '总部外景'),
+           ('开放办公', '敏捷协作空间设计', '办公区域'),
+           ('创新实验室', '前沿技术研发基地', '实验室')],
+    source='Source: ...')
 ```
 
 ---
@@ -2729,49 +2030,13 @@ add_page_number(s, 5, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '产品生态系统的四大核心模块',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Center image ──
-img_w = Inches(5.0)
-img_h = Inches(2.4)
-img_x = LM + (CONTENT_W - img_w) / 2
-add_image_placeholder(s, img_x, Inches(2.5), img_w, img_h, '产品生态架构图')
-
-# ── Four points: 2 above, 2 below ──
-points = [
-    ('用户端', '移动App + 小程序，覆盖2亿月活用户'),
-    ('商户端', 'SaaS管理平台，赋能50万商户'),
-    ('数据中台', '实时数据处理能力达10亿条/天'),
-    ('开放平台', 'API市场已接入300+合作伙伴'),
-]
-accents = [ACCENT_BLUE, ACCENT_GREEN, ACCENT_ORANGE, ACCENT_RED]
-card_w = Inches(5.2)
-card_h = Inches(0.7)
-positions = [
-    (LM + Inches(0.5), Inches(1.1)),
-    (LM + CONTENT_W - card_w - Inches(0.5), Inches(1.1)),
-    (LM + Inches(0.5), Inches(5.2)),
-    (LM + CONTENT_W - card_w - Inches(0.5), Inches(5.2)),
-]
-
-for i, (title, desc) in enumerate(points):
-    px, py = positions[i]
-    add_oval(s, px, py + Inches(0.08), str(i + 1), bg=accents[i])
-    add_text(s, px + Inches(0.55), py, Inches(1.5), Inches(0.35),
-             title, font_size=Pt(16), font_color=accents[i], bold=True)
-    add_text(s, px + Inches(0.55), py + Inches(0.35), card_w - Inches(0.55), Inches(0.35),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-
-add_source(s, 'Source: 产品架构文档，2026年3月')
-add_page_number(s, 6, 12)
+eng.image_four_points(title='核心优势',
+    image_label='产品示意图',
+    points=[('高性能', '毫秒级响应'),
+            ('高可用', '99.99% SLA'),
+            ('安全', '多层防护体系'),
+            ('弹性', '自动扩缩容')],
+    source='Source: ...')
 ```
 
 ---
@@ -2798,34 +2063,10 @@ add_page_number(s, 6, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Full-width image placeholder ──
-add_image_placeholder(s, Inches(0), Inches(0), Inches(13.333), Inches(6.5), '全幅背景图片')
-
-# ── Dark semi-transparent overlay bar at bottom ──
-overlay = add_rect(s, Inches(0), Inches(4.0), Inches(13.333), Inches(2.0),
-                   RGBColor(0x05, 0x1C, 0x2C))
-# Set transparency via alpha (70% opaque)
-fill_elem = overlay._element.find(qn('p:spPr')).find(qn('a:solidFill'))
-if fill_elem is not None:
-    srgb = fill_elem.find(qn('a:srgbClr'))
-    if srgb is not None:
-        alpha = srgb.makeelement(qn('a:alpha'), {'val': '70000'})
-        srgb.append(alpha)
-
-add_text(s, LM, Inches(4.1), CONTENT_W, Inches(0.8),
-         '"数字化不是选择题，而是生存题"',
-         font_size=Pt(28), font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-add_text(s, LM, Inches(4.9), CONTENT_W, Inches(0.4),
-         '— 某全球500强企业CEO，2026年战略峰会',
-         font_size=Pt(14), font_color=RGBColor(0xCC, 0xCC, 0xCC),
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 战略峰会实录，2026年1月')
-add_page_number(s, 7, 12)
+eng.full_width_image(title='全球布局',
+    image_label='世界地图',
+    overlay_text='覆盖全球32个国家和地区',
+    source='Source: ...')
 ```
 
 ---
@@ -2853,54 +2094,13 @@ add_page_number(s, 7, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '案例：某零售集团全渠道数字化转型',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Left: SAR text (55%) ──
-left_w = Inches(6.5)
-sections = [
-    ('背景', '该集团拥有3000+门店，线上渠道占比仅12%，客户数据分散在15个独立系统中'),
-    ('方案', '分三阶段推进：1) 统一数据中台建设 2) 全渠道会员体系打通 3) 智能选品与补货系统上线'),
-    ('成果', '线上渠道占比提升至38%，会员贡献收入占比从45%增至72%，库存周转提升40%'),
-]
-accents_sar = [ACCENT_BLUE, ACCENT_GREEN, ACCENT_ORANGE]
-ty = Inches(1.0)
-for i, (label, text) in enumerate(sections):
-    # Section accent bar
-    add_rect(s, LM, ty, Inches(0.06), Inches(1.0), accents_sar[i])
-    add_text(s, LM + Inches(0.2), ty, Inches(1.2), Inches(0.3),
-             label, font_size=Pt(16), font_color=accents_sar[i], bold=True)
-    add_text(s, LM + Inches(0.2), ty + Inches(0.35), left_w - Inches(0.3), Inches(0.65),
-             text, font_size=BODY_SIZE, font_color=DARK_GRAY)
-    ty += Inches(1.3)
-
-# ── Right: image + KPIs ──
-rx = LM + left_w + Inches(0.3)
-rw = CONTENT_W - left_w - Inches(0.3)
-add_image_placeholder(s, rx, Inches(1.0), rw, Inches(2.5), '项目实施现场照片')
-
-# KPI boxes
-kpis = [('38%', '线上占比'), ('72%', '会员贡献'), ('+40%', '库存周转')]
-kpi_w = rw / len(kpis)
-for i, (val, label) in enumerate(kpis):
-    kx = rx + i * kpi_w
-    add_rect(s, kx, Inches(3.8), kpi_w - Inches(0.1), Inches(1.2), BG_GRAY)
-    add_text(s, kx, Inches(3.85), kpi_w - Inches(0.1), Inches(0.6),
-             val, font_size=Pt(28), font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    add_text(s, kx, Inches(4.45), kpi_w - Inches(0.1), Inches(0.4),
-             label, font_size=Pt(12), font_color=MED_GRAY,
-             alignment=PP_ALIGN.CENTER)
-
-add_source(s, 'Source: 项目交付报告，2025年12月')
-add_page_number(s, 8, 12)
+eng.case_study_image(title='XX银行案例',
+    sections=[('背景', '传统系统老化', ACCENT_BLUE),
+              ('方案', '微服务改造', ACCENT_GREEN),
+              ('成果', '效率提升10倍', ACCENT_ORANGE)],
+    image_label='系统架构图',
+    kpis=[('10x', '处理能力'), ('90%', '故障减少')],
+    source='Source: ...')
 ```
 
 ---
@@ -2928,37 +2128,11 @@ add_page_number(s, 8, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Background image (top half) ──
-add_image_placeholder(s, Inches(0), Inches(0), Inches(13.333), Inches(3.2),
-                      '主题相关背景图片（建议使用浅色/模糊效果）')
-
-# ── White overlay for text area ──
-add_rect(s, Inches(0), Inches(3.2), Inches(13.333), Inches(4.3), WHITE)
-
-# ── Decorative lines ──
-line_x = LM + Inches(1.0)
-line_w = CONTENT_W - Inches(2.0)
-add_hline(s, line_x, Inches(3.6), line_w, NAVY, Pt(1.0))
-
-# ── Quote text ──
-add_text(s, LM + Inches(1.5), Inches(3.8), CONTENT_W - Inches(3.0), Inches(1.4),
-         '"最危险的不是变化本身，而是用昨天的逻辑做明天的决策"',
-         font_size=Pt(24), font_color=NAVY, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Attribution ──
-add_text(s, LM + Inches(1.5), Inches(5.2), CONTENT_W - Inches(3.0), Inches(0.4),
-         '— Peter Drucker，管理学大师',
-         font_size=Pt(14), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-
-# ── Bottom decorative line ──
-add_hline(s, line_x, Inches(5.7), line_w, NAVY, Pt(1.0))
-
-add_source(s, 'Source: 《管理的实践》')
-add_page_number(s, 9, 12)
+eng.quote_bg_image(title='',
+    quote_text='创新不是选择，而是生存的必需。',
+    attribution='CEO, 2026年全员大会',
+    image_label='背景图',
+    source='')
 ```
 
 ---
@@ -2984,42 +2158,12 @@ add_page_number(s, 9, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '2026年下半年四大战略目标',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Left: goals list (55%) ──
-left_w = Inches(6.5)
-goals = [
-    ('营收增长', '实现全年营收目标120亿元，同比增长25%', ACCENT_BLUE),
-    ('市场扩张', '新进入3个海外市场，海外收入占比提升至15%', ACCENT_GREEN),
-    ('产品升级', 'AI功能覆盖率从40%提升至80%，用户NPS达到65+', ACCENT_ORANGE),
-    ('组织发展', '关键岗位内部晋升率达60%，员工满意度≥4.2/5', ACCENT_RED),
-]
-ty = Inches(1.1)
-for i, (title, desc, color) in enumerate(goals):
-    # Accent bar
-    add_rect(s, LM, ty, Inches(0.06), Inches(0.8), color)
-    add_oval(s, LM + Inches(0.25), ty + Inches(0.15), str(i + 1), bg=color)
-    add_text(s, LM + Inches(0.8), ty, left_w - Inches(1.0), Inches(0.35),
-             title, font_size=Pt(16), font_color=color, bold=True)
-    add_text(s, LM + Inches(0.8), ty + Inches(0.35), left_w - Inches(1.0), Inches(0.45),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-    ty += Inches(1.05)
-
-# ── Right: illustration ──
-rx = LM + left_w + Inches(0.3)
-rw = CONTENT_W - left_w - Inches(0.3)
-add_image_placeholder(s, rx, Inches(1.1), rw, Inches(4.2), '战略目标示意图 / 增长路线图')
-
-add_source(s, 'Source: 2026年战略规划文件')
-add_page_number(s, 10, 12)
+eng.goals_illustration(title='2026年度目标',
+    goals=[('营收翻倍', '达到¥20亿年营收'),
+           ('全球化', '进入5个海外市场'),
+           ('IPO准备', '完成合规与治理升级')],
+    image_label='目标愿景图',
+    source='Source: ...')
 ```
 
 ---
@@ -3053,63 +2197,12 @@ add_page_number(s, 10, 12)
 ```
 
 ```python
-from pptx.oxml.ns import qn
-
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '2026年上半年营收渠道构成',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Donut chart using BLOCK_ARC (4 shapes total) ──
-cx, cy = LM + Inches(3.0), Inches(3.2)  # center
-outer_r = Inches(1.6)
-inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)  # ~10px ring width
-segments = [
-    (0.45, NAVY, '线上直营'),
-    (0.28, ACCENT_BLUE, '经销商'),
-    (0.15, ACCENT_GREEN, '企业客户'),
-    (0.12, ACCENT_ORANGE, '其他'),
-]
-
-cum_deg = 0  # start at top (0° = 12 o'clock, CW)
-for pct, color, label in segments:
-    sweep = pct * 360
-    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
-                  cum_deg, cum_deg + sweep, inner_ratio, color)
-    cum_deg += sweep
-
-# Center label (use WHITE for readability against colored ring)
-add_text(s, cx - Inches(0.7), cy - Inches(0.3), Inches(1.4), Inches(0.6),
-         '¥8.5亿', font_size=Pt(24), font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE,
-         font_name='Georgia')
-add_text(s, cx - Inches(0.7), cy + Inches(0.2), Inches(1.4), Inches(0.3),
-         '总营收', font_size=Pt(12), font_color=WHITE,
-         alignment=PP_ALIGN.CENTER)
-
-# ── Legend (right side) ──
-legend_x = LM + Inches(7.0)
-legend_y = Inches(1.5)
-for i, (pct, color, label) in enumerate(segments):
-    ly = legend_y + i * Inches(0.8)
-    add_rect(s, legend_x, ly + Inches(0.05), Inches(0.3), Inches(0.3), color)
-    add_text(s, legend_x + Inches(0.45), ly, Inches(3.0), Inches(0.4),
-             f'{label}  {int(pct*100)}%',
-             font_size=Pt(16), font_color=DARK_GRAY, bold=True)
-
-# ── Insight box ──
-add_rect(s, legend_x, Inches(5.0), Inches(4.5), Inches(0.8), BG_GRAY)
-add_text(s, legend_x + Inches(0.2), Inches(5.0), Inches(4.1), Inches(0.8),
-         '线上直营渠道占比同比提升12个百分点，预计下半年将突破50%',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 财务报告，2026年H1')
-add_page_number(s, 5, 12)
+eng.donut(title='2026年上半年营收渠道构成',
+    segments=[(0.45, NAVY, '线上直营'), (0.28, ACCENT_BLUE, '经销商'),
+              (0.15, ACCENT_GREEN, '企业客户'), (0.12, ACCENT_ORANGE, '其他')],
+    center_label='¥8.5亿', center_sub='总营收',
+    summary='线上直营渠道占比同比提升12个百分点',
+    source='Source: ...')
 ```
 
 ---
@@ -3135,80 +2228,11 @@ add_page_number(s, 5, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '2026年H1利润增长桥接分析（百万元）',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Waterfall data ──
-items = [
-    ('2025 H2\n利润', 850, 'base'),
-    ('营收\n增长', 220, 'up'),
-    ('成本\n优化', 85, 'up'),
-    ('人力\n支出', -120, 'down'),
-    ('营销\n投入', -65, 'down'),
-    ('新业务\n投资', -40, 'down'),
-    ('2026 H1\n利润', 930, 'base'),
-]
-
-chart_left = LM + Inches(0.3)
-chart_bottom = Inches(5.0)
-chart_top = Inches(1.2)
-chart_h = chart_bottom - chart_top
-max_val = 1000  # Y-axis max
-bar_w = Inches(1.2)
-gap = Inches(0.4)
-
-running = 0
-for i, (label, val, typ) in enumerate(items):
-    bx = chart_left + i * (bar_w + gap)
-
-    if typ == 'base':
-        # Full bar from bottom
-        bar_h = int(chart_h * val / max_val)
-        bar_top = chart_bottom - bar_h
-        color = NAVY
-        add_rect(s, bx, bar_top, bar_w, bar_h, color)
-        running = val
-    elif typ == 'up':
-        bar_h = int(chart_h * val / max_val)
-        bar_top = chart_bottom - int(chart_h * running / max_val) - bar_h
-        color = ACCENT_GREEN
-        add_rect(s, bx, bar_top, bar_w, bar_h, color)
-        running += val
-    else:  # down
-        bar_h = int(chart_h * abs(val) / max_val)
-        bar_top = chart_bottom - int(chart_h * running / max_val)
-        color = ACCENT_RED
-        add_rect(s, bx, bar_top, bar_w, bar_h, color)
-        running += val
-
-    # Value label above bar
-    val_str = f'+{val}' if val > 0 and typ != 'base' else str(val)
-    add_text(s, bx, bar_top - Inches(0.35), bar_w, Inches(0.3),
-             val_str, font_size=Pt(14), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-    # Category label below
-    add_text(s, bx, chart_bottom + Inches(0.05), bar_w, Inches(0.5),
-             label, font_size=Pt(11), font_color=MED_GRAY,
-             alignment=PP_ALIGN.CENTER)
-
-# ── Baseline axis ──
-add_hline(s, chart_left, chart_bottom, Inches(11.5), LINE_GRAY, Pt(0.5))
-
-# ── Takeaway ──
-add_rect(s, LM, Inches(6.0), CONTENT_W, Inches(0.7), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(6.0), CONTENT_W - Inches(0.6), Inches(0.7),
-         '关键发现：营收增长和成本优化共贡献305M增量，人力和营销支出消耗185M，净利润增长9.4%',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 财务管理部，2026年6月')
-add_page_number(s, 6, 12)
+eng.waterfall(title='利润变动瀑布图',
+    items=[('2025年利润', 100, 'base'), ('营收增长', 35, 'up'),
+           ('成本节省', 15, 'up'), ('新投资', -20, 'down'),
+           ('2026年利润', 130, 'base')],
+    source='Source: ...')
 ```
 
 ---
@@ -3234,85 +2258,12 @@ add_page_number(s, 6, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '核心产品月活用户趋势（2024Q1 - 2026Q1）',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Chart area setup ──
-chart_l = LM + Inches(0.8)
-chart_r = LM + CONTENT_W - Inches(1.5)
-chart_w = chart_r - chart_l
-chart_top = Inches(1.3)
-chart_bot = Inches(5.0)
-chart_h = chart_bot - chart_top
-
-# Y-axis labels
-y_labels = ['0', '500万', '1000万', '1500万', '2000万']
-for i, yl in enumerate(y_labels):
-    yy = chart_bot - int(chart_h * i / (len(y_labels) - 1))
-    add_text(s, LM, yy - Inches(0.12), Inches(0.7), Inches(0.24),
-             yl, font_size=Pt(9), font_color=MED_GRAY, alignment=PP_ALIGN.RIGHT)
-    if i > 0:
-        add_hline(s, chart_l, yy, chart_w, RGBColor(0xE8, 0xE8, 0xE8), Pt(0.25))
-
-# X-axis labels
-x_labels = ['Q1\'24', 'Q2\'24', 'Q3\'24', 'Q4\'24', 'Q1\'25', 'Q2\'25',
-            'Q3\'25', 'Q4\'25', 'Q1\'26']
-n_pts = len(x_labels)
-for i, xl in enumerate(x_labels):
-    xx = chart_l + int(chart_w * i / (n_pts - 1))
-    add_text(s, xx - Inches(0.3), chart_bot + Inches(0.05), Inches(0.6), Inches(0.25),
-             xl, font_size=Pt(9), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
-
-# ── Data series ──
-# Series values as fraction of max (2000万)
-series = [
-    ('产品A', [0.35,0.40,0.48,0.55,0.62,0.70,0.78,0.85,0.92], BLACK, Pt(3)),
-    ('产品B', [0.20,0.22,0.25,0.30,0.35,0.38,0.42,0.45,0.50], ACCENT_BLUE, Pt(2)),
-    ('产品C', [0.10,0.12,0.13,0.15,0.16,0.18,0.20,0.22,0.25], ACCENT_GREEN, Pt(2)),
-]
-
-for name, values, color, thickness in series:
-    # Draw line segments as thin rects connecting data points
-    for j in range(len(values) - 1):
-        x1 = chart_l + int(chart_w * j / (n_pts - 1))
-        y1 = chart_bot - int(chart_h * values[j])
-        x2 = chart_l + int(chart_w * (j + 1) / (n_pts - 1))
-        y2 = chart_bot - int(chart_h * values[j + 1])
-        # Approximate line with thin rect (horizontal segment)
-        seg_w = x2 - x1
-        seg_y = min(y1, y2)
-        seg_h = max(abs(y2 - y1), int(thickness))
-        add_rect(s, x1, seg_y, seg_w, seg_h, color)
-    # Data points as small squares
-    for j, v in enumerate(values):
-        px = chart_l + int(chart_w * j / (n_pts - 1))
-        py = chart_bot - int(chart_h * v)
-        dot_sz = Inches(0.08)
-        add_rect(s, px - dot_sz // 2, py - dot_sz // 2, dot_sz, dot_sz, color)
-    # End label
-    last_x = chart_r + Inches(0.1)
-    last_y = chart_bot - int(chart_h * values[-1])
-    add_text(s, last_x, last_y - Inches(0.12), Inches(1.2), Inches(0.24),
-             name, font_size=Pt(11), font_color=color, bold=True)
-
-# ── Baseline axis ──
-add_hline(s, chart_l, chart_bot, chart_w, BLACK, Pt(0.5))
-
-# ── Takeaway ──
-add_rect(s, LM, Inches(5.5), CONTENT_W, Inches(0.7), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.5), CONTENT_W - Inches(0.6), Inches(0.7),
-         '关键趋势：产品A保持强劲增长势头，MAU有望在Q2\'26突破2000万大关',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 产品数据平台，2026年3月')
-add_page_number(s, 4, 12)
+eng.line_chart(title='月活用户趋势',
+    x_labels=['1月','2月','3月','4月','5月','6月'],
+    y_labels=['0','100万','200万','300万'],
+    values=[0.4, 0.45, 0.5, 0.6, 0.7, 0.82],
+    legend_label='月活用户',
+    source='Source: ...')
 ```
 
 ---
@@ -3339,87 +2290,10 @@ add_page_number(s, 4, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '客户投诉根因帕累托分析',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Data ──
-items = [
-    ('系统响应慢', 35), ('功能缺失', 25), ('操作复杂', 18),
-    ('数据不准', 10), ('界面难看', 7), ('其他', 5),
-]
-total = sum(v for _, v in items)
-
-chart_l = LM + Inches(0.5)
-chart_bot = Inches(5.2)
-chart_top = Inches(1.3)
-chart_h = chart_bot - chart_top
-bar_w = Inches(1.5)
-gap = Inches(0.3)
-
-cumulative = 0
-cum_points = []
-for i, (label, val) in enumerate(items):
-    bx = chart_l + i * (bar_w + gap)
-    pct = val / total
-    bar_h = int(chart_h * pct)
-    bar_top = chart_bot - bar_h
-
-    # Bar
-    add_rect(s, bx, bar_top, bar_w, bar_h, NAVY if i < 3 else LINE_GRAY)
-    # Value label
-    add_text(s, bx, bar_top - Inches(0.3), bar_w, Inches(0.25),
-             f'{val}件 ({int(pct*100)}%)', font_size=Pt(11),
-             font_color=DARK_GRAY, bold=(i < 3), alignment=PP_ALIGN.CENTER)
-    # X-axis label
-    add_text(s, bx, chart_bot + Inches(0.05), bar_w, Inches(0.4),
-             label, font_size=Pt(11), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
-
-    # Cumulative point
-    cumulative += pct
-    cx_pt = bx + bar_w // 2
-    cy_pt = chart_bot - int(chart_h * cumulative)
-    cum_points.append((cx_pt, cy_pt))
-    # Cumulative dot
-    dot = Inches(0.1)
-    add_rect(s, cx_pt - dot // 2, cy_pt - dot // 2, dot, dot, ACCENT_ORANGE)
-
-# Connect cumulative dots with horizontal segments
-for j in range(len(cum_points) - 1):
-    x1, y1 = cum_points[j]
-    x2, y2 = cum_points[j + 1]
-    seg_w = x2 - x1
-    seg_y = min(y1, y2)
-    seg_h = max(abs(y2 - y1), Pt(2))
-    add_rect(s, x1, seg_y, seg_w, seg_h, ACCENT_ORANGE)
-
-# 80% threshold line (dashed approximation with small rects)
-threshold_y = chart_bot - int(chart_h * 0.80)
-dash_len = Inches(0.2)
-total_w = len(items) * (bar_w + gap)
-for d in range(0, int(total_w), int(dash_len * 2)):
-    add_rect(s, chart_l + d, threshold_y, dash_len, Pt(1), ACCENT_RED)
-add_text(s, chart_l + total_w + Inches(0.1), threshold_y - Inches(0.12),
-         Inches(0.6), Inches(0.24), '80%',
-         font_size=Pt(10), font_color=ACCENT_RED, bold=True)
-
-# ── Baseline axis ──
-add_hline(s, chart_l, chart_bot, total_w, BLACK, Pt(0.5))
-
-# ── Takeaway ──
-add_rect(s, LM, Inches(5.7), CONTENT_W, Inches(0.7), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.7), CONTENT_W - Inches(0.6), Inches(0.7),
-         '分析：前3项根因占全部投诉的78%，优先解决"系统响应慢"可消除35%的投诉量',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 客服工单系统，2026年1-6月')
-add_page_number(s, 7, 12)
+eng.pareto(title='缺陷类型分析（帕累托）',
+    items=[('UI问题', 45), ('性能', 28), ('兼容性', 15), ('安全', 8), ('其他', 4)],
+    max_val=50,
+    source='Source: ...')
 ```
 
 ---
@@ -3445,85 +2319,11 @@ add_page_number(s, 7, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '2026年Q2 OKR达成进度追踪',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Header row ──
-hy = Inches(1.0)
-add_text(s, LM, hy, Inches(3.5), Inches(0.35),
-         'KPI 指标', font_size=Pt(12), font_color=MED_GRAY, bold=True)
-add_text(s, LM + Inches(3.5), hy, Inches(6.0), Inches(0.35),
-         '进度', font_size=Pt(12), font_color=MED_GRAY, bold=True)
-add_text(s, LM + Inches(9.5), hy, Inches(1.2), Inches(0.35),
-         '达成率', font_size=Pt(12), font_color=MED_GRAY, bold=True,
-         alignment=PP_ALIGN.CENTER)
-add_text(s, LM + Inches(10.7), hy, Inches(1.0), Inches(0.35),
-         '状态', font_size=Pt(12), font_color=MED_GRAY, bold=True,
-         alignment=PP_ALIGN.CENTER)
-add_hline(s, LM, hy + Inches(0.35), CONTENT_W, BLACK, Pt(0.75))
-
-# ── KPI rows ──
-kpis = [
-    ('营收目标', 0.78, '¥9.4亿/¥12亿', 'on'),
-    ('新客获取', 0.52, '2.6万/5万', 'risk'),
-    ('客户留存率', 0.92, '92%/95%', 'on'),
-    ('产品NPS', 0.85, '59/70', 'on'),
-    ('成本控制', 0.38, '¥3.8亿/¥3.2亿', 'off'),
-]
-
-bar_x = LM + Inches(3.5)
-bar_max_w = Inches(5.8)
-bar_h = Inches(0.25)
-row_h = Inches(0.7)
-
-status_colors = {'on': ACCENT_GREEN, 'risk': ACCENT_ORANGE, 'off': ACCENT_RED}
-status_labels = {'on': '达标', 'risk': '风险', 'off': '滞后'}
-
-for i, (name, pct, detail, status) in enumerate(kpis):
-    ry = Inches(1.6) + i * row_h
-    # KPI name
-    add_text(s, LM, ry, Inches(3.3), row_h,
-             name, font_size=BODY_SIZE, font_color=DARK_GRAY, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-    # Progress bar background
-    add_rect(s, bar_x, ry + (row_h - bar_h) / 2, bar_max_w, bar_h, BG_GRAY)
-    # Progress bar fill
-    fill_w = int(bar_max_w * min(pct, 1.0))
-    fill_color = status_colors[status]
-    add_rect(s, bar_x, ry + (row_h - bar_h) / 2, fill_w, bar_h, fill_color)
-    # Percentage
-    add_text(s, LM + Inches(9.5), ry, Inches(1.2), row_h,
-             f'{int(pct*100)}%', font_size=Pt(16), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    # Status indicator
-    sc = status_colors[status]
-    dot_sz = Inches(0.15)
-    add_rect(s, LM + Inches(10.8), ry + (row_h - dot_sz) / 2, dot_sz, dot_sz, sc)
-    add_text(s, LM + Inches(11.0), ry, Inches(0.7), row_h,
-             status_labels[status], font_size=Pt(11), font_color=sc,
-             anchor=MSO_ANCHOR.MIDDLE)
-    # Row separator
-    if i < len(kpis) - 1:
-        add_hline(s, LM, ry + row_h, CONTENT_W, LINE_GRAY, Pt(0.25))
-
-# ── Summary ──
-add_rect(s, LM, Inches(5.5), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.5), Inches(1.5), Inches(0.8),
-         '总结', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(5.5), CONTENT_W - Inches(2.3), Inches(0.8),
-         '5项KPI中3项达标，"新客获取"和"成本控制"需重点关注，建议Q3调整预算分配',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: OKR管理平台，2026年6月')
-add_page_number(s, 8, 12)
+eng.kpi_tracker(title='OKR进度追踪',
+    kpis=[('营收目标', 0.78, '¥7.8亿 / ¥10亿', 'on'),
+          ('客户增长', 0.92, '184家 / 200家', 'on'),
+          ('NPS提升', 0.65, '72分 / 80分', 'risk')],
+    source='Source: ...')
 ```
 
 ---
@@ -3549,83 +2349,12 @@ add_page_number(s, 8, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '产品组合分析：市场吸引力 vs 竞争地位',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Axes ──
-chart_l = LM + Inches(1.2)
-chart_b = Inches(5.0)
-chart_t = Inches(1.3)
-chart_w = Inches(9.0)
-chart_h = chart_b - chart_t
-
-# X-axis
-add_hline(s, chart_l, chart_b, chart_w, BLACK, Pt(0.5))
-add_text(s, chart_l + chart_w // 2 - Inches(1.0), chart_b + Inches(0.15),
-         Inches(2.0), Inches(0.3), '竞争地位 →',
-         font_size=Pt(11), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
-
-# Y-axis (vertical rect)
-add_rect(s, chart_l, chart_t, Pt(0.5), chart_h, BLACK)
-add_text(s, LM, chart_t + chart_h // 2 - Inches(0.5), Inches(1.0), Inches(1.0),
-         '市\n场\n吸\n引\n力\n↑', font_size=Pt(11), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Bubbles (oval shapes with size encoding) ──
-# (x_pct, y_pct, size_inches, label, color)
-bubbles = [
-    (0.75, 0.80, 0.9, '产品A\n¥3.2亿', NAVY),
-    (0.55, 0.60, 0.65, '产品B\n¥1.8亿', ACCENT_BLUE),
-    (0.30, 0.75, 0.5, '产品C\n¥0.9亿', ACCENT_GREEN),
-    (0.80, 0.35, 0.55, '产品D\n¥1.2亿', ACCENT_ORANGE),
-    (0.20, 0.25, 0.35, '产品E\n¥0.4亿', LINE_GRAY),
-    (0.45, 0.45, 0.7, '产品F\n¥2.1亿', ACCENT_BLUE),
-]
-
-for xp, yp, sz, label, color in bubbles:
-    bx = chart_l + int(chart_w * xp) - Inches(sz / 2)
-    by = chart_b - int(chart_h * yp) - Inches(sz / 2)
-    oval = s.shapes.add_shape(MSO_SHAPE.OVAL, bx, by, Inches(sz), Inches(sz))
-    oval.fill.solid()
-    oval.fill.fore_color.rgb = color
-    oval.line.fill.background()
-    _clean_shape(oval)
-    # Set 40% transparency
-    fill_elem = oval._element.find(qn('p:spPr')).find(qn('a:solidFill'))
-    if fill_elem is not None:
-        srgb = fill_elem.find(qn('a:srgbClr'))
-        if srgb is not None:
-            alpha = srgb.makeelement(qn('a:alpha'), {'val': '60000'})
-            srgb.append(alpha)
-    # Label inside bubble
-    add_text(s, bx, by + Inches(sz * 0.2), Inches(sz), Inches(sz * 0.6),
-             label, font_size=Pt(9), font_color=WHITE, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Quadrant lines (dashed) ──
-mid_x = chart_l + chart_w // 2
-mid_y = chart_t + chart_h // 2
-dash = Inches(0.15)
-for d in range(0, int(chart_w), int(dash * 2)):
-    add_rect(s, chart_l + d, mid_y, dash, Pt(0.5), RGBColor(0xDD, 0xDD, 0xDD))
-for d in range(0, int(chart_h), int(dash * 2)):
-    add_rect(s, mid_x, chart_t + d, Pt(0.5), dash, RGBColor(0xDD, 0xDD, 0xDD))
-
-# ── Takeaway ──
-add_rect(s, LM, Inches(5.5), CONTENT_W, Inches(0.7), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.5), CONTENT_W - Inches(0.6), Inches(0.7),
-         '建议：优先投资产品A（高吸引力+强竞争力），观察产品F的增长潜力，逐步退出产品E',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 战略规划部，2026年Q1')
-add_page_number(s, 9, 12)
+eng.bubble(title='业务组合分析',
+    bubbles=[(30, 70, 1.2, '产品A', NAVY),
+             (60, 50, 0.8, '产品B', ACCENT_BLUE),
+             (80, 30, 0.5, '产品C', ACCENT_GREEN)],
+    x_label='市场份额 →', y_label='增长率 ↑',
+    source='Source: ...')
 ```
 
 ---
@@ -3652,91 +2381,14 @@ add_page_number(s, 9, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '项目风险评估矩阵',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Matrix setup ──
-grid_l = LM + Inches(1.8)
-grid_t = Inches(1.3)
-cell_w = Inches(3.0)
-cell_h = Inches(1.1)
-rows = 3  # High, Medium, Low probability
-cols = 3  # Low, Medium, High impact
-
-# Color coding: [row][col] where row 0 = High prob, col 0 = Low impact
-heat_colors = [
-    [ACCENT_ORANGE, ACCENT_RED, ACCENT_RED],       # High prob
-    [ACCENT_GREEN, ACCENT_ORANGE, ACCENT_RED],      # Med prob
-    [ACCENT_GREEN, ACCENT_GREEN, ACCENT_ORANGE],    # Low prob
-]
-# Semi-transparent lighter versions for background
-light_colors = [
-    [LIGHT_ORANGE, LIGHT_RED, LIGHT_RED],
-    [LIGHT_GREEN, LIGHT_ORANGE, LIGHT_RED],
-    [LIGHT_GREEN, LIGHT_GREEN, LIGHT_ORANGE],
-]
-
-# Risks placed in cells: (row, col, name)
-risks = [
-    (0, 1, '数据泄露'), (0, 2, '核心人员流失'),
-    (1, 0, '供应商延迟'), (1, 1, '预算超支'), (1, 2, '法规变更'),
-    (2, 2, '汇率波动'),
-]
-
-# Y-axis labels
-y_labels = ['高概率', '中概率', '低概率']
-for r in range(rows):
-    add_text(s, LM, grid_t + r * cell_h, Inches(1.6), cell_h,
-             y_labels[r], font_size=Pt(13), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.RIGHT, anchor=MSO_ANCHOR.MIDDLE)
-
-# X-axis labels
-x_labels = ['低影响', '中影响', '高影响']
-for c in range(cols):
-    add_text(s, grid_l + c * cell_w, grid_t - Inches(0.35), cell_w, Inches(0.3),
-             x_labels[c], font_size=Pt(13), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-
-# Draw grid cells
-for r in range(rows):
-    for c in range(cols):
-        cx = grid_l + c * cell_w
-        cy = grid_t + r * cell_h
-        add_rect(s, cx, cy, cell_w - Inches(0.05), cell_h - Inches(0.05),
-                 light_colors[r][c])
-        # Color indicator dot
-        add_rect(s, cx + Inches(0.1), cy + Inches(0.1), Inches(0.2), Inches(0.2),
-                 heat_colors[r][c])
-
-# Place risk labels
-for r, c, name in risks:
-    cx = grid_l + c * cell_w
-    cy = grid_t + r * cell_h
-    add_text(s, cx + Inches(0.4), cy + Inches(0.25), cell_w - Inches(0.6), Inches(0.6),
-             name, font_size=Pt(13), font_color=DARK_GRAY, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Mitigation summary ──
-add_rect(s, LM, Inches(4.8), CONTENT_W, Inches(1.2), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(4.85), Inches(1.5), Inches(0.3),
-         '应对措施', font_size=Pt(14), font_color=NAVY, bold=True)
-mitigations = [
-    '• 红色区域（2项）：已制定应急预案，每周评审进展',
-    '• 橙色区域（3项）：指定风险负责人，双周监控',
-    '• 绿色区域（1项）：季度回顾，暂不采取主动措施',
-]
-add_text(s, LM + Inches(0.3), Inches(5.2), CONTENT_W - Inches(0.6), Inches(0.8),
-         mitigations, font_size=BODY_SIZE, font_color=DARK_GRAY, line_spacing=Pt(4))
-
-add_source(s, 'Source: 项目管理办公室，2026年Q2')
-add_page_number(s, 10, 12)
+eng.risk_matrix(title='项目风险评估矩阵',
+    grid_colors=[[ACCENT_GREEN,ACCENT_ORANGE,ACCENT_RED],
+                 [ACCENT_GREEN,ACCENT_ORANGE,ACCENT_ORANGE],
+                 [ACCENT_GREEN,ACCENT_GREEN,ACCENT_ORANGE]],
+    grid_lights=[[None]*3]*3,
+    risks=[('数据泄露', 2, 2), ('系统宕机', 1, 2)],
+    y_labels=['高','中','低'], x_labels=['低','中','高'],
+    source='Source: ...')
 ```
 
 **Variant: Matrix + Side Panel** — When the matrix needs an accompanying insight panel (e.g. "Key Changes", "Action Items"), use a compact grid (~60% width) with a side panel (~38% width). This prevents the panel from being crushed by a full-width grid.
@@ -3761,33 +2413,14 @@ add_page_number(s, 10, 12)
 Layout math for the side-panel variant:
 
 ```python
-# ── Compact grid + side panel layout ──
-axis_label_w = Inches(0.65)            # Y-axis label column (tight)
-grid_l       = LM + axis_label_w       # Grid left edge
-cell_w       = Inches(2.15)            # Narrower cells (vs 3.0" default)
-cell_h       = Inches(1.65)            # Taller cells to fill vertical space
-grid_gap     = Inches(0.04)            # Minimal gap between cells
-
-grid_right   = grid_l + 3 * (cell_w + grid_gap)
-panel_gap    = Inches(0.25)
-rx           = grid_right + panel_gap  # Panel left edge
-rw           = LM + CONTENT_W - rx     # Panel width (~4.2")
-
-# Panel height matches grid height
-panel_h = 3 * (cell_h + grid_gap) - grid_gap
-
-# Draw panel background
-add_rect(s, rx, grid_t, rw, panel_h, BG_GRAY)
-add_rect(s, rx, grid_t, rw, Inches(0.05), NAVY)  # Top accent line
-
-# Optional: dark summary box at panel bottom
-summary_h = Inches(0.65)
-summary_y = grid_t + panel_h - summary_h
-add_rect(s, rx, summary_y, rw, summary_h, NAVY)
-add_text(s, rx + Inches(0.15), summary_y, rw - Inches(0.3), summary_h,
-         'Key takeaway text here',
-         font_size=Pt(11), font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+eng.risk_matrix(title='项目风险评估矩阵',
+    grid_colors=[[ACCENT_GREEN,ACCENT_ORANGE,ACCENT_RED],
+                 [ACCENT_GREEN,ACCENT_ORANGE,ACCENT_ORANGE],
+                 [ACCENT_GREEN,ACCENT_GREEN,ACCENT_ORANGE]],
+    grid_lights=[[None]*3]*3,
+    risks=[('数据泄露', 2, 2), ('系统宕机', 1, 2)],
+    y_labels=['高','中','低'], x_labels=['低','中','高'],
+    source='Source: ...')
 ```
 
 > **Rule**: When a matrix needs a companion panel, shrink `cell_w` to ~2.15" (from 3.0") and `axis_label_w` to ~0.65" (from 1.8"). This yields a panel width of ~4.2" — enough for 6+ bullet items with comfortable reading. Never let the panel shrink below Inches(2.5).
@@ -3818,78 +2451,10 @@ add_text(s, rx + Inches(0.15), summary_y, rw - Inches(0.3), summary_h,
 ```
 
 ```python
-from pptx.oxml.ns import qn
-
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '客户净推荐值（NPS）健康度仪表盘',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Gauge: horizontal rainbow arc using BLOCK_ARC (3 shapes) ──
-# Arc goes from left (270° PPT) → top (0°) → right (90° PPT)
-# Total sweep = 180° (a horizontal semi-circle, opening upward like ⌢)
-cx = LM + CONTENT_W // 2
-cy = Inches(3.8)
-outer_r = Inches(2.2)
-inner_ratio = int((outer_r - Pt(10)) / outer_r * 50000)  # ~10px ring width
-score = 78  # out of 100
-
-gauge_segs = [
-    (0.40, ACCENT_RED),    # 0-40%: red zone (PPT 270° → 342°)
-    (0.30, ACCENT_ORANGE), # 40-70%: orange zone (PPT 342° → 396°→36°)
-    (0.30, ACCENT_GREEN),  # 70-100%: green zone (PPT 36° → 90°)
-]
-
-ppt_cum = 270  # start at left (270° in PPT CW from 12 o'clock)
-for pct, color in gauge_segs:
-    sweep = pct * 180  # half-circle, so 180° total
-    add_block_arc(s, cx - outer_r, cy - outer_r, outer_r * 2, outer_r * 2,
-                  ppt_cum % 360, (ppt_cum + sweep) % 360, inner_ratio, color)
-    ppt_cum += sweep
-
-# Center score
-add_text(s, cx - Inches(0.8), cy - Inches(0.5), Inches(1.6), Inches(0.6),
-         str(score), font_size=Pt(44), font_color=NAVY, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE,
-         font_name='Georgia')
-add_text(s, cx - Inches(0.5), cy + Inches(0.1), Inches(1.0), Inches(0.3),
-         '/ 100', font_size=Pt(14), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-
-# Zone labels
-add_text(s, cx - outer_r - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
-         '差', font_size=Pt(11), font_color=ACCENT_RED, alignment=PP_ALIGN.CENTER)
-add_text(s, cx - Inches(0.3), cy - outer_r - Inches(0.3), Inches(0.6), Inches(0.25),
-         '良', font_size=Pt(11), font_color=ACCENT_ORANGE, alignment=PP_ALIGN.CENTER)
-add_text(s, cx + outer_r - Inches(0.3), cy + Inches(0.1), Inches(0.8), Inches(0.25),
-         '优', font_size=Pt(11), font_color=ACCENT_GREEN, alignment=PP_ALIGN.CENTER)
-
-# ── Benchmark context ──
-benchmarks = [
-    ('当前 NPS', '78', ACCENT_GREEN),
-    ('行业平均', '52', MED_GRAY),
-    ('去年同期', '65', ACCENT_BLUE),
-    ('目标值', '80', NAVY),
-]
-bx_start = LM + Inches(0.5)
-by_row = Inches(5.0)
-bw = Inches(2.5)
-for i, (label, val, color) in enumerate(benchmarks):
-    bx = bx_start + i * bw
-    add_rect(s, bx, by_row, Inches(0.08), Inches(0.6), color)
-    add_text(s, bx + Inches(0.2), by_row, bw - Inches(0.3), Inches(0.3),
-             label, font_size=Pt(12), font_color=MED_GRAY)
-    add_text(s, bx + Inches(0.2), by_row + Inches(0.3), bw - Inches(0.3), Inches(0.3),
-             val, font_size=Pt(22), font_color=color, bold=True,
-             font_name='Georgia')
-
-add_source(s, 'Source: 客户体验部 NPS 调研，2026年Q2')
-add_page_number(s, 11, 12)
+eng.gauge(title='客户满意度',
+    score=78,
+    benchmarks=[('行业平均', '65分', ACCENT_ORANGE), ('目标', '85分', ACCENT_GREEN)],
+    source='Source: ...')
 ```
 
 ---
@@ -3917,105 +2482,11 @@ add_page_number(s, 11, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         'CRM系统供应商评估对比',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Table setup ──
-criteria = ['功能完整度', '用户体验', '技术可扩展', '实施成本', '供应商实力', '数据安全']
-options = ['供应商 A', '供应商 B', '供应商 C']
-# Scores: 4=full, 3=75%, 2=50%, 1=25%, 0=empty
-scores = [
-    [4, 3, 2],
-    [3, 4, 1],
-    [2, 3, 4],
-    [3, 2, 4],
-    [4, 3, 3],
-    [4, 4, 2],
-]
-
-col1_w = Inches(2.8)
-col_w = Inches(2.5)
-row_h = Inches(0.6)
-table_l = LM
-ty = Inches(1.1)
-
-# Header row
-add_text(s, table_l, ty, col1_w, row_h,
-         '评估维度', font_size=Pt(13), font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-for j, opt in enumerate(options):
-    add_text(s, table_l + col1_w + j * col_w, ty, col_w, row_h,
-             opt, font_size=Pt(13), font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, table_l, ty + row_h, col1_w + len(options) * col_w, BLACK, Pt(0.75))
-
-# Data rows
-def draw_harvey_ball(slide, x, y, score, size=Inches(0.35)):
-    """Draw Harvey ball: 0=empty circle, 1-3=partial fill, 4=full fill."""
-    # Outer circle (always drawn)
-    oval = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
-    oval.fill.solid()
-    oval.fill.fore_color.rgb = BG_GRAY
-    oval.line.color.rgb = NAVY
-    oval.line.width = Pt(1.0)
-    _clean_shape(oval)
-    if score == 0:
-        return
-    # Fill proportion: draw a filled rect clipped visually by the oval context
-    fill_w = int(size * score / 4)
-    filled = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
-    filled.fill.solid()
-    filled.fill.fore_color.rgb = NAVY
-    filled.line.fill.background()
-    _clean_shape(filled)
-    if score < 4:
-        # Overlay white rect to "erase" unfilled portion
-        mask_x = x + fill_w
-        mask_w = size - fill_w
-        mask = add_rect(slide, mask_x, y, mask_w, size, WHITE)
-
-for i, criterion in enumerate(criteria):
-    ry = ty + row_h + Inches(0.05) + i * row_h
-    add_text(s, table_l, ry, col1_w, row_h,
-             criterion, font_size=BODY_SIZE, font_color=DARK_GRAY,
-             anchor=MSO_ANCHOR.MIDDLE)
-    for j in range(len(options)):
-        ball_x = table_l + col1_w + j * col_w + (col_w - Inches(0.35)) // 2
-        ball_y = ry + (row_h - Inches(0.35)) // 2
-        draw_harvey_ball(s, ball_x, ball_y, scores[i][j])
-    if i < len(criteria) - 1:
-        add_hline(s, table_l, ry + row_h,
-                  col1_w + len(options) * col_w, LINE_GRAY, Pt(0.25))
-
-# ── Legend ──
-legend_y = ty + row_h + len(criteria) * row_h + Inches(0.3)
-add_hline(s, table_l, legend_y - Inches(0.1),
-          col1_w + len(options) * col_w, BLACK, Pt(0.5))
-legend_items = ['● 完全满足', '◕ 大部分满足', '◑ 部分满足', '◔ 少量满足']
-lx = table_l
-for item in legend_items:
-    add_text(s, lx, legend_y, Inches(2.0), Inches(0.3),
-             item, font_size=Pt(11), font_color=MED_GRAY)
-    lx += Inches(2.2)
-
-# ── Recommendation ──
-add_rect(s, LM, Inches(5.5), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.5), Inches(1.5), Inches(0.8),
-         '推荐', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(5.5), CONTENT_W - Inches(2.3), Inches(0.8),
-         '综合评估，供应商A在功能完整度和供应商实力方面领先，建议作为首选，供应商C可作为备选方案',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: IT采购评估小组，2026年Q2')
-add_page_number(s, 7, 12)
+eng.harvey_ball_table(title='供应商能力评估',
+    headers=['供应商', '技术', '交付', '价格', '服务'],
+    rows=[('供应商A', 100, 75, 50, 100),
+          ('供应商B', 75, 100, 75, 50)],
+    source='Source: ...')
 ```
 
 ---
@@ -4052,95 +2523,12 @@ add_page_number(s, 7, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '业务健康度仪表盘 — 2026年Q2',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Top: KPI cards row ──
-kpis = [
-    ('¥8.5亿', '总营收', '+18% YoY', ACCENT_BLUE),
-    ('+25%', '营收增速', '超目标5%', ACCENT_GREEN),
-    ('78', 'NPS评分', '+13 vs去年', ACCENT_ORANGE),
-    ('92%', '客户留存', '行业TOP10%', NAVY),
-]
-card_w = CONTENT_W / len(kpis) - Inches(0.15)
-card_h = Inches(1.1)
-ky = Inches(0.95)
-
-for i, (val, label, detail, color) in enumerate(kpis):
-    cx = LM + i * (card_w + Inches(0.15))
-    add_rect(s, cx, ky, card_w, card_h, WHITE)
-    add_rect(s, cx, ky, card_w, Inches(0.06), color)  # Top accent bar
-    add_text(s, cx + Inches(0.2), ky + Inches(0.15), card_w - Inches(0.4), Inches(0.45),
-             val, font_size=Pt(24), font_color=color, bold=True)
-    add_text(s, cx + Inches(0.2), ky + Inches(0.6), Inches(1.5), Inches(0.2),
-             label, font_size=Pt(11), font_color=MED_GRAY)
-    add_text(s, cx + Inches(1.8), ky + Inches(0.6), card_w - Inches(2.0), Inches(0.2),
-             detail, font_size=Pt(10), font_color=ACCENT_GREEN,
-             alignment=PP_ALIGN.RIGHT)
-
-# ── Middle: mini grouped bar chart ──
-chart_y = Inches(2.3)
-chart_h_area = Inches(2.5)
-chart_l = LM + Inches(0.5)
-chart_bot = chart_y + chart_h_area
-months = ['1月', '2月', '3月', '4月', '5月', '6月']
-# Two series: actual vs target
-actual =  [1.2, 1.3, 1.4, 1.5, 1.4, 1.7]
-target =  [1.3, 1.3, 1.4, 1.4, 1.5, 1.5]
-max_val = 2.0
-bar_w = Inches(0.6)
-pair_gap = Inches(0.15)
-group_w = bar_w * 2 + pair_gap
-month_gap = Inches(0.5)
-
-for i in range(len(months)):
-    gx = chart_l + i * (group_w + month_gap)
-    for j, (vals, color) in enumerate([(actual, NAVY), (target, BG_GRAY)]):
-        bx = gx + j * (bar_w + pair_gap)
-        val = vals[i]
-        bh = int(chart_h_area * val / max_val)
-        bt = chart_bot - bh
-        add_rect(s, bx, bt, bar_w, bh, color)
-        add_text(s, bx, bt - Inches(0.2), bar_w, Inches(0.18),
-                 f'{val}亿', font_size=Pt(8), font_color=DARK_GRAY,
-                 alignment=PP_ALIGN.CENTER)
-    # Month label
-    add_text(s, gx, chart_bot + Inches(0.03), group_w, Inches(0.2),
-             months[i], font_size=Pt(9), font_color=MED_GRAY,
-             alignment=PP_ALIGN.CENTER)
-
-add_hline(s, chart_l, chart_bot, Inches(10.5), LINE_GRAY, Pt(0.5))
-
-# Mini legend
-add_rect(s, LM + Inches(9.0), chart_y, Inches(0.3), Inches(0.15), NAVY)
-add_text(s, LM + Inches(9.4), chart_y - Inches(0.02), Inches(0.8), Inches(0.2),
-         '实际', font_size=Pt(9), font_color=DARK_GRAY)
-add_rect(s, LM + Inches(10.3), chart_y, Inches(0.3), Inches(0.15), BG_GRAY)
-add_text(s, LM + Inches(10.7), chart_y - Inches(0.02), Inches(0.8), Inches(0.2),
-         '目标', font_size=Pt(9), font_color=DARK_GRAY)
-
-# ── Bottom: takeaway panel ──
-add_rect(s, LM, Inches(5.3), CONTENT_W, Inches(0.9), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.3), Inches(1.5), Inches(0.9),
-         '关键发现', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-takeaways = [
-    '• 6月营收创单月新高（1.7亿），主要来自企业客户增长',
-    '• NPS连续3个季度提升，但距行业标杆（85）仍有7分差距',
-]
-add_text(s, LM + Inches(2.0), Inches(5.3), CONTENT_W - Inches(2.3), Inches(0.9),
-         takeaways, font_size=BODY_SIZE, font_color=DARK_GRAY,
-         anchor=MSO_ANCHOR.MIDDLE, line_spacing=Pt(4))
-
-add_source(s, 'Source: 业务数据平台，2026年6月')
-add_page_number(s, 3, 12)
+eng.dashboard_kpi_chart(title='月度运营概览',
+    kpi_cards=[('¥2.3亿', '月营收', '+18%', NAVY),
+               ('98.5%', '可用性', '超SLA', ACCENT_GREEN),
+               ('4.8', 'NPS', '+0.3', ACCENT_BLUE)],
+    chart_data={'labels':['1月','2月','3月'], 'values':[180,210,230], 'color':NAVY},
+    source='Source: ...')
 ```
 
 ---
@@ -4168,103 +2556,11 @@ add_page_number(s, 3, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '区域业绩总览 — 2026年H1',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Left: data table (55%) ──
-left_w = Inches(6.2)
-ty = Inches(1.0)
-cols = ['区域', 'H1营收', '同比', '达成率']
-col_ws = [Inches(1.5), Inches(1.5), Inches(1.2), Inches(1.5)]
-rows_data = [
-    ('华东', '¥3.2亿', '+22%', '105%'),
-    ('华南', '¥2.1亿', '+18%', '98%'),
-    ('华北', '¥1.8亿', '+15%', '92%'),
-    ('西部', '¥0.9亿', '+28%', '110%'),
-    ('海外', '¥0.5亿', '+45%', '85%'),
-]
-
-# Table header
-hx = LM
-for ci, (col_name, cw) in enumerate(zip(cols, col_ws)):
-    add_text(s, hx, ty, cw, Inches(0.3),
-             col_name, font_size=Pt(12), font_color=NAVY, bold=True)
-    hx += cw
-add_hline(s, LM, ty + Inches(0.3), left_w, BLACK, Pt(0.75))
-
-# Table rows
-for ri, row in enumerate(rows_data):
-    ry = ty + Inches(0.4) + ri * Inches(0.5)
-    rx = LM
-    for ci, (val, cw) in enumerate(zip(row, col_ws)):
-        fc = DARK_GRAY
-        bld = False
-        if ci == 2:  # Growth column
-            fc = ACCENT_GREEN if '+' in val else ACCENT_RED
-        if ci == 3:  # Achievement
-            pct_val = int(val.replace('%', ''))
-            fc = ACCENT_GREEN if pct_val >= 100 else (ACCENT_ORANGE if pct_val >= 90 else ACCENT_RED)
-            bld = True
-        add_text(s, rx, ry, cw, Inches(0.4),
-                 val, font_size=BODY_SIZE, font_color=fc, bold=bld,
-                 anchor=MSO_ANCHOR.MIDDLE)
-        rx += cw
-    if ri < len(rows_data) - 1:
-        add_hline(s, LM, ry + Inches(0.45), left_w, LINE_GRAY, Pt(0.25))
-
-# ── Right: mini horizontal bar chart (45%) ──
-chart_x = LM + left_w + Inches(0.5)
-chart_w = CONTENT_W - left_w - Inches(0.5)
-chart_ty = Inches(1.0)
-bar_max = Inches(3.5)
-max_rev = 3.2
-
-add_text(s, chart_x, chart_ty, chart_w, Inches(0.3),
-         '各区域营收对比', font_size=Pt(12), font_color=NAVY, bold=True)
-add_hline(s, chart_x, chart_ty + Inches(0.3), chart_w, BLACK, Pt(0.5))
-
-regions = [('华东', 3.2), ('华南', 2.1), ('华北', 1.8), ('西部', 0.9), ('海外', 0.5)]
-bar_h = Inches(0.3)
-bar_gap = Inches(0.15)
-for i, (region, rev) in enumerate(regions):
-    by = chart_ty + Inches(0.45) + i * (bar_h + bar_gap)
-    bw = int(bar_max * rev / max_rev)
-    add_text(s, chart_x, by, Inches(0.8), bar_h,
-             region, font_size=Pt(11), font_color=MED_GRAY,
-             anchor=MSO_ANCHOR.MIDDLE)
-    add_rect(s, chart_x + Inches(0.9), by, bw, bar_h, NAVY if i == 0 else ACCENT_BLUE)
-    add_text(s, chart_x + Inches(0.9) + bw + Inches(0.1), by, Inches(0.8), bar_h,
-             f'¥{rev}亿', font_size=Pt(11), font_color=DARK_GRAY, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Bottom: factoid cards ──
-facts = [
-    ('120+', '服务客户数', ACCENT_BLUE),
-    ('¥8.5亿', 'H1总营收', NAVY),
-    ('Top 5%', '行业排名', ACCENT_GREEN),
-    ('99.2%', '服务可用性', ACCENT_ORANGE),
-]
-card_y = Inches(4.8)
-card_w = CONTENT_W / len(facts) - Inches(0.15)
-card_h = Inches(1.0)
-for i, (val, label, color) in enumerate(facts):
-    fx = LM + i * (card_w + Inches(0.15))
-    add_rect(s, fx, card_y, card_w, card_h, BG_GRAY)
-    add_rect(s, fx, card_y, Inches(0.06), card_h, color)  # Left accent
-    add_text(s, fx + Inches(0.2), card_y + Inches(0.1), card_w - Inches(0.3), Inches(0.5),
-             val, font_size=Pt(24), font_color=color, bold=True)
-    add_text(s, fx + Inches(0.2), card_y + Inches(0.6), card_w - Inches(0.3), Inches(0.3),
-             label, font_size=Pt(11), font_color=MED_GRAY)
-
-add_source(s, 'Source: 区域业务部 & 财务部，2026年H1')
-add_page_number(s, 4, 12)
+eng.dashboard_table_chart(title='季度业务仪表盘',
+    table_data={'headers':['指标','Q1','Q2','Q3'],
+                'rows':[('营收','¥1.8亿','¥2.1亿','¥2.5亿'),
+                        ('利润','¥0.3亿','¥0.4亿','¥0.5亿')]},
+    source='Source: ...')
 ```
 
 ---
@@ -4299,72 +2595,12 @@ add_page_number(s, 4, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '项目利益相关者影响力-关注度矩阵',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── 2x2 grid ──
-grid_l = LM + Inches(2.0)
-grid_t = Inches(1.2)
-cell_w = Inches(4.5)
-cell_h = Inches(1.8)
-
-quadrant_labels = [
-    ('保持沟通', 'Keep Informed', LIGHT_BLUE),
-    ('重点管理', 'Manage Closely', LIGHT_RED),
-    ('定期监测', 'Monitor', LIGHT_GREEN),
-    ('维护满意', 'Keep Satisfied', LIGHT_ORANGE),
-]
-quadrant_stakeholders = [
-    ['产品经理', '设计团队'],
-    ['CEO', 'CTO', '投资方'],
-    ['法务部', '行政部'],
-    ['运维团队', '外部供应商'],
-]
-
-for qi, (label_cn, label_en, bg_color) in enumerate(quadrant_labels):
-    row = qi // 2
-    col = qi % 2
-    qx = grid_l + col * cell_w
-    qy = grid_t + row * cell_h
-    # Cell background
-    add_rect(s, qx, qy, cell_w - Inches(0.05), cell_h - Inches(0.05), bg_color)
-    # Quadrant title
-    add_text(s, qx + Inches(0.15), qy + Inches(0.1), cell_w - Inches(0.3), Inches(0.35),
-             f'{label_cn} ({label_en})',
-             font_size=Pt(13), font_color=NAVY, bold=True)
-    # Stakeholder names
-    names = quadrant_stakeholders[qi]
-    for ni, name in enumerate(names):
-        add_oval(s, qx + Inches(0.2), qy + Inches(0.55) + ni * Inches(0.4),
-                 name[0], size=Inches(0.3), bg=NAVY)
-        add_text(s, qx + Inches(0.6), qy + Inches(0.5) + ni * Inches(0.4),
-                 Inches(2.5), Inches(0.35),
-                 name, font_size=BODY_SIZE, font_color=DARK_GRAY)
-
-# ── Axis labels ──
-add_text(s, LM, grid_t + cell_h - Inches(0.3), Inches(1.8), Inches(0.6),
-         '关\n注\n度\n↑', font_size=Pt(12), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, grid_l + cell_w - Inches(0.5), grid_t + 2 * cell_h + Inches(0.1),
-         Inches(2.5), Inches(0.3),
-         '影响力 →', font_size=Pt(12), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-
-# ── Action plan ──
-add_rect(s, LM, Inches(5.2), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.2), CONTENT_W - Inches(0.6), Inches(0.8),
-         '行动计划：本周安排CEO一对一沟通，每双周向投资方发送项目简报，产品团队纳入每日站会',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 项目管理办公室，2026年Q2')
-add_page_number(s, 5, 12)
+eng.stakeholder_map(title='干系人矩阵',
+    quadrants=[('高关注 / 高影响', ['CEO', 'CTO']),
+               ('高关注 / 低影响', ['项目经理', '产品经理']),
+               ('低关注 / 高影响', ['监管机构']),
+               ('低关注 / 低影响', ['普通员工'])],
+    source='Source: ...')
 ```
 
 ---
@@ -4395,99 +2631,11 @@ add_page_number(s, 5, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '利润下滑根因诊断树',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Tree structure (3 levels) ──
-# Level 0: Root
-L0_x, L0_y = LM + Inches(0.3), Inches(2.5)
-L0_w, L0_h = Inches(2.2), Inches(1.2)
-add_rect(s, L0_x, L0_y, L0_w, L0_h, NAVY)
-add_text(s, L0_x, L0_y, L0_w, L0_h,
-         '利润下滑\n15%',
-         font_size=Pt(16), font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# Level 1: branches
-L1_items = [
-    ('营收下降', '–8%'),
-    ('成本上升', '+12%'),
-]
-L1_x = L0_x + L0_w + Inches(0.6)
-L1_w, L1_h = Inches(2.0), Inches(0.9)
-
-# Connecting lines from L0 to L1
-conn_x = L0_x + L0_w
-for i, (title, metric) in enumerate(L1_items):
-    L1_y = Inches(1.5) + i * Inches(2.2)
-    # Horizontal connector
-    add_hline(s, conn_x, L0_y + L0_h // 2, L1_x - conn_x, LINE_GRAY, Pt(1))
-    # Vertical segment to branch
-    if i == 0:
-        add_rect(s, L1_x - Inches(0.02), L1_y + L1_h // 2, Pt(1),
-                 L0_y + L0_h // 2 - L1_y - L1_h // 2, LINE_GRAY)
-    else:
-        add_rect(s, L1_x - Inches(0.02), L0_y + L0_h // 2, Pt(1),
-                 L1_y + L1_h // 2 - L0_y - L0_h // 2, LINE_GRAY)
-
-    add_rect(s, L1_x, L1_y, L1_w, L1_h, ACCENT_BLUE if i == 0 else ACCENT_ORANGE)
-    add_text(s, L1_x, L1_y, L1_w, Inches(0.5),
-             title, font_size=Pt(14), font_color=WHITE, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, L1_x, L1_y + Inches(0.45), L1_w, Inches(0.4),
-             metric, font_size=Pt(18), font_color=WHITE, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# Level 2: leaves
-L2_groups = [
-    [('客户流失', '–5%'), ('价格下调', '–3%')],
-    [('原材料涨价', '+7%'), ('人力成本', '+3%'), ('运营费用', '+2%')],
-]
-L2_x = L1_x + L1_w + Inches(0.6)
-L2_w, L2_h = Inches(2.0), Inches(0.65)
-
-for gi, group in enumerate(L2_groups):
-    parent_y = Inches(1.5) + gi * Inches(2.2)
-    parent_cx = L1_x + L1_w
-    for li, (title, metric) in enumerate(group):
-        L2_y = parent_y - Inches(0.3) + li * Inches(0.8)
-        # Connector
-        add_hline(s, parent_cx, parent_y + L1_h // 2,
-                  L2_x - parent_cx, LINE_GRAY, Pt(0.5))
-        color = BG_GRAY
-        add_rect(s, L2_x, L2_y, L2_w, L2_h, color)
-        add_text(s, L2_x + Inches(0.1), L2_y, L2_w * 0.6, L2_h,
-                 title, font_size=Pt(12), font_color=DARK_GRAY,
-                 anchor=MSO_ANCHOR.MIDDLE)
-        add_text(s, L2_x + L2_w * 0.6, L2_y, L2_w * 0.4, L2_h,
-                 metric, font_size=Pt(14), font_color=NAVY, bold=True,
-                 anchor=MSO_ANCHOR.MIDDLE, alignment=PP_ALIGN.CENTER)
-
-# Level 3: action items (rightmost)
-L3_x = L2_x + L2_w + Inches(0.4)
-L3_w = CONTENT_W - (L3_x - LM)
-add_rect(s, L3_x, Inches(1.2), L3_w, Inches(4.5), BG_GRAY)
-add_text(s, L3_x + Inches(0.15), Inches(1.3), L3_w - Inches(0.3), Inches(0.3),
-         '建议行动', font_size=Pt(14), font_color=NAVY, bold=True)
-actions = [
-    '1. 客户挽回计划：Top 20客户专项拜访',
-    '2. 价格策略：阶梯定价替代统一折扣',
-    '3. 供应链：锁定6个月期货合约',
-    '4. 人效提升：AI工具导入减少20%人力',
-    '5. 费用管控：暂停非核心项目支出',
-]
-add_text(s, L3_x + Inches(0.15), Inches(1.7), L3_w - Inches(0.3), Inches(3.5),
-         actions, font_size=Pt(12), font_color=DARK_GRAY, line_spacing=Pt(8))
-
-add_source(s, 'Source: 财务分析部，2026年Q2')
-add_page_number(s, 6, 12)
+eng.decision_tree(title='技术选型决策树',
+    root='是否需要实时处理？',
+    branches=[('是', ['流式计算', 'Kafka + Flink']),
+              ('否', ['批处理', 'Spark + Hive'])],
+    source='Source: ...')
 ```
 
 ---
@@ -4515,78 +2663,16 @@ add_page_number(s, 6, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_action_title(s, '系统上线前检查清单 — 进度追踪')
-
-# ── Table header ──
-hy = CONTENT_TOP + Inches(0.1)
-headers = [('#', Inches(0.5)), ('任务项', Inches(4.5)), ('负责人', Inches(1.8)),
-           ('截止日期', Inches(1.8)), ('状态', Inches(2.0))]
-hx = LM
-for label, w in headers:
-    add_text(s, hx, hy, w, Inches(0.35),
-             label, font_size=Pt(12), font_color=NAVY, bold=True)
-    hx += w
-add_hline(s, LM, hy + Inches(0.35), CW, BLACK, Pt(0.75))
-
-# ── Checklist rows ──
-tasks = [
-    ('1', '数据迁移与验证', '技术运维部', '3月15日', 'done'),
-    ('2', 'UAT用户验收测试', 'QA团队', '3月20日', 'done'),
-    ('3', '信息安全审计', '信息安全部', '3月25日', 'active'),
-    ('4', '全员培训与上手', 'HR & 培训部', '4月1日', 'pending'),
-    ('5', '上线审批签字', 'PMO', '4月5日', 'pending'),
-    ('6', '灰度发布与监控', '技术运维部', '4月8日', 'pending'),
-    ('7', '全量上线', 'PMO', '4月10日', 'pending'),
-]
-
-status_config = {
-    'done':    ('✓ 完成', ACCENT_GREEN, LIGHT_GREEN),
-    'active':  ('→ 进行中', ACCENT_ORANGE, LIGHT_ORANGE),
-    'pending': ('○ 待启动', MED_GRAY, BG_GRAY),
-}
-
-# ── Dynamic row height: fit all rows without overflowing page ──
-data_start_y = hy + Inches(0.5)
-bottom_limit = SOURCE_Y - Inches(0.1)  # or BOTTOM_BAR_Y if using bottom bar
-available_h = bottom_limit - data_start_y
-row_h = min(Inches(0.85), available_h / max(len(tasks), 1))  # cap at 0.85"
-
-# Use smaller font when rows are tight
-row_font = SMALL_SIZE if row_h < Inches(0.65) else BODY_SIZE
-
-for i, (num, task, owner, deadline, status) in enumerate(tasks):
-    ry = data_start_y + i * row_h
-    st_label, st_color, st_bg = status_config[status]
-
-    # Row background for alternating
-    if i % 2 == 0:
-        add_rect(s, LM, ry, CW, row_h, RGBColor(0xFA, 0xFA, 0xFA))
-
-    rx = LM
-    vals = [(num, Inches(0.5)), (task, Inches(4.5)), (owner, Inches(1.8)),
-            (deadline, Inches(1.8))]
-    for val, w in vals:
-        add_text(s, rx, ry, w, row_h,
-                 val, font_size=row_font, font_color=DARK_GRAY,
-                 anchor=MSO_ANCHOR.MIDDLE)
-        rx += w
-
-    # Status badge
-    badge_h = min(row_h - Inches(0.2), Inches(0.35))
-    add_rect(s, rx + Inches(0.1), ry + (row_h - badge_h) / 2,
-             Inches(1.5), badge_h, st_bg)
-    add_text(s, rx + Inches(0.1), ry, Inches(1.5), row_h,
-             st_label, font_size=Pt(12), font_color=st_color, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    if i < len(tasks) - 1:
-        add_hline(s, LM, ry + row_h, CW, LINE_GRAY, Pt(0.25))
-
-add_source(s, 'Source: 项目管理办公室，2026年3月')
-add_page_number(s, 8, 12)
+eng.checklist(title='上线准备检查清单',
+    columns=['检查项', '负责人', '截止日', '状态'],
+    col_widths=[Inches(4.5), Inches(2.0), Inches(2.0), Inches(2.0)],
+    rows=[('安全审计完成', '张三', '3/15', 'done'),
+          ('性能压测通过', '李四', '3/20', 'wip'),
+          ('文档更新', '王五', '3/25', 'todo')],
+    status_map={'done': ('✅ 完成', ACCENT_GREEN, LIGHT_GREEN),
+                'wip': ('🔄 进行中', ACCENT_ORANGE, LIGHT_ORANGE),
+                'todo': ('⏳ 待开始', MED_GRAY, BG_GRAY)},
+    source='Source: ...')
 ```
 
 ---
@@ -4616,86 +2702,11 @@ add_page_number(s, 8, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '数字化转型前后关键指标对比',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Metric pairs ──
-metrics = [
-    ('营收规模', '¥5.2亿', '¥8.5亿', '+63%'),
-    ('库存周转', '45天', '28天', '–38%'),
-    ('客户NPS', '52', '78', '+50%'),
-    ('线上占比', '12%', '38%', '+217%'),
-]
-
-row_h = Inches(0.95)
-before_x = LM + Inches(0.5)
-after_x = LM + Inches(6.5)
-card_w = Inches(4.0)
-arrow_x = before_x + card_w + Inches(0.3)
-delta_x = after_x + card_w + Inches(0.3)
-
-# Column headers
-add_text(s, before_x, Inches(1.0), card_w, Inches(0.3),
-         '转型前 (2024)', font_size=Pt(13), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-add_text(s, after_x, Inches(1.0), card_w, Inches(0.3),
-         '转型后 (2026)', font_size=Pt(13), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-add_text(s, delta_x, Inches(1.0), Inches(1.5), Inches(0.3),
-         '变化', font_size=Pt(13), font_color=MED_GRAY,
-         alignment=PP_ALIGN.CENTER)
-
-for i, (label, before, after, delta) in enumerate(metrics):
-    ry = Inches(1.5) + i * row_h
-
-    # Before card
-    add_rect(s, before_x, ry, card_w, row_h - Inches(0.1), BG_GRAY)
-    add_text(s, before_x + Inches(0.2), ry, Inches(1.5), row_h - Inches(0.1),
-             label, font_size=Pt(12), font_color=MED_GRAY,
-             anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, before_x + Inches(1.8), ry, Inches(2.0), row_h - Inches(0.1),
-             before, font_size=Pt(22), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    # Arrow
-    add_text(s, arrow_x, ry, Inches(1.5), row_h - Inches(0.1),
-             '→', font_size=Pt(24), font_color=LINE_GRAY,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    # After card
-    add_rect(s, after_x, ry, card_w, row_h - Inches(0.1), LIGHT_BLUE)
-    add_text(s, after_x + Inches(0.2), ry, Inches(1.5), row_h - Inches(0.1),
-             label, font_size=Pt(12), font_color=ACCENT_BLUE,
-             anchor=MSO_ANCHOR.MIDDLE)
-    add_text(s, after_x + Inches(1.8), ry, Inches(2.0), row_h - Inches(0.1),
-             after, font_size=Pt(22), font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    # Delta badge
-    is_positive = delta.startswith('+')
-    dc = ACCENT_GREEN if is_positive else ACCENT_RED
-    add_rect(s, delta_x + Inches(0.1), ry + Inches(0.15),
-             Inches(1.2), row_h - Inches(0.35), dc)
-    add_text(s, delta_x + Inches(0.1), ry + Inches(0.15),
-             Inches(1.2), row_h - Inches(0.35),
-             delta, font_size=Pt(16), font_color=WHITE, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-# ── Summary ──
-add_rect(s, LM, Inches(5.5), CONTENT_W, Inches(0.7), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.5), CONTENT_W - Inches(0.6), Inches(0.7),
-         '总结：两年数字化转型使营收增长63%，运营效率（库存周转）改善38%，客户满意度（NPS）提升50%',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 战略转型办公室，2026年Q1')
-add_page_number(s, 9, 12)
+eng.metric_comparison(title='数字化转型前后关键指标对比',
+    metrics=[('营收规模', '¥5.2亿', '¥8.5亿', '+63%'),
+             ('库存周转', '45天', '28天', '–38%'),
+             ('客户NPS', '52', '78', '+50%')],
+    source='Source: ...')
 ```
 
 ---
@@ -4721,62 +2732,12 @@ add_page_number(s, 9, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '平台六大核心能力',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-items = [
-    ('数据智能', '实时数据采集与AI驱动的智能分析，日处理10亿+数据点', ACCENT_BLUE),
-    ('用户增长', '全渠道获客引擎，月活用户增长率保持25%+', ACCENT_GREEN),
-    ('安全合规', 'ISO 27001认证，满足GDPR与等保三级要求', ACCENT_ORANGE),
-    ('开放生态', 'API开放平台，已接入300+合作伙伴与ISV', ACCENT_RED),
-    ('智能运维', 'AIOps平台实现99.99%系统可用性', ACCENT_BLUE),
-    ('全球部署', '5大洲12个数据中心，端到端延迟<100ms', ACCENT_GREEN),
-]
-
-cols = 3
-rows = 2
-cell_w = CONTENT_W / cols - Inches(0.15)
-cell_h = Inches(2.2)
-ty = Inches(1.0)
-
-for i, (title, desc, color) in enumerate(items):
-    col = i % cols
-    row = i // cols
-    ix = LM + col * (cell_w + Inches(0.15))
-    iy = ty + row * (cell_h + Inches(0.1))
-
-    # Card background
-    add_rect(s, ix, iy, cell_w, cell_h, WHITE)
-    # Top accent line
-    add_rect(s, ix, iy, cell_w, Inches(0.06), color)
-    # Icon circle placeholder
-    icon_sz = Inches(0.6)
-    oval = s.shapes.add_shape(MSO_SHAPE.OVAL, ix + Inches(0.3), iy + Inches(0.25),
-                               icon_sz, icon_sz)
-    oval.fill.solid()
-    oval.fill.fore_color.rgb = color
-    oval.line.fill.background()
-    _clean_shape(oval)
-    add_text(s, ix + Inches(0.3), iy + Inches(0.25), icon_sz, icon_sz,
-             title[0], font_size=Pt(18), font_color=WHITE, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    # Title
-    add_text(s, ix + Inches(1.1), iy + Inches(0.25), cell_w - Inches(1.3), Inches(0.4),
-             title, font_size=Pt(16), font_color=color, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-    # Description
-    add_text(s, ix + Inches(0.3), iy + Inches(1.0), cell_w - Inches(0.6), Inches(1.0),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-
-add_source(s, 'Source: 产品白皮书，2026年')
-add_page_number(s, 5, 12)
+eng.icon_grid(title='产品功能矩阵',
+    items=[('🔍', '智能搜索', '毫秒级全文检索'),
+           ('📊', '数据分析', '实时BI仪表盘'),
+           ('🤖', 'AI助手', '自然语言交互'),
+           ('🔒', '安全防护', '多层加密体系')],
+    source='Source: ...')
 ```
 
 ---
@@ -4804,55 +2765,10 @@ add_page_number(s, 5, 12)
 ```
 
 ```python
-from pptx.oxml.ns import qn
-
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '2026年IT预算分配',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Pie chart using BLOCK_ARC with inner_ratio=0 (solid sectors) ──
-cx, cy = LM + Inches(3.0), Inches(3.2)
-radius = Inches(1.8)
-
-segments = [
-    (0.42, NAVY, '基础设施'),
-    (0.28, ACCENT_BLUE, '应用开发'),
-    (0.18, ACCENT_GREEN, '安全合规'),
-    (0.12, ACCENT_ORANGE, '创新研发'),
-]
-
-cum_deg = 0  # start at top (0° = 12 o'clock, CW)
-for pct, color, label in segments:
-    sweep = pct * 360
-    add_block_arc(s, cx - radius, cy - radius, radius * 2, radius * 2,
-                  cum_deg, cum_deg + sweep, 0, color)  # inner_ratio=0 → solid sector
-    cum_deg += sweep
-
-# ── Legend (right side) ──
-legend_x = LM + Inches(7.0)
-for i, (pct, color, label) in enumerate(segments):
-    ly = Inches(1.5) + i * Inches(0.9)
-    add_rect(s, legend_x, ly + Inches(0.05), Inches(0.3), Inches(0.3), color)
-    add_text(s, legend_x + Inches(0.45), ly, Inches(3.5), Inches(0.3),
-             f'{label}', font_size=Pt(16), font_color=DARK_GRAY, bold=True)
-    add_text(s, legend_x + Inches(0.45), ly + Inches(0.3), Inches(3.5), Inches(0.3),
-             f'{int(pct*100)}% — ¥{pct*2.4:.1f}亿',
-             font_size=Pt(13), font_color=MED_GRAY)
-
-# ── Insight ──
-add_rect(s, LM, Inches(5.3), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.3), CONTENT_W - Inches(0.6), Inches(0.8),
-         '分析：基础设施占比42%符合行业水平，建议将创新研发占比从12%提升至18%以加速数字化转型',
-         font_size=BODY_SIZE, font_color=NAVY, bold=True, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: IT预算委员会，2026年度')
-add_page_number(s, 6, 12)
+eng.pie(title='市场份额分布',
+    segments=[(0.35, NAVY, '我们', ''), (0.25, ACCENT_BLUE, '竞品A', ''),
+              (0.20, ACCENT_GREEN, '竞品B', ''), (0.20, ACCENT_ORANGE, '其他', '')],
+    source='Source: ...')
 ```
 
 ---
@@ -4878,51 +2794,12 @@ add_page_number(s, 6, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '市场竞争力SWOT分析',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── 2x2 SWOT grid ──
-quadrants = [
-    ('S — 优势', ACCENT_BLUE, LIGHT_BLUE,
-     ['• 行业领先的技术架构', '• 强大的数据资产（10亿+用户画像）', '• 完善的合作伙伴生态']),
-    ('W — 劣势', ACCENT_ORANGE, LIGHT_ORANGE,
-     ['• 海外市场品牌知名度不足', '• 中小客户服务能力薄弱', '• 部分产品线老化需升级']),
-    ('O — 机会', ACCENT_GREEN, LIGHT_GREEN,
-     ['• AI技术赋能新业务场景', '• 东南亚市场快速增长', '• 政策鼓励企业数字化转型']),
-    ('T — 威胁', ACCENT_RED, LIGHT_RED,
-     ['• 头部竞品加大投入', '• 数据合规要求日益严格', '• 经济下行影响企业IT预算']),
-]
-
-cell_w = CONTENT_W / 2 - Inches(0.1)
-cell_h = Inches(2.3)
-grid_t = Inches(1.0)
-
-for qi, (title, accent, bg, points) in enumerate(quadrants):
-    row = qi // 2
-    col = qi % 2
-    qx = LM + col * (cell_w + Inches(0.15))
-    qy = grid_t + row * (cell_h + Inches(0.1))
-
-    # Cell background
-    add_rect(s, qx, qy, cell_w, cell_h, bg)
-    # Accent top bar
-    add_rect(s, qx, qy, cell_w, Inches(0.06), accent)
-    # Title
-    add_text(s, qx + Inches(0.2), qy + Inches(0.15), cell_w - Inches(0.4), Inches(0.35),
-             title, font_size=Pt(16), font_color=accent, bold=True)
-    # Points
-    add_text(s, qx + Inches(0.2), qy + Inches(0.55), cell_w - Inches(0.4), cell_h - Inches(0.7),
-             points, font_size=BODY_SIZE, font_color=DARK_GRAY, line_spacing=Pt(6))
-
-add_source(s, 'Source: 战略规划研讨会，2026年Q1')
-add_page_number(s, 4, 12)
+eng.swot(title='SWOT分析',
+    quadrants=[('优势 Strengths', ['技术领先', '团队优秀', '资金充裕']),
+               ('劣势 Weaknesses', ['品牌知名度低', '销售网络有限']),
+               ('机会 Opportunities', ['市场快速增长', '政策利好']),
+               ('威胁 Threats', ['巨头入场', '人才竞争激烈'])],
+    source='Source: ...')
 ```
 
 ---
@@ -4949,77 +2826,14 @@ add_page_number(s, 4, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '季度战略评审会议议程',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Agenda header ──
-hy = Inches(1.1)
-col_defs = [('时间', Inches(1.5)), ('议题', Inches(5.5)), ('主讲人', Inches(2.0)),
-            ('时长', Inches(1.2)), ('状态', Inches(1.5))]
-hx = LM
-for label, w in col_defs:
-    add_text(s, hx, hy, w, Inches(0.35),
-             label, font_size=Pt(13), font_color=NAVY, bold=True)
-    hx += w
-add_hline(s, LM, hy + Inches(0.35), CONTENT_W, BLACK, Pt(0.75))
-
-# ── Agenda items ──
-items = [
-    ('09:00', '开场致辞与战略背景', 'CEO 张总', '15分钟', 'key'),
-    ('09:15', '市场竞争格局分析', '市场VP 李总', '30分钟', 'key'),
-    ('09:45', '产品路线图与技术规划', 'CPO 王总', '30分钟', 'key'),
-    ('10:15', '茶歇', '', '15分钟', 'break'),
-    ('10:30', '财务回顾与预算规划', 'CFO 赵总', '30分钟', 'normal'),
-    ('11:00', 'Q&A 与下一步行动', '全体参会者', '30分钟', 'normal'),
-    ('11:30', '总结与会议闭幕', 'CEO 张总', '15分钟', 'normal'),
-]
-
-row_h = Inches(0.6)
-for i, (time, topic, speaker, duration, item_type) in enumerate(items):
-    ry = Inches(1.6) + i * row_h
-
-    # Row background
-    if item_type == 'break':
-        add_rect(s, LM, ry, CONTENT_W, row_h, BG_GRAY)
-    elif item_type == 'key':
-        add_rect(s, LM, ry, Inches(0.06), row_h, ACCENT_BLUE)
-
-    rx = LM
-    vals = [(time, Inches(1.5)), (topic, Inches(5.5)), (speaker, Inches(2.0)),
-            (duration, Inches(1.2))]
-    for val, w in vals:
-        fc = MED_GRAY if item_type == 'break' else DARK_GRAY
-        bld = item_type == 'key'
-        add_text(s, rx, ry, w, row_h,
-                 val, font_size=BODY_SIZE, font_color=fc, bold=bld,
-                 anchor=MSO_ANCHOR.MIDDLE)
-        rx += w
-
-    # Status
-    if item_type == 'key':
-        add_rect(s, rx + Inches(0.1), ry + Inches(0.12), Inches(1.0), row_h - Inches(0.24),
-                 LIGHT_BLUE)
-        add_text(s, rx + Inches(0.1), ry, Inches(1.0), row_h,
-                 '★ 重点', font_size=Pt(11), font_color=ACCENT_BLUE, bold=True,
-                 alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    if i < len(items) - 1:
-        add_hline(s, LM, ry + row_h, CONTENT_W, LINE_GRAY, Pt(0.25))
-
-# ── Footer note ──
-add_text(s, LM, Inches(5.9), CONTENT_W, Inches(0.3),
-         '会议地点：总部大楼28层会议室A | 参会人数：12人 | 会议材料已于3月10日分发',
-         font_size=Pt(10), font_color=MED_GRAY)
-
-add_source(s, 'Source: 战略管理部，2026年Q1')
-add_page_number(s, 2, 12)
+eng.agenda(title='季度回顾会议议程',
+    headers=[('议题', Inches(5.0)), ('时间', Inches(2.0)),
+             ('负责人', Inches(2.0)), ('备注', Inches(2.5))],
+    items=[('Q3业绩回顾', '09:00-09:30', '张总', '', 'key'),
+           ('产品路线图更新', '09:30-10:00', '李总', '', 'normal'),
+           ('茶歇', '10:00-10:15', '', '', 'break'),
+           ('2026规划讨论', '10:15-11:00', '全员', '', 'key')],
+    source='Source: ...')
 ```
 
 ---
@@ -5046,64 +2860,12 @@ add_page_number(s, 2, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_action_title(s, '端到端价值链分析 — 从获客到复购')
-
-# ── Value chain stages ──
-stages = [
-    ('获客', '多渠道投放\n精准触达', 'CAC ¥45', ACCENT_BLUE),
-    ('转化', '产品试用\n销售跟进', '转化率 8%', ACCENT_GREEN),
-    ('交付', '实施部署\n数据迁移', '周期 21天', ACCENT_ORANGE),
-    ('服务', '客户成功\n技术支持', 'NPS 78', NAVY),
-    ('复购', '续约管理\n增购推荐', '续约率 92%', ACCENT_BLUE),
-]
-
-# ── Dynamic sizing: fill full content width and height ──
-n = len(stages)
-arrow_w = Inches(0.4)
-stage_w = (CW - arrow_w * (n - 1)) / n   # fills entire content width
-stage_y = CONTENT_TOP + Inches(0.1)
-# Fill down to bottom bar or source area
-stage_h = SOURCE_Y - Inches(0.15) - stage_y
-
-for i, (title, desc, kpi, color) in enumerate(stages):
-    sx = LM + i * (stage_w + arrow_w)
-
-    # Stage card
-    add_rect(s, sx, stage_y, stage_w, stage_h, WHITE)
-    add_rect(s, sx, stage_y, stage_w, Inches(0.06), color)  # Top accent
-    # Stage number
-    add_oval(s, sx + Inches(0.15), stage_y + Inches(0.2), str(i + 1),
-             size=Inches(0.4), bg=color)
-    # Title
-    add_text(s, sx + Inches(0.65), stage_y + Inches(0.2), stage_w - Inches(0.8), Inches(0.4),
-             title, font_size=Pt(16), font_color=color, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-    # Description
-    desc_h = stage_h - Inches(1.6)  # space for title row + KPI box + padding
-    add_text(s, sx + Inches(0.15), stage_y + Inches(0.8), stage_w - Inches(0.3), desc_h,
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY,
-             alignment=PP_ALIGN.CENTER)
-    # KPI box at bottom
-    add_rect(s, sx + Inches(0.1), stage_y + stage_h - Inches(0.7),
-             stage_w - Inches(0.2), Inches(0.55), BG_GRAY)
-    add_text(s, sx + Inches(0.1), stage_y + stage_h - Inches(0.7),
-             stage_w - Inches(0.2), Inches(0.55),
-             kpi, font_size=Pt(13), font_color=NAVY, bold=True,
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-    # Arrow between stages
-    if i < len(stages) - 1:
-        ax = sx + stage_w + Inches(0.05)
-        ay = stage_y + stage_h // 2
-        add_text(s, ax, ay - Inches(0.15), arrow_w - Inches(0.1), Inches(0.3),
-                 '→', font_size=Pt(22), font_color=LINE_GRAY,
-                 alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 运营效率分析，2026年Q2')
-add_page_number(s, 7, 12)
+eng.value_chain(title='价值链分析',
+    stages=[('研发', '产品设计与技术开发', ACCENT_BLUE),
+            ('生产', '精益制造与质量管控', ACCENT_GREEN),
+            ('营销', '品牌建设与渠道管理', ACCENT_ORANGE),
+            ('服务', '客户支持与持续运营', NAVY)],
+    source='Source: ...')
 ```
 
 ---
@@ -5129,51 +2891,12 @@ add_page_number(s, 7, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '四大区域办公室概览',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-items = [
-    ('上海总部', '员工800+人，研发与运营中心，覆盖华东市场', ACCENT_BLUE),
-    ('深圳分部', '员工350+人，技术创新中心，负责华南及出海业务', ACCENT_GREEN),
-    ('北京分部', '员工200+人，政府关系与企业客户中心', ACCENT_ORANGE),
-    ('新加坡办事处', '员工50+人，东南亚市场拓展前哨站', ACCENT_RED),
-]
-
-cell_w = CONTENT_W / 2 - Inches(0.15)
-cell_h = Inches(2.2)
-img_w = Inches(2.8)
-img_h = Inches(1.8)
-ty = Inches(1.0)
-
-for i, (title, desc, color) in enumerate(items):
-    col = i % 2
-    row = i // 2
-    cx = LM + col * (cell_w + Inches(0.15))
-    cy = ty + row * (cell_h + Inches(0.1))
-
-    # Card background
-    add_rect(s, cx, cy, cell_w, cell_h, WHITE)
-    # Left: image placeholder
-    add_image_placeholder(s, cx + Inches(0.15), cy + Inches(0.15), img_w, img_h,
-                          f'{title}办公室照片')
-    # Right: text
-    tx = cx + img_w + Inches(0.3)
-    tw = cell_w - img_w - Inches(0.45)
-    add_rect(s, tx - Inches(0.05), cy, Inches(0.06), cell_h, color)
-    add_text(s, tx + Inches(0.1), cy + Inches(0.2), tw, Inches(0.35),
-             title, font_size=Pt(16), font_color=color, bold=True)
-    add_text(s, tx + Inches(0.1), cy + Inches(0.6), tw, Inches(1.2),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-
-add_source(s, 'Source: 人力资源部，2026年3月')
-add_page_number(s, 8, 12)
+eng.two_col_image_grid(title='解决方案矩阵',
+    items=[('智能客服', '7×24小时AI客服', ACCENT_BLUE, '客服系统截图'),
+           ('数据分析', '实时BI仪表盘', ACCENT_GREEN, '分析面板'),
+           ('流程自动化', 'RPA机器人流程', ACCENT_ORANGE, '自动化流程'),
+           ('安全合规', '一站式合规管理', NAVY, '安全架构')],
+    source='Source: ...')
 ```
 
 ---
@@ -5202,73 +2925,12 @@ add_page_number(s, 8, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '五项核心建议',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Left: numbered recommendations (65%) ──
-left_w = Inches(7.5)
-recs = [
-    ('构建数据中台', '统一数据标准与治理体系，打通15个业务系统数据孤岛'),
-    ('升级客户体验', '引入AI客服+智能推荐，目标NPS提升至85+'),
-    ('拓展海外市场', '以东南亚为突破口，3年内海外营收占比达20%'),
-    ('强化人才体系', '实施"数字化人才倍增计划"，年培养200+复合型人才'),
-    ('优化成本结构', '通过自动化+云原生架构，IT运营成本降低30%'),
-]
-
-ty = Inches(1.0)
-for i, (title, desc) in enumerate(recs):
-    ry = ty + i * Inches(0.85)
-    add_oval(s, LM, ry + Inches(0.05), str(i + 1), bg=NAVY)
-    add_text(s, LM + Inches(0.6), ry, left_w - Inches(0.6), Inches(0.3),
-             title, font_size=Pt(15), font_color=NAVY, bold=True)
-    add_text(s, LM + Inches(0.6), ry + Inches(0.35), left_w - Inches(0.6), Inches(0.4),
-             desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
-    if i < len(recs) - 1:
-        add_hline(s, LM + Inches(0.6), ry + Inches(0.8), left_w - Inches(0.8),
-                  LINE_GRAY, Pt(0.25))
-
-# ── Right: highlight panel (35%) ──
-rx = LM + left_w + Inches(0.3)
-rw = CONTENT_W - left_w - Inches(0.3)
-panel_y = Inches(1.0)
-panel_h = Inches(4.8)
-
-add_rect(s, rx, panel_y, rw, panel_h, NAVY)
-add_text(s, rx + Inches(0.3), panel_y + Inches(0.3), rw - Inches(0.6), Inches(0.3),
-         '预期回报', font_size=Pt(14), font_color=RGBColor(0xCC, 0xCC, 0xCC))
-add_text(s, rx + Inches(0.3), panel_y + Inches(0.8), rw - Inches(0.6), Inches(0.6),
-         '+¥3.2亿', font_size=Pt(36), font_color=WHITE, bold=True,
-         alignment=PP_ALIGN.CENTER)
-add_text(s, rx + Inches(0.3), panel_y + Inches(1.5), rw - Inches(0.6), Inches(0.3),
-         '年化增量营收', font_size=Pt(13), font_color=RGBColor(0xCC, 0xCC, 0xCC),
-         alignment=PP_ALIGN.CENTER)
-
-# Divider
-add_hline(s, rx + Inches(0.3), panel_y + Inches(2.1), rw - Inches(0.6),
-          RGBColor(0x33, 0x44, 0x55), Pt(0.5))
-
-# Additional metrics
-panel_metrics = [
-    ('投资回收期', '18个月'),
-    ('三年ROI', '320%'),
-    ('风险等级', '中低'),
-]
-for mi, (label, val) in enumerate(panel_metrics):
-    my = panel_y + Inches(2.4) + mi * Inches(0.7)
-    add_text(s, rx + Inches(0.3), my, rw - Inches(0.6), Inches(0.3),
-             label, font_size=Pt(11), font_color=RGBColor(0xAA, 0xAA, 0xAA))
-    add_text(s, rx + Inches(0.3), my + Inches(0.3), rw - Inches(0.6), Inches(0.3),
-             val, font_size=Pt(18), font_color=WHITE, bold=True)
-
-add_source(s, 'Source: 战略咨询项目终期报告，2026年Q1')
-add_page_number(s, 11, 12)
+eng.numbered_list_panel(title='战略建议',
+    items=[('优先推进AI能力建设', '短期内集中资源打造AI核心竞争力'),
+           ('建立数据治理体系', '统一数据标准，打通数据孤岛'),
+           ('构建开放生态', '与合作伙伴共建行业解决方案')],
+    panel=('战略目标', ['2026年AI渗透率达到60%', '数据资产价值提升3倍', '合作伙伴超过100家']),
+    source='Source: ...')
 ```
 
 ---
@@ -5295,230 +2957,359 @@ add_page_number(s, 11, 12)
 ```
 
 ```python
-s = prs.slides.add_slide(prs.slide_layouts[6])
-
-# ── Title bar ──
-add_rect(s, Inches(0), Inches(0), Inches(13.333), Inches(0.75), NAVY)
-add_text(s, LM, Inches(0), CONTENT_W, Inches(0.75),
-         '营收构成趋势（2021-2026E）',
-         font_size=TITLE_SIZE, font_color=WHITE, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_hline(s, LM, Inches(0.75), CONTENT_W, BLACK, Pt(0.5))
-
-# ── Chart setup ──
-chart_l = LM + Inches(1.0)
-chart_b = Inches(4.8)
-chart_t = Inches(1.3)
-chart_w = Inches(9.5)
-chart_h = chart_b - chart_t
-max_val = 12  # ¥12亿
-
-years = ['2021', '2022', '2023', '2024', '2025', '2026E']
-# Series data (stacked from bottom): values in 亿
-series_data = [
-    ('线上直营', [1.5, 2.0, 2.8, 3.5, 4.2, 5.0], NAVY),
-    ('经销渠道', [2.0, 2.3, 2.5, 2.8, 3.0, 3.2], ACCENT_BLUE),
-    ('企业客户', [0.5, 0.8, 1.2, 1.5, 1.8, 2.5], ACCENT_GREEN),
-]
-
-n_pts = len(years)
-col_w = chart_w // n_pts
-
-# Draw stacked columns for each year
-for yi in range(n_pts):
-    cumulative = 0
-    for si, (name, values, color) in enumerate(series_data):
-        val = values[yi]
-        bar_h = int(chart_h * val / max_val)
-        base_h = int(chart_h * cumulative / max_val)
-        bx = chart_l + int(chart_w * yi / n_pts)
-        by = chart_b - base_h - bar_h
-        add_rect(s, bx + Inches(0.05), by, col_w - Inches(0.1), bar_h, color)
-        cumulative += val
-
-    # Total label above
-    total = sum(s_data[1][yi] for s_data in series_data)
-    total_h = int(chart_h * total / max_val)
-    add_text(s, chart_l + int(chart_w * yi / n_pts), chart_b - total_h - Inches(0.25),
-             col_w, Inches(0.2),
-             f'¥{total:.1f}亿', font_size=Pt(10), font_color=DARK_GRAY, bold=True,
-             alignment=PP_ALIGN.CENTER)
-
-    # Year label
-    add_text(s, chart_l + int(chart_w * yi / n_pts), chart_b + Inches(0.05),
-             col_w, Inches(0.2),
-             years[yi], font_size=Pt(10), font_color=MED_GRAY,
-             alignment=PP_ALIGN.CENTER)
-
-# Baseline
-add_hline(s, chart_l, chart_b, chart_w, BLACK, Pt(0.5))
-
-# Y-axis labels
-for i in range(5):
-    val = max_val * i / 4
-    yy = chart_b - int(chart_h * i / 4)
-    add_text(s, LM, yy - Inches(0.1), Inches(0.8), Inches(0.2),
-             f'¥{int(val)}亿', font_size=Pt(9), font_color=MED_GRAY,
-             alignment=PP_ALIGN.RIGHT)
-    if i > 0:
-        add_hline(s, chart_l, yy, chart_w, RGBColor(0xE8, 0xE8, 0xE8), Pt(0.25))
-
-# ── Legend ──
-legend_x = LM + Inches(9.0)
-for i, (name, _, color) in enumerate(series_data):
-    ly = Inches(1.5) + i * Inches(0.4)
-    add_rect(s, legend_x, ly + Inches(0.05), Inches(0.25), Inches(0.2), color)
-    add_text(s, legend_x + Inches(0.35), ly, Inches(2.0), Inches(0.3),
-             name, font_size=Pt(11), font_color=DARK_GRAY)
-
-# ── Takeaway ──
-add_rect(s, LM, Inches(5.2), CONTENT_W, Inches(0.8), BG_GRAY)
-add_text(s, LM + Inches(0.3), Inches(5.2), Inches(1.5), Inches(0.8),
-         '趋势分析', font_size=BODY_SIZE, font_color=NAVY, bold=True,
-         anchor=MSO_ANCHOR.MIDDLE)
-add_text(s, LM + Inches(2.0), Inches(5.2), CONTENT_W - Inches(2.3), Inches(0.8),
-         '总营收6年CAGR达19%，线上直营增速最快（22% CAGR），企业客户板块2026年有望成为第二大收入来源',
-         font_size=BODY_SIZE, font_color=DARK_GRAY, anchor=MSO_ANCHOR.MIDDLE)
-
-add_source(s, 'Source: 财务部 & 战略规划部，2026年')
-add_page_number(s, 5, 12)
+eng.stacked_area(title='用户增长趋势',
+    years=['2022', '2023', '2024', '2025', '2026E'],
+    series_data=[('企业用户', [20, 35, 55, 80, 120], NAVY),
+                 ('个人用户', [50, 80, 120, 160, 200], ACCENT_BLUE)],
+    max_val=350, source='Source: ...')
 ```
 
 ---
 
-## Python Code Patterns
 
-### Helper Functions (Copy Directly)
+---
+
+## MckEngine API Reference
+
+All 67 public methods on `MckEngine`. Every method creates exactly one slide (except `save()`).
+
+### Initialization
 
 ```python
-from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.enum.shapes import MSO_SHAPE
-from pptx.oxml.ns import qn
-
-
-def _clean_shape(shape):
-    """Remove p:style from any shape to prevent effect references."""
-    sp = shape._element
-    style = sp.find(qn('p:style'))
-    if style is not None:
-        sp.remove(style)
-
-
-def set_ea_font(run, typeface='KaiTi'):
-    """Set East Asian font for Chinese text"""
-    rPr = run._r.get_or_add_rPr()
-    ea = rPr.find(qn('a:ea'))
-    if ea is None:
-        ea = rPr.makeelement(qn('a:ea'), {})
-        rPr.append(ea)
-    ea.set('typeface', typeface)
-
-
-def add_text(slide, left, top, width, height, text, font_size=Pt(14),
-             font_name='Arial', font_color=RGBColor(0x33, 0x33, 0x33), bold=False,
-             alignment=PP_ALIGN.LEFT, ea_font='KaiTi', anchor=MSO_ANCHOR.TOP,
-             line_spacing=Pt(6)):
-    """Unified text helper. Pass str for single line, list for multi-line."""
-    txBox = slide.shapes.add_textbox(left, top, width, height)
-    tf = txBox.text_frame
-    tf.word_wrap = True
-    tf.auto_size = None
-    bodyPr = tf._txBody.find(qn('a:bodyPr'))
-    anchor_map = {MSO_ANCHOR.MIDDLE: 'ctr', MSO_ANCHOR.BOTTOM: 'b', MSO_ANCHOR.TOP: 't'}
-    bodyPr.set('anchor', anchor_map.get(anchor, 't'))
-    for attr in ['lIns','tIns','rIns','bIns']:
-        bodyPr.set(attr, '45720')
-    lines = text if isinstance(text, list) else [text]
-    for i, line in enumerate(lines):
-        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-        p.text = line
-        p.font.size = font_size
-        p.font.name = font_name
-        p.font.color.rgb = font_color
-        p.font.bold = bold
-        p.alignment = alignment
-        p.space_before = line_spacing if i > 0 else Pt(0)
-        p.space_after = Pt(0)
-        p.line_spacing = 0.93 if font_size.pt >= 18 else Pt(font_size.pt * 1.35)  # Titles (>=18pt): 0.93x multiple; Body: 135% fixed Pt
-        for run in p.runs:
-            set_ea_font(run, ea_font)
-    return txBox
-
-
-def add_rect(slide, left, top, width, height, fill_color):
-    shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = fill_color
-    shape.line.fill.background()
-    _clean_shape(shape)  # CRITICAL: remove p:style
-    return shape
-
-
-def add_hline(slide, x, y, length, color=RGBColor(0, 0, 0), thickness=Pt(0.5)):
-    """Draw a horizontal line using a thin rectangle (no connector)."""
-    h = max(int(thickness), Emu(6350))  # minimum ~0.5pt
-    return add_rect(slide, x, y, length, h, color)
-
-
-def add_oval(slide, x, y, letter, size=Inches(0.45),
-             bg=RGBColor(0x05, 0x1C, 0x2C), fg=RGBColor(0xFF, 0xFF, 0xFF)):
-    """Add a circle label with a letter (e.g. 'A', '1').
-    Uses Arial font to match body text consistency."""
-    c = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y, size, size)
-    c.fill.solid()
-    c.fill.fore_color.rgb = bg
-    c.line.fill.background()
-    tf = c.text_frame
-    tf.paragraphs[0].text = letter
-    tf.paragraphs[0].font.size = Pt(14)
-    tf.paragraphs[0].font.name = 'Arial'
-    tf.paragraphs[0].font.color.rgb = fg
-    tf.paragraphs[0].font.bold = True
-    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
-    for run in tf.paragraphs[0].runs:
-        set_ea_font(run, 'KaiTi')
-    bodyPr = tf._txBody.find(qn('a:bodyPr'))
-    bodyPr.set('anchor', 'ctr')
-    _clean_shape(c)  # CRITICAL: remove p:style
-    return c
-
-
-def add_action_title(slide, text, title_size=Pt(22)):
-    """White bg, black text, thin line below."""
-    add_text(slide, Inches(0.8), Inches(0.15), Inches(11.7), Inches(0.9),
-             text, font_size=title_size, font_color=RGBColor(0, 0, 0), bold=True,
-             font_name='Georgia', ea_font='KaiTi', anchor=MSO_ANCHOR.MIDDLE)
-    add_hline(slide, Inches(0.8), Inches(1.05), Inches(11.7),
-             color=RGBColor(0, 0, 0), thickness=Pt(0.5))
-
-
-def add_source(slide, text, y=Inches(7.05)):
-    add_text(slide, Inches(0.8), y, Inches(11), Inches(0.3),
-             text, font_size=Pt(9), font_color=RGBColor(0x66, 0x66, 0x66))
-
-
-def add_image_placeholder(slide, left, top, width, height, label='Image'):
-    """Draw a gray placeholder box with crosshair + label for image positions.
-    Users replace these with real images after PPT generation."""
-    PLACEHOLDER_GRAY = RGBColor(0xD9, 0xD9, 0xD9)
-    # Background rect
-    rect = add_rect(slide, left, top, width, height, PLACEHOLDER_GRAY)
-    # Horizontal center line
-    add_hline(slide, left, top + height // 2, width, RGBColor(0xBB, 0xBB, 0xBB), Pt(0.5))
-    # Vertical center line as thin rect
-    vw = Pt(0.5)
-    add_rect(slide, left + width // 2 - vw // 2, top, vw, height, RGBColor(0xBB, 0xBB, 0xBB))
-    # Label
-    add_text(slide, left, top + height // 2 - Inches(0.2), width, Inches(0.4),
-             f'[ {label} ]', font_size=Pt(12), font_color=RGBColor(0x99, 0x99, 0x99),
-             alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    return rect
+eng = MckEngine(total_slides=N)  # N = planned slide count (for page numbering)
 ```
 
----
+### Save
+
+```python
+eng.save('output/deck.pptx')  # Auto-runs full_cleanup (p:style, shadow, 3D removal)
+```
+
+### Structure
+
+**`eng.cover(title, subtitle='', author='', date='')`**
+> #1 Cover Slide — title, subtitle, author, date, accent line.
+
+**`eng.toc(title='目录', items=None, source='')`**
+> #6 Table of Contents — numbered items with descriptions.
+> items: list of (num, title, description)
+
+**`eng.section_divider(section_label, title, subtitle='')`**
+> #5 Section Divider — navy left bar, large title.
+
+**`eng.appendix_title(title, subtitle='')`**
+> #7 Appendix Title — centered title with accent lines.
+
+**`eng.closing(title, message='', source_text='')`**
+> #36 Closing / Thank You slide.
+
+
+### Data & Stats
+
+**`eng.big_number(title, number, unit='', description='', detail_items=None, source='', bottom_bar=None)`**
+> #8 Big Number — large stat with context.
+> detail_items: list[str] bullet points shown below.
+> bottom_bar: (label, text) or None.
+
+**`eng.two_stat(title, stats, detail_items=None, source='')`**
+> #9 Two-Stat Comparison — two big numbers side by side.
+> stats: list of (number, label, is_navy:bool)
+
+**`eng.three_stat(title, stats, detail_items=None, source='')`**
+> #10 Three-Stat — three big numbers in a row.
+> stats: list of 3 (number, label, is_navy:bool)
+
+**`eng.data_table(title, headers, rows, col_widths=None, source='', bottom_bar=None)`**
+> #11 Data Table — header row + data rows with separators.
+> headers: list[str], rows: list[list[str]], col_widths: list[Inches] or auto.
+
+**`eng.metric_cards(title, cards, source='')`**
+> #12 Metric Cards — 3-4 accent-colored cards.
+> cards: list of (letter, card_title, description, accent_color, light_bg)
+> or (letter, card_title, description) — auto-colors from ACCENT_PAIRS.
+
+**`eng.metric_comparison(title, metrics, source='')`**
+> #62 Metric Comparison — before/after row cards with delta badges.
+> metrics: list of (label, before_val, after_val, delta_str).
+
+
+### Frameworks & Matrices
+
+**`eng.matrix_2x2(title, quadrants, axis_labels=None, source='', bottom_bar=None)`**
+> #13 2×2 Matrix — four quadrants.
+> quadrants: list of 4 (label, bg_color, description).
+> axis_labels: (x_label, y_label) or None.
+
+**`eng.three_pillar(title, pillars, source='')`**
+> #14 Three-Pillar Framework — 3 accent-colored columns.
+> pillars: list of (name, points:list[str]) or (name, points, accent, light_bg).
+
+**`eng.pyramid(title, levels, source='', bottom_bar=None)`**
+> #15 Pyramid — top-down widening layers.
+> levels: list of (label, description, width_inches:float).
+
+**`eng.process_chevron(title, steps, source='', bottom_bar=None)`**
+> #16 Process Chevron — horizontal step flow with arrows.
+> steps: list of (label, step_title, description).
+
+**`eng.venn(title, circles, overlap_label='', right_text=None, source='')`**
+> #17 Venn Diagram — overlapping rectangles for 2-3 sets.
+> circles: list of (label, points:list[str], x, y, w, h) positioned rects.
+> overlap_label: text for overlap zone.
+> right_text: list[str] explanation on the right side.
+
+**`eng.temple(title, roof_text, pillar_names, foundation_text, pillar_colors=None, source='')`**
+> #18 Temple / House Framework — roof + pillars + foundation.
+> pillar_names: list[str], pillar_colors: list[RGBColor] or auto.
+
+
+### Comparison & Evaluation
+
+**`eng.side_by_side(title, options, source='')`**
+> #19 Side-by-Side Comparison — two columns with navy headers.
+> options: list of 2 (option_title, points:list[str]).
+
+**`eng.before_after(title, before_title, before_points, after_title, after_points, source='')`**
+> #20 Before/After — gray (before) + navy (after) with arrow.
+
+**`eng.pros_cons(title, pros_title, pros, cons_title, cons, conclusion=None, source='')`**
+> #21 Pros/Cons — two-column layout.
+> pros, cons: list[str].
+> conclusion: (label, text) or None.
+
+**`eng.rag_status(title, headers, rows, source='')`**
+> #22 RAG Status — table with red/amber/green status dots.
+> headers: list[str], rows: list of (name, status_color, *values, note).
+
+**`eng.scorecard(title, items, source='')`**
+> #23 Scorecard — items with progress bars.
+> items: list of (name, score_str, pct_float_0_to_1)
+
+**`eng.checklist(title, columns, col_widths, rows, status_map=None, source='', bottom_bar=None)`**
+> #61 Checklist / Status table.
+> columns: list[str] header labels.
+> col_widths: list[Inches].
+> rows: list of tuples — last element is status key.
+> status_map: dict of status_key → (label, color, bg_color).
+
+**`eng.swot(title, quadrants, source='')`**
+> #65 SWOT Analysis — 2×2 colored grid.
+> quadrants: list of 4 (label, accent_color, light_bg, points:list[str]).
+
+
+### Narrative
+
+**`eng.executive_summary(title, headline, items, source='')`**
+> #24 Executive Summary — navy headline + numbered items.
+> headline: str, items: list of (num, item_title, description).
+
+**`eng.key_takeaway(title, left_text, takeaways, source='')`**
+> #25 Key Takeaway — left analysis + right gray panel.
+> left_text: list[str], takeaways: list[str].
+
+**`eng.quote(quote_text, attribution='')`**
+> #26 Quote Slide — centered quote with accent lines.
+
+**`eng.two_column_text(title, columns, source='')`**
+> #27 Two-Column Text — lettered columns with bullet lists.
+> columns: list of 2 (letter, col_title, points:list[str]).
+
+**`eng.four_column(title, items, source='')`**
+> #28 Four-Column Overview — 4 vertical cards.
+> items: list of (num, col_title, description:str_or_list).
+
+**`eng.numbered_list_panel(title, items, panel=None, source='')`**
+> #69 Numbered List + Side Panel — left numbered list + right accent panel.
+> items: list of (item_title, description).
+> panel: dict with 'subtitle','big_number','big_label','metrics':list[(label,value)].
+
+
+### Timeline & Process
+
+**`eng.timeline(title, milestones, source='', bottom_bar=None)`**
+> #29 Timeline / Roadmap — horizontal line with milestone nodes.
+> milestones: list of (label, description).
+
+**`eng.vertical_steps(title, steps, source='', bottom_bar=None)`**
+> #30 Vertical Steps — top-down numbered steps.
+> steps: list of (num, step_title, description).
+
+**`eng.cycle(title, phases, right_panel=None, source='')`**
+> #31 Cycle Diagram — rectangular nodes with arrows in a loop.
+> phases: list of (label, x_inches, y_inches) — positioned boxes.
+> right_panel: (panel_title, points:list[str]) or None.
+
+**`eng.funnel(title, stages, source='')`**
+> #32 Funnel — top-down narrowing bars.
+> stages: list of (name, count_label, pct_float).
+
+**`eng.value_chain(title, stages, source='', bottom_bar=None)`**
+> #67 Value Chain / Horizontal Flow — stages with arrows.
+> stages: list of (stage_title, description, accent_color).
+> Stages fill the full content width; height fills available vertical space.
+
+
+### Team & Cases
+
+**`eng.meet_the_team(title, members, source='')`**
+> #33 Meet the Team — profile cards in a row.
+> members: list of (name, role, bio:str_or_list).
+
+**`eng.case_study(title, sections, result_box=None, source='')`**
+> #34 Case Study — S/A/R or custom sections.
+> sections: list of (letter, section_title, description).
+> result_box: (label, text) or None.
+
+**`eng.action_items(title, actions, source='')`**
+> #35 Action Items — cards with timeline + owner.
+> actions: list of (action_title, timeline, description, owner).
+
+**`eng.case_study_image(title, sections, image_label, kpis=None, source='')`**
+> #45 Case Study with Image — left text sections + right image + KPIs.
+> sections: list of (label, text, accent_color).
+> kpis: list of (value, label) or None.
+
+
+### Charts (BLOCK_ARC)
+
+**`eng.donut(title, segments, center_label='', center_sub='', legend_x=None, summary=None, source='')`**
+> #48 Donut Chart — BLOCK_ARC ring segments.
+> segments: list of (pct_float, color, label).
+
+**`eng.pie(title, segments, legend_x=None, summary=None, source='')`**
+> #64 Pie Chart — BLOCK_ARC with inner_ratio=0 (solid).
+> segments: list of (pct_float, color, label, sub_label).
+
+**`eng.gauge(title, score, benchmarks=None, source='')`**
+> #55 Gauge — semicircle rainbow arc with center score.
+> score: int 0-100.
+> benchmarks: list of (label, value_str, color) shown below gauge.
+
+
+### Charts (Bar/Line)
+
+**`eng.grouped_bar(title, categories, series, data, max_val=None, y_ticks=None, summary=None, source='')`**
+> #37 Grouped Bar Chart — vertical bars grouped by category.
+> categories: list[str] x-labels. series: list of (name, color).
+> data: list[list[int]] — data[cat_idx][series_idx].
+> summary: (label, text) or None.
+
+**`eng.stacked_bar(title, periods, series, data, summary=None, source='')`**
+> #38 Stacked Bar Chart — 100% stacked vertical bars.
+> periods: list[str] x-labels. series: list of (name, color).
+> data: list[list[int]] — percentages, data[period_idx][series_idx].
+> summary: (label, text) or None.
+
+**`eng.horizontal_bar(title, items, summary=None, source='')`**
+> #39 Horizontal Bar Chart — labeled bars with percentage.
+> items: list of (name, pct_int_0_to_100, bar_color).
+> summary: (label, text) or None.
+
+**`eng.line_chart(title, x_labels, y_labels, values, legend_label='', summary=None, source='')`**
+> #50 Line Chart — single line with dot approximation.
+> x_labels: list[str], y_labels: list[str], values: list[float] 0.0-1.0 normalized.
+
+**`eng.waterfall(title, items, max_val=None, legend_items=None, summary=None, source='')`**
+> #49 Waterfall Chart — bridge from start to end.
+> items: list of (label, value, type) — type: 'base'|'up'|'down'.
+
+**`eng.pareto(title, items, max_val=None, summary=None, source='')`**
+> #51 Pareto Chart — descending bars with value/pct labels.
+> items: list of (label, value).
+
+**`eng.stacked_area(title, years, series_data, max_val=None, summary=None, source='')`**
+> #70 Stacked Area Chart — stacked columns for area approximation.
+> years: list[str] x-labels.
+> series_data: list of (name, values:list[int], color).
+
+
+### Charts (Advanced)
+
+**`eng.bubble(title, bubbles, x_label='', y_label='', legend_items=None, summary=None, source='')`**
+> #53 Bubble / Scatter — positioned circles on XY plane.
+> bubbles: list of (x_pct, y_pct, size_inches, label, color).
+
+**`eng.kpi_tracker(title, kpis, summary=None, source='')`**
+> #52 KPI Tracker — progress bars with status dots.
+> kpis: list of (name, pct_float, detail, status_key).
+> status_key: 'on'|'risk'|'off'.
+
+**`eng.risk_matrix(title, grid_colors, grid_lights, risks, y_labels=None, x_labels=None, notes=None, source='')`**
+> #54 Risk Matrix — 3×3 heatmap grid with risk labels.
+> grid_colors: 3×3 list[list[RGBColor]] dot colors.
+> grid_lights: 3×3 list[list[RGBColor]] cell backgrounds.
+> risks: list of (row, col, name).
+> notes: list[str] or None for bottom panel.
+
+**`eng.harvey_ball_table(title, criteria, options, scores, legend_text=None, summary=None, source='')`**
+> #56 Harvey Ball Table — matrix with Harvey Ball indicators.
+> criteria: list[str] row labels. options: list[str] column headers.
+> scores: list[list[int]] — scores[row][col], 0-4.
+
+
+### Dashboards
+
+**`eng.dashboard_kpi_chart(title, kpi_cards, chart_data=None, summary=None, source='')`**
+> #57 Dashboard KPI + Chart — top KPI cards + bottom mini chart.
+> kpi_cards: list of (value, label, detail, accent_color).
+> chart_data: dict with 'labels','actual','target','max_val','legend'.
+
+**`eng.dashboard_table_chart(title, table_data, chart_data=None, factoids=None, source='')`**
+> #58 Dashboard Table + Chart — left table + right mini chart + bottom facts.
+> table_data: dict with 'headers','col_widths','rows'.
+> chart_data: dict with 'title','items':(name, value, max_val).
+> factoids: list of (value, label, color).
+
+
+### Image Layouts
+
+**`eng.content_right_image(title, subtitle, bullets, takeaway='', image_label='Image', source='')`**
+> #40 Content + Right Image.
+
+**`eng.three_images(title, items, source='')`**
+> #42 Three Images — three image+caption columns.
+> items: list of (caption_title, description, image_label).
+
+**`eng.image_four_points(title, image_label, points, source='')`**
+> #43 Image + 4 Points — center image with 4 corner cards.
+> points: list of 4 (point_title, description, accent_color).
+
+**`eng.full_width_image(title, image_label, overlay_text='', attribution='', source='')`**
+> #44 Full-Width Image — edge-to-edge image with text overlay.
+
+**`eng.quote_bg_image(image_label, quote_text, attribution='', source='')`**
+> #46 Quote with Background Image — image top + quote bottom.
+
+**`eng.goals_illustration(title, goals, image_label, source='')`**
+> #47 Goals with Illustration — left numbered goals + right image.
+> goals: list of (goal_title, description, accent_color).
+
+**`eng.two_col_image_grid(title, items, source='')`**
+> #68 Two-Column Image + Text Grid — 2×2 image-text cards.
+> items: list of (card_title, description, accent_color, image_label).
+
+
+### Special
+
+**`eng.icon_grid(title, items, cols=3, source='')`**
+> #63 Icon Grid — grid of icon cards.
+> items: list of (item_title, description, accent_color).
+
+**`eng.stakeholder_map(title, quadrants, x_label='影响力 →', y_label='关注度 ↑', summary=None, source='')`**
+> #59 Stakeholder Map — 2×2 quadrant with stakeholder lists.
+> quadrants: list of 4 (label_cn, label_en, bg_color, members:list[str]).
+
+**`eng.decision_tree(title, root, branches, right_panel=None, source='')`**
+> #60 Decision Tree — root → L1 → L2 hierarchy with connector lines.
+> root: (label,).
+> branches: list of (L1_title, L1_metric, L1_color, children:list[(name, metric)]).
+> right_panel: (panel_title, points:list[str]) or None.
+
+**`eng.agenda(title, headers, items, footer_text='', source='')`**
+> #66 Agenda — table-style meeting agenda.
+> headers: list of (label, width).
+> items: list of (*values, item_type) — type: 'key'|'normal'|'break'.
+
 
 ## Common Issues & Solutions
 
@@ -5836,129 +3627,42 @@ add_hline(s, connector_x, connector_y, connector_w, LINE_GRAY, Pt(0.75))
 
 ## Best Practices
 
-1. **Always start from scratch** - Don't try to edit existing .pptx files with python-pptx; regenerate
-2. **Test early** - Save and open in PowerPoint after every 2-3 slides to catch issues
-3. **Use constants** - Define all colors, sizes, positions as named constants at the top
-4. **Keep code DRY** - Use helper functions like `add_text()`, `add_hline()`, `add_oval()`, etc.
-5. **Never use connectors** - Always draw lines as thin rectangles via `add_hline()`
-6. **Validate XML** - After `full_cleanup()`, verify zero `p:style` and zero shadows remain
-7. **Document decisions** - Comment code explaining why specific colors/sizes are chosen
-8. **Version control** - Save Python generation script alongside .pptx output
+1. **Use MckEngine** — Never write raw `add_shape()` / coordinate code. Call `eng.xxx()` methods.
+2. **One script, all slides** — Generate ALL planned slides in a single script run. Do not truncate.
+3. **Set `total_slides` accurately** — This controls page number display (e.g., "Page 5/12").
+4. **Use constants** — Import from `mck_ppt.constants`: `NAVY`, `ACCENT_BLUE`, `BG_GRAY`, `Inches`, etc.
+5. **Layout diversity** — Each content slide MUST use a DIFFERENT layout from its neighbors.
+6. **Chart priority** — When data has dates + values, use chart methods (`eng.grouped_bar`, `eng.donut`, etc.).
+7. **Image priority** — For case studies / product showcases, use image layouts (`eng.content_right_image`, etc.).
+8. **TOC completeness** — The TOC slide must list ALL content sections by number and title.
+9. **`eng.save()` is sufficient** — It auto-runs `full_cleanup()`. No manual XML processing needed.
 
-### Code Efficiency Guidelines (v1.9)
+### Code Efficiency with MckEngine
 
-The generated Python scripts can become 500+ lines for 15+ slide presentations. Follow these patterns to reduce code size, improve readability, and minimize LLM token consumption:
-
-#### 1. Extract Repeated Layout Constants
-
-Instead of recalculating positions inline, define named constants at the top:
+MckEngine already handles constants, helpers, and cleanup internally. Your script only needs:
 
 ```python
-# ✅ Define once, reuse everywhere
-CONTENT_TOP = Inches(1.25)      # Below action title
-CONTENT_BOTTOM = Inches(6.9)    # Above source line
-BOTTOM_BAR_Y = Inches(6.2)     # Standard bottom bar position
-BOTTOM_BAR_H = Inches(0.65)    # Standard bottom bar height
-BOTTOM_BAR_GAP = Inches(0.15)  # Minimum gap above bottom bar
-LEGEND_Y = Inches(1.15)        # Standard legend line Y position
-LEGEND_SQ = Inches(0.15)       # Legend color square size
+import sys, os
+sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))
+from mck_ppt import MckEngine
+from mck_ppt.constants import *
+from pptx.util import Inches
+
+eng = MckEngine(total_slides=N)
+# ... eng.cover() / eng.toc() / eng.xxx() calls ...
+eng.save('output/deck.pptx')
 ```
 
-#### 2. Use Helper Functions for Repeated Patterns
-
-When the same visual pattern appears across multiple slides, create a reusable function:
-
-```python
-# ✅ Reusable legend builder
-def add_color_legend(slide, x, y, items):
-    """items: list of (label, color) tuples"""
-    cx = x
-    for label, color in items:
-        add_rect(slide, cx, y + Inches(0.03), LEGEND_SQ, LEGEND_SQ, color)
-        add_text(slide, cx + Inches(0.2), y, Inches(1.2), Inches(0.25),
-                 label, font_size=Pt(10), font_color=MED_GRAY)
-        cx += Inches(0.2) + Inches(len(label) * 0.12 + 0.3)  # dynamic spacing
-
-# ✅ Reusable bottom bar
-def add_bottom_bar(slide, label, text, y=BOTTOM_BAR_Y):
-    add_rect(slide, LM, y, CW, BOTTOM_BAR_H, BG_GRAY)
-    add_text(slide, LM + Inches(0.3), y, Inches(1.5), BOTTOM_BAR_H,
-             label, font_size=BODY_SIZE, font_color=NAVY, bold=True,
-             anchor=MSO_ANCHOR.MIDDLE)
-    add_text(slide, LM + Inches(2), y, CW - Inches(2.3), BOTTOM_BAR_H,
-             text, font_size=BODY_SIZE, font_color=DARK_GRAY,
-             anchor=MSO_ANCHOR.MIDDLE)
-```
-
-#### 3. Use Short Variable Names (Approved Abbreviations)
-
-To keep code compact, use these standard abbreviations consistently:
-
-| Short | Full Name | Example |
-|-------|-----------|---------|
-| `s` | slide | `s = prs.slides.add_slide(BL)` |
-| `at` | add_text | `at(s, x, y, w, h, text, ...)` |
-| `ar` | add_rect | `ar(s, x, y, w, h, color)` |
-| `ahl` | add_hline | `ahl(s, x, y, length, color)` |
-| `ao` | add_oval | `ao(s, x, y, label)` |
-| `aat` | add_action_title | `aat(s, 'Title Text')` |
-| `asrc` | add_source | `asrc(s, 'Source: ...')` |
-| `apn` | add_page_number | `apn(s, 5, 19)` |
-
-#### 4. Batch Data as Lists of Tuples
-
-Instead of separate variables for each element, organize data as iteration-ready structures:
-
-```python
-# ❌ WRONG: Separate variables
-card1_title = 'Agent化'; card1_value = '95%'; card1_color = ACCENT_RED
-card2_title = '架构层'; card2_value = '88%'; card2_color = ACCENT_ORANGE
-# ... 8 more lines
-
-# ✅ CORRECT: Compact data structure
-cards = [
-    ('Agent化', '95%', ACCENT_RED),
-    ('架构层', '88%', ACCENT_ORANGE),
-    ('安全危机', '82%', ACCENT_ORANGE),
-]
-for i, (title, value, color) in enumerate(cards):
-    x = LM + i * (card_w + gap)
-    # ... render card
-```
-
-#### 5. Page Number Auto-Tracking
-
-Use a global counter instead of hardcoding page numbers:
-
-```python
-TT = 19  # Total slide count (set after planning)
-_pn = 0  # Auto-incrementing page counter
-
-def next_slide(prs):
-    global _pn
-    _pn += 1
-    return prs.slides.add_slide(BL)
-
-# Usage:
-s = next_slide(prs)
-aat(s, 'Title Here')
-# ... content ...
-asrc(s, 'Source: ...')
-apn(s, _pn, TT)
-```
-
-This eliminates the need to manually renumber all slides when inserting or removing a page.
+No need to define `add_text()`, `add_rect()`, `add_hline()`, `_clean_shape()`, `full_cleanup()` — they are all encapsulated in the engine.
 
 ---
 
 ## Dependencies
 
-- **python-pptx** >= 0.6.21 - For PowerPoint generation
-- **lxml** - For XML processing during theme cleanup
-- **zipfile** (built-in) - For PPTX manipulation
+- **python-pptx** >= 0.6.21
+- **lxml** — XML processing for theme cleanup
 - Python 3.8+
 
-Install with:
 ```bash
 pip install python-pptx lxml
 ```
@@ -5967,23 +3671,40 @@ pip install python-pptx lxml
 
 ## Example: Complete Minimal Presentation
 
-See `scripts/minimal_example.py` for a complete, working example that generates:
-- Cover slide
-- Table of contents
-- Content slide with title + body text
-- Source attribution
-- Proper theme cleanup
+```python
+import sys, os
+sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))
+from mck_ppt import MckEngine
+from mck_ppt.constants import *
+
+eng = MckEngine(total_slides=5)
+eng.cover(title='示例演示', subtitle='McKinsey Design Framework', date='2026')
+eng.toc(items=[('1', '数据概览', '核心指标'), ('2', '分析', '趋势洞见')])
+eng.big_number(title='核心发现', number='42%', description='年增长率',
+    source='Source: 内部数据')
+eng.three_pillar(title='三大方向',
+    pillars=[('创新', ['产品迭代', 'AI赋能']),
+             ('增长', ['市场扩张', '客户深耕']),
+             ('效率', ['流程优化', '自动化'])],
+    source='Source: 战略部')
+eng.closing(title='谢谢')
+eng.save('output/demo.pptx')
+```
 
 ---
 
 ## File References
 
-Generated presentations are typically saved to:
 ```
-./output/presentation.pptx
+~/.workbuddy/skills/mck-ppt-design/
+├── SKILL.md                 # This file (design spec + API reference)
+├── mck_ppt/
+│   ├── __init__.py          # from mck_ppt import MckEngine
+│   ├── engine.py            # 67 layout methods
+│   ├── core.py              # Drawing primitives + XML cleanup
+│   └── constants.py          # Colors, typography, grid constants
+└── output/                  # Default output directory
 ```
-
-All colors, fonts, and dimensions referenced in code should match this document exactly.
 
 ---
 
@@ -6084,6 +3805,7 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1.0 | 2026-03-19 | **SKILL.md → MckEngine Integration**: Rewrote all 70 layout code examples from inline `add_shape()` to `eng.xxx()` calls. Added MckEngine Quick Start section, API Reference (67 methods), and updated Best Practices for engine-first workflow. Estimated **75% token reduction** per generation. |
 | 2.0.0 | 2026-03-19 | **BLOCK_ARC Chart Engine**: Donut (#48), Pie (#64), and Gauge (#55) charts rewritten from hundreds of `add_rect()` blocks to native BLOCK_ARC shapes — 3-4 shapes per chart instead of 100-2800. File size reduced 60-80%. New `add_block_arc()` helper function with PPT coordinate system documentation. **Guard Rail Rule 9**: mandatory BLOCK_ARC for all circular charts. **5 new Common Issues** (Problems 16-20): rect-block charts, vertical gauge, unreadable donut center text, body content above title bar, waterfall connector dots. Donut center labels changed to WHITE for contrast. Gauge uses correct PPT angle mapping (270°→0°→90° for horizontal rainbow). |
 | 1.10.4 | 2026-03-19 | **5 New Bug Fixes + Guard Rail Rule 8**: (1) Cover slide title/subtitle overlap — dynamic title height from line count; (2) Action title anchor changed to `MSO_ANCHOR.BOTTOM` for flush separator alignment; (3) Checklist `#61` dynamic `row_h` prevents page overflow with 7+ rows; (4) Value Chain `#67` dynamic `stage_w` and `stage_h` fill content area instead of fixed 2.0" width; (5) Closing `#36` bottom line changed from `Inches(3)` to `CW` for full-width. New **Production Guard Rails Rule 8**: dynamic sizing for variable-count layouts. **5 new Common Issues** (Problems 11-15). Updated code examples for #1, #36, #61, #67. |
 | 1.10.3 | 2026-03-18 | **Title Line Spacing Optimization**: Titles (≥18pt) now use `0.93` multiple spacing instead of fixed `Pt(fs*1.35)`, producing tighter, more professional title rendering. Body text (<18pt) retains fixed Pt spacing. Updated Problem 5 documentation. Thanks to **冯梓航 Denzel** for detailed feedback. |
@@ -6112,4 +3834,3 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 | | | - Line treatment standardized (no shadows) |
 | | | - Theme cleanup process documented |
 | | | - All helper functions optimized |
-
