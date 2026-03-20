@@ -29,3 +29,6 @@ Thumbs.db
 # Temp files
 *.tmp
 *.bak
+
+# Keep asset icons (PNG) — these are part of the skill
+!assets/icons/*.png

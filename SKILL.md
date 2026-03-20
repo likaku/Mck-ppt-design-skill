@@ -1151,32 +1151,62 @@ eng.matrix_2x2(title='战略优先级矩阵',
 
 > **已退役**：#14 布局已被 **#71 Table+Insight** 取代。请使用 `eng.table_insight()` 实现类似的三列对比需求，数据表达更清晰、视觉层级更强。
 
-#### 15. Pyramid / Hierarchy (金字塔/层级图)
+#### 15. Staircase Evolution (阶梯进化图) ⭐ v2.0.5
 
-**适用场景**: 展示层级关系（如 Maslow 需求层次、战略-战术-执行分层）。
+**适用场景**: 展示阶段性演进路径（如品牌进化、能力成长、战略升级），从左下到右上阶梯式上升。具有明显的阶梯台阶轮廓线。可选底部结构化详情表格。
 
 ```
-┌─────────────────────────────────────────┐
-│ ▌ Action Title                          │
-├─────────────────────────────────────────┤
-│           ┌──NAVY──┐                    │
-│           │ 愿景   │    右侧说明        │
-│         ┌─┴────────┴─┐                  │
-│         │  战略目标   │  右侧说明        │
-│       ┌─┴────────────┴─┐                │
-│       │   执行措施      │  右侧说明      │
-│       └────────────────┘                │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│ ▌ Action Title                                       │
+├──────────────────────────────────────────────────────┤
+│                              ●3● 远期标题             │
+│                    ┌─────────┘                        │
+│         ●2● 中期标题│  远期描述...                     │
+│    ┌────┘          │                                  │
+│  ●1● 近期标题 │ 中期描述...                            │
+│  ─────────── │                                       │
+│  近期描述... │                                        │
+│──────────────────────────────────────────────────────│
+│ 行标题1  │ • bullet1    │ • bullet1    │ • bullet1    │
+│──────────────────────────────────────────────────────│
+│ 行标题2  │ • bullet1    │ • bullet1    │ • bullet1    │
+└──────────────────────────────────────────────────────┘
 ```
+
+**Engine method**: `eng.pyramid()`
 
 ```python
-eng.pyramid(title='价值金字塔',
-    layers=[('愿景', '成为行业领导者'),
-            ('战略', '三大核心战略方向'),
-            ('执行', '12个关键项目'),
-            ('基础', '技术平台 + 组织能力')],
-    source='Source: ...')
+eng.pyramid(
+    title='品牌心智三层进化路径',
+    levels=[
+        ('层次一：2-3年', '"冰淇淋品类的操作系统"\nB端采购决策者', '1'),
+        ('层次二：3-5年', '"冰淇淋界的Dolby"\n品质认知消费者', '2'),
+        ('层次三：5-10年', '"美好甜蜜时刻的守护者"\n所有消费者', '3'),
+    ],
+    detail_rows=[
+        ('核心策略', [
+            ['AI数据+品类白皮书', '建立B端操作系统壁垒'],
+            ['"日世品质"认证标识', '品质认知渗透消费端'],
+            ['品牌情感化升级', '全渠道消费者心智占领'],
+        ]),
+        ('对标案例', [
+            ['Intel Inside', 'B端技术标准→消费认知'],
+            ['利乐 / 杜比', '品质认证→行业标配'],
+            ['Gore-Tex', '专业品牌→大众信赖'],
+        ]),
+    ],
+    source='对标: Intel Inside / 利乐 / 杜比 / Gore-Tex',
+)
 ```
+
+**Parameters**: `title`, `levels` (label, description, icon_text), `detail_rows` (row_label, [[col_texts]...]), `source`, `bottom_bar` (optional)
+
+**设计特点**:
+- **阶梯台阶轮廓线**：NAVY 颜色的水平台面线+垂直阶梯线，形成清晰的台阶外形
+- **Icon + 标题同行**：NAVY 圆形 icon 在左，粗体标题在右，位于台面线上方
+- **描述在台面线下方**：每阶段的详细描述文字在水平台面线下面
+- **可选底部结构化表格**：行标题+各阶段 bullet 详情，居中对齐
+- 兼容有/无 detail_rows 两种模式
 
 #### 16. Process Chevron (流程箭头页)
 
@@ -3827,8 +3857,9 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0.5 | 2026-03-19 | **Unified Release**: Merged v2.0.4 engine fixes with v2.1 SKILL.md rewrite. Cleaned residual `three_pillar` references from SKILL.md — all 6 occurrences replaced with `table_insight` (#71). Marked #14 as RETIRED in layout catalog section. QA: 68/68 layouts pass, table_insight scores 100/100, overall 87/100. |
-| 2.0.4 | 2026-03-19 | **Retire #14 Three-Pillar → #71 Table+Insight**: Removed `three_pillar()` from engine, added `table_insight()` (left data table + right insight panel with chevron icon). Supports **bold** markup, adaptive row heights, gray-bg insight panel. |
+| 2.0.5 | 2026-03-21 | **#15 Staircase Evolution v3**: PNG icon support (auto-detect `.png` paths, overlay on navy circle with 0.08" inset). Single-line detail_rows = no bullet; multi-line = bullet. Icon library (6 icons in `assets/icons/`). New example: `staircase_civilization.py`. Unified release: merged v2.0.4 engine + v2.1 SKILL.md rewrite + #14→#71 cleanup. |
+| 2.0.4 | 2026-03-19 | **#14 Three-Pillar RETIRED**: Removed `three_pillar` method from engine.py and its documentation from SKILL.md. All former #14 use cases now served by **#71 Table+Insight Panel** (`table_insight`). Updated Layout Diversity table, Opening Slide Priority Rule, and recommended slide structure. |
+| 2.0.3 | 2026-03-19 | **3 Template Updates — Category M: Editorial Narrative**: (1) **#20 Before/After rewrite** (v2.0.1) — replaced BG_GRAY+NAVY color blocks with clean white-bg + black vertical divider + black circle `>` arrow + structured data rows (dict: label/brand/val/extra) + formula cards (dict: title/desc/cases with underline), new params: `corner_label`, `bottom_bar`, `left_summary`, `right_summary`, `right_summary_color`; (2) **#71 Table+Insight Panel** (NEW) — left data table (~60%) + middle CHEVRON shape icon (0.7") + right gray-bg (#F2F2F2) insight panel (~32%) with "启示：" title + `•` bullet points, supports `**bold**` markup in cells, self-adaptive row height; (3) **#72 Multi-Bar Panel Chart** (NEW) — 2-3 side-by-side bar panels with auto-numbered titles, CAGR trend arrows following actual bar-top slopes (RIGHT_ARROW shape, ~1.5px shaft, ±0.27" offset), per-bar value labels, green/red CAGR coloring. **OPENING SLIDE PRIORITY RULE** added: Slides 2-5 strongly prefer #71, #8, #14, #25. New Category M in layout-catalog.md. Total patterns: **72**. |
 | 2.0.2 | 2026-03-19 | **Adaptive Row Height**: `data_table` / `vertical_steps` dynamically calculate row_h to prevent overflow. Font shrinks to Pt(10) for compact rows. |
 | 2.0.1 | 2026-03-19 | **Before/After Rewrite**: White editorial layout with structured data rows (label/brand/val/extra), formula cards, left/right summaries. Fixed `set_ea_font` import in core.py. |
 | 2.0.0 | 2026-03-19 | **BLOCK_ARC Chart Engine**: Donut (#48), Pie (#64), and Gauge (#55) charts rewritten from hundreds of `add_rect()` blocks to native BLOCK_ARC shapes — 3-4 shapes per chart instead of 100-2800. File size reduced 60-80%. New `add_block_arc()` helper function with PPT coordinate system documentation. **Guard Rail Rule 9**: mandatory BLOCK_ARC for all circular charts. **5 new Common Issues** (Problems 16-20): rect-block charts, vertical gauge, unreadable donut center text, body content above title bar, waterfall connector dots. Donut center labels changed to WHITE for contrast. Gauge uses correct PPT angle mapping (270°→0°→90° for horizontal rainbow). |

@@ -2,7 +2,7 @@
 
 # McKinsey PPT Design Skill
 
-**AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · Python runtime**
+**AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · icon library · Python runtime**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -174,14 +174,27 @@ eng.save('output/deck.pptx')
 
 ```
 ├── SKILL.md                 # Design specification (290KB, 6100 lines)
-├── mck_ppt/                 # Python runtime engine (140KB)     [NEW v2.0]
+├── mck_ppt/                 # Python runtime engine (160KB)     [NEW v2.0]
 │   ├── __init__.py          # Public API
 │   ├── engine.py            # 70 layout methods (2,359 lines)
 │   ├── core.py              # Drawing primitives + XML cleanup (295 lines)
 │   └── constants.py         # Colors, typography, grid (78 lines)
+├── assets/
+│   └── icons/               # Pre-built PNG icons (200×200px)   [NEW v2.0.5]
+│       ├── icon_person_bust.png
+│       ├── icon_shield_check.png
+│       ├── icon_people_group.png
+│       ├── icon_factory_gear.png
+│       ├── icon_circuit_chip.png
+│       └── icon_ai_brain.png
 ├── CHANGELOG.md
+├── examples/
+│   ├── minimal_example.py
+│   ├── staircase_civilization.py    [NEW v2.0.5]
+│   └── requirements.txt
 ├── scripts/
 │   ├── minimal_example.py
+│   ├── generate_icons.py            [NEW v2.0.5]
 │   └── requirements.txt
 └── references/
     ├── color-palette.md
@@ -194,7 +207,7 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| **v2.0.5** | 2026-03-19 | Unified release: merged v2.0.4 engine + v2.1 SKILL.md rewrite. Retire #14 → #71 `table_insight`. QA 68/68 pass, 87/100 |
+| **v2.0.5** | 2026-03-21 | Unified release: #14→#71, v2.1 SKILL.md rewrite, PNG icon support for #15, icon library (6 icons), narrative detail_rows |
 | **v2.0.4** | 2026-03-19 | New `table_insight()` layout (#71), retire `three_pillar` (#14) |
 | **v2.0.2** | 2026-03-19 | Adaptive row height for `data_table` / `vertical_steps` (overflow prevention) |
 | **v2.0.1** | 2026-03-19 | `before_after` template rewrite — white editorial layout with structured data |

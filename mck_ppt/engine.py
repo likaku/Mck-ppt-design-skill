@@ -499,25 +499,182 @@ class MckEngine:
         self._footer(s, source)
         return s
 
-    def pyramid(self, title, levels, source='', bottom_bar=None):
-        """#15 Pyramid — top-down widening layers.
-        levels: list of (label, description, width_inches:float).
+    def pyramid(self, title, levels, source='', bottom_bar=None,
+                detail_rows=None, detail_headers=None):
+        """#15 Staircase Evolution — ascending steps with connected staircase outline.
+
+        Parameters
+        ----------
+        title : str
+            Action title (can be long, narrative-style).
+        levels : list of (label, description, icon)
+            Each level is one step. Displayed as ascending staircase L→R.
+            icon can be:
+            - **PNG file path** (recommended): absolute or relative path to a
+              transparent-background white-line icon PNG file. The icon will be
+              overlaid on the navy circle with slight inset (0.08") for clean fit.
+              Example: '/path/to/assets/icons/icon_person_bust.png'
+            - **Text/Unicode**: single char, Unicode symbol, or short text
+              shown in white on navy circle. Example: '⚙', '1', 'A'
+            If omitted, defaults to sequential number (1, 2, 3...).
+        source : str
+        bottom_bar : tuple(label, text) — optional summary bar (usually omitted).
+        detail_rows : list of (row_label, [col1_texts, col2_texts, ...])
+            Optional structured detail table below the staircase.
+            Each row has a bold label on the left and one cell per level column.
+            Each cell can be str or list[str].
+            - **Single-line cells** are rendered as plain text (no bullet prefix).
+              Use this for complete, narrative-style sentences.
+            - **Multi-line cells** (list with 2+ items) are rendered with bullet
+              prefix '•  ' for each line.
+        detail_headers : list of str — optional column headers for detail table.
+
+        Icon Guidelines
+        ---------------
+        For best results, generate PNG icons (200×200px, transparent background,
+        white strokes ~6px) using PIL/Pillow ImageDraw. Store under assets/icons/.
+        The engine automatically detects .png/.svg file paths and switches from
+        text-in-circle to image-overlay mode.
         """
         s = self._ns()
         add_action_title(s, title)
-        for i, (label, desc, w) in enumerate(levels):
-            w_emu = Inches(w)
-            lx = Inches(6.666) - w_emu / 2
-            ly = Inches(1.5) + Inches(1.15) * i
-            h = Inches(0.9)
-            fill = NAVY if i == 0 else BG_GRAY
-            tc = WHITE if i == 0 else NAVY
-            dc = WHITE if i == 0 else DARK_GRAY
-            add_rect(s, lx, ly, w_emu, h, fill)
-            add_text(s, lx + Inches(0.2), ly + Inches(0.05), Inches(2.5), Inches(0.35),
-                     label, font_size=BODY_SIZE, font_color=tc, bold=True)
-            add_text(s, lx + Inches(2.8), ly + Inches(0.05), w_emu - Inches(3.0), Inches(0.8),
-                     desc, font_size=SMALL_SIZE, font_color=dc)
+
+        n = len(levels)
+
+        # ── Staircase geometry ──
+        # Steps ascend from left-bottom to right-top.
+        # Platform lines extend rightward to connect with next vertical riser.
+        col_w = Inches(3.6)       # content width per step
+        gap = Inches(0.2)         # logical gap between columns (for content only)
+        total_w = col_w * n + gap * (n - 1)
+        x_start = LM + (CW - total_w) / 2  # center horizontally
+
+        # Vertical: step platform Y positions (ascending)
+        if detail_rows:
+            platform_base = Inches(3.55)   # Y of the lowest step platform
+            step_rise = Inches(0.85)       # vertical rise per step
+        else:
+            platform_base = Inches(3.8)
+            step_rise = Inches(0.9)
+
+        # Line thickness — use raw EMU for pixel-perfect alignment
+        line_thick_emu = Emu(19050)  # ~1.5pt = 19050 EMU
+        icon_size = Inches(0.5)
+
+        # Collect platform coordinates for drawing
+        # x_content_left, x_content_right = content area for labels/descriptions
+        # platform_y = Y position of platform line
+        platforms = []
+        for i in range(n):
+            cx = x_start + (col_w + gap) * i
+            py = platform_base - step_rise * i
+            platforms.append((cx, cx + col_w, py))
+
+        # ── Draw connected staircase outline ──
+        # Key: platform lines extend to the next column's left edge (no gap in lines).
+        # Vertical risers connect from one platform's Y down to the previous platform's Y.
+        for i in range(n):
+            x_l, x_r, py = platforms[i]
+
+            # Horizontal platform line:
+            # - For non-last steps: extend from x_l to next step's x_l (bridging the gap)
+            # - For last step: just x_l to x_r (normal width)
+            if i < n - 1:
+                next_x_l = platforms[i + 1][0]
+                hline_length = next_x_l - x_l
+            else:
+                hline_length = x_r - x_l
+            add_hline(s, x_l, py, hline_length, NAVY, Pt(1.5))
+
+            # Vertical riser: from current platform UP to next (higher) platform
+            if i < n - 1:
+                next_py = platforms[i + 1][2]  # higher step's Y
+                riser_x = platforms[i + 1][0]  # at the next step's left edge
+                riser_h = py - next_py          # height from higher to lower
+                # Riser goes from next_py down to py (top = next_py)
+                # Center the thin rect on the x position
+                add_rect(s, riser_x, next_py, line_thick_emu, riser_h + line_thick_emu, NAVY)
+
+        # ── Draw content for each step ──
+        for i, level_data in enumerate(levels):
+            label = level_data[0]
+            desc = level_data[1]
+            icon_val = level_data[2] if len(level_data) > 2 else str(i + 1)
+            x_l, x_r, py = platforms[i]
+
+            # ── Navy circle icon (above platform, left side) ──
+            icon_x = x_l + Inches(0.15)
+            icon_y = py - icon_size - Inches(0.2)
+
+            # Check if icon_val is a file path (PNG image) or text
+            icon_is_image = isinstance(icon_val, str) and (
+                icon_val.endswith('.png') or icon_val.endswith('.svg')
+            ) and os.path.isfile(icon_val)
+
+            if icon_is_image:
+                # Draw navy circle background (no text)
+                add_oval(s, icon_x, icon_y, '', size=icon_size)
+                # Overlay the icon image centered on the circle
+                # Inset the image slightly so it fits inside the circle
+                inset = Inches(0.08)
+                img_size = icon_size - inset * 2
+                s.shapes.add_picture(
+                    icon_val,
+                    icon_x + inset, icon_y + inset,
+                    img_size, img_size,
+                )
+            else:
+                add_oval(s, icon_x, icon_y, str(icon_val), size=icon_size)
+
+            # ── Stage label (bold, to the right of icon, same row) ──
+            label_x = icon_x + icon_size + Inches(0.15)
+            label_y = icon_y + Inches(0.02)
+            label_w = x_r - label_x - Inches(0.1)
+            add_text(s, label_x, label_y, label_w, Inches(0.45),
+                     label, font_size=SUB_HEADER_SIZE, font_color=BLACK,
+                     bold=True, alignment=PP_ALIGN.LEFT)
+
+            # ── Description text (below platform line) ──
+            desc_x = x_l + Inches(0.25)
+            desc_y = py + Inches(0.15)
+            desc_w = col_w - Inches(0.5)
+            add_text(s, desc_x, desc_y, desc_w, Inches(0.7),
+                     desc, font_size=BODY_SIZE, font_color=DARK_GRAY,
+                     alignment=PP_ALIGN.LEFT)
+
+        # ── Detail table (optional, below staircase) ──
+        if detail_rows:
+            table_top = Inches(4.65)
+            # Top separator line
+            add_hline(s, LM, table_top - Inches(0.08), CW, BLACK, Pt(0.75))
+
+            label_col_w = Inches(1.6)  # left label column width
+            data_col_w = (CW - label_col_w) / n  # equal-width data columns
+            row_h = Inches(0.9)  # height per row
+
+            for r, (row_label, cells) in enumerate(detail_rows):
+                ry = table_top + row_h * r + Inches(0.05) * r
+                # Row label (bold, left-aligned, vertically centered)
+                add_text(s, LM, ry, label_col_w, row_h,
+                         row_label, font_size=BODY_SIZE, font_color=BLACK,
+                         bold=True, anchor=MSO_ANCHOR.MIDDLE)
+                # Data cells
+                for c, cell_text in enumerate(cells):
+                    cell_x = LM + label_col_w + data_col_w * c
+                    txt = cell_text if isinstance(cell_text, list) else [cell_text]
+                    # If single line, show as plain text; if multi-line, add bullets
+                    if len(txt) == 1:
+                        formatted = txt
+                    else:
+                        formatted = ['•  ' + line for line in txt]
+                    add_text(s, cell_x + Inches(0.1), ry, data_col_w - Inches(0.2), row_h,
+                             formatted, font_size=SMALL_SIZE, font_color=DARK_GRAY,
+                             anchor=MSO_ANCHOR.MIDDLE)
+                # Row separator
+                if r < len(detail_rows) - 1:
+                    sep_y = ry + row_h
+                    add_hline(s, LM, sep_y, CW, LINE_GRAY, Pt(0.5))
+
         if bottom_bar:
             add_bottom_bar(s, bottom_bar[0], bottom_bar[1])
         self._footer(s, source)

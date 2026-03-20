@@ -25,7 +25,7 @@
 |---|------|----------|
 | 13 | 2x2 Matrix | BCG matrix, priority grid |
 | ~~14~~ | ~~Three-Pillar Framework~~ | _Retired v2.0.4 → use #71 Table+Insight_ |
-| 15 | Pyramid / Hierarchy | Layered structures |
+| 15 | Staircase Evolution | Ascending phases with icons + detail table (v2.0.5) |
 | 16 | Process Chevron | 3-5 step linear flow |
 | 17 | Venn Diagram | Concept intersections |
 | 18 | Temple / House Framework | Roof-pillar-foundation |

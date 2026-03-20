@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.5] - 2026-03-21
+
+### Added
+- **#15 Staircase Evolution — PNG icon support**: The `levels` icon parameter now accepts PNG file paths (in addition to text/Unicode). The engine auto-detects `.png`/`.svg` paths and overlays transparent-background icons on navy circles with 0.08" inset.
+- **Icon library** (`assets/icons/`): 6 pre-built white-on-transparent PNG icons (200×200px):
+  - Business: `icon_person_bust.png`, `icon_shield_check.png`, `icon_people_group.png`
+  - Civilization: `icon_factory_gear.png`, `icon_circuit_chip.png`, `icon_ai_brain.png`
+- **Icon generation script** (`scripts/generate_icons.py`): Pillow-based generator for all 6 icons with extensible pattern.
+- **New example**: `examples/staircase_civilization.py` — Three Stages of Human Civilization (Industrial → Information → Intelligence Age) using #15 layout with PNG icons and narrative-style detail rows.
+- **Pillow dependency** added to `requirements.txt` for icon generation.
+
+### Changed
+- **#15 `pyramid()` detail_rows bullet logic**: Single-line cells render as plain text (no `•` prefix); multi-line cells (2+ items) get automatic bullet prefix. This enables clean narrative sentences in detail tables.
+- **Docstring updated**: `pyramid()` now fully documents PNG icon support, icon guidelines (200×200px, transparent bg, white ~6px strokes), and detail_rows bullet rules.
+
 ## [2.0.0] - 2026-03-19
 
 ### Breaking Changes — Chart Rendering Engine
