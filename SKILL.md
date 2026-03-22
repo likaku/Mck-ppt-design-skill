@@ -9,14 +9,16 @@ description: >-
   across 12 categories (structure, data, framework, comparison, narrative,
   timeline, team, charts, images, advanced viz, dashboards, visual storytelling),
   consistent typography, zero file-corruption issues, BLOCK_ARC native shapes
-  for circular charts (donut, pie, gauge), and production-hardened guard rails
+  for circular charts (donut, pie, gauge), production-hardened guard rails
   for spacing, overflow, legend consistency, title style uniformity,
-  dynamic sizing for variable-count layouts, and chart rendering.
+  dynamic sizing for variable-count layouts, chart rendering, and
+  AI-generated cover images via Tencent Hunyuan 2.0 with professional cutout,
+  cool grey-blue tint, and McKinsey-style Bézier ribbon decoration.
 ---
 
 # McKinsey PPT Design Framework
 
-> **Version**: 2.1.0 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 2.2.0 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: python3, pip
 
@@ -33,6 +35,7 @@ This skill encodes the complete design specification for **professional business
 - **BLOCK_ARC native shapes for charts** — donut, pie, gauge rendered with 3-4 shapes instead of hundreds of blocks, 60-80% smaller files (v2.0)
 - **Production Guard Rails** — 9 mandatory rules including spacing/overflow protection, legend color consistency, title style uniformity, axis label centering, dynamic sizing, BLOCK_ARC chart rendering (v1.9+v2.0)
 - **Code Efficiency guidelines** — variable reuse patterns, constant extraction, loop optimization for faster generation (v1.9)
+- **AI-generated cover images** — Tencent Hunyuan 2.0 text-to-image → rembg professional cutout → cool grey-blue tint + 50% lighten → McKinsey-style Bézier ribbon curves → transparent RGBA PNG full-bleed background (v2.2)
 
 All specifications have been refined through iterative production feedback to ensure visual consistency, professional polish, and zero-defect output.
 
@@ -96,7 +99,7 @@ from pptx.util import Inches
 eng = MckEngine(total_slides=12)  # Set total for page numbering
 
 # ── Structure ──
-eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月')
+eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月', cover_image='auto')
 eng.toc(items=[('1', '市场概览', '当前竞争格局'),
                ('2', '财务分析', '营收与利润趋势'),
                ('3', '战略建议', '三大核心行动')])
@@ -831,7 +834,34 @@ Layout:
 
 Code template:
 ```python
+# Without cover image (default, classic layout)
 eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月')
+
+# With AI-generated cover image (McKinsey style)
+eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月', cover_image='auto')
+
+# With custom image file
+eng.cover(title='Q1 2026 战略回顾', subtitle='董事会汇报', author='战略部', date='2026年3月', cover_image='assets/my_cover.png')
+```
+
+**Cover Image Generation Pipeline** (`cover_image='auto'`):
+
+When `cover_image='auto'`, the system automatically generates a McKinsey-style cover illustration:
+
+1. **Keyword → Real Product Mapping**: Title keywords are matched to real-world product descriptions via `_METAPHOR_MAP` in `mck_ppt/cover_image.py` (e.g. `'AI'` → high-end triple-fan GPU, `'医药'` → stethoscope + capsules, `'金融'` → metal chip bank card, `'建筑'` → 3D-printed architectural model)
+2. **Hunyuan 2.0 Generation**: Tencent Hunyuan 2.0 (`SubmitHunyuanImageJob` async API) generates a 1024×1024 product photo with prompt: "真实产品摄影照片，{product}，纯白色背景，轮廓清晰锐利，影棚灯光，超高清"
+3. **Professional Cutout**: `rembg` removes background completely — only the product subject remains with transparent background
+4. **Cool Grey-Blue Tint**: Desaturation (30%), channel shift (R×0.85, G×0.92, B×1.18), then 50% lighten by blending with white
+5. **Canvas Placement**: Subject scaled to ~66% canvas height, placed at right-center of 1920×1080 transparent canvas
+6. **Bézier Ribbon Curves**: 24 parallel cubic Bézier curves drawn from bottom-left to top-right, with a gentle twist/fold at center (lines cross over like a folded silk ribbon). Inner lines thicker+darker, outer lines thinner+lighter
+7. **Full-bleed Embed**: Image added as first shape (bottom layer), all text rendered on top
+
+**Requirements**: `pip install tencentcloud-sdk-python rembg pillow numpy` + env vars `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY`
+
+**Standalone usage**:
+```python
+from mck_ppt.cover_image import generate_cover_image
+path = generate_cover_image('AI的能力边界', output_path='cover.png')
 ```
 
 #### 2. Action Title Slide (Most Content Slides)
@@ -3036,8 +3066,11 @@ eng.save('output/deck.pptx')  # Auto-runs full_cleanup (p:style, shadow, 3D remo
 
 ### Structure
 
-**`eng.cover(title, subtitle='', author='', date='')`**
-> #1 Cover Slide — title, subtitle, author, date, accent line.
+**`eng.cover(title, subtitle='', author='', date='', cover_image=None)`**
+> #1 Cover Slide — title, subtitle, author, date, accent line, optional AI-generated cover image.
+> cover_image: `None` (no image, default), `'auto'` (AI-generated via Hunyuan 2.0), or `'path.png'` (custom image file).
+> When `cover_image='auto'`: generates a McKinsey-style cover illustration automatically.
+> Requires env vars: `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY`.
 
 **`eng.toc(title='目录', items=None, source='')`**
 > #6 Table of Contents — numbered items with descriptions.
@@ -3857,6 +3890,7 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-03-22 | **AI Cover Image Generation**: New `mck_ppt/cover_image.py` module. `eng.cover()` gains `cover_image` parameter (`None`/`'auto'`/`'path.png'`). When `'auto'`: Tencent Hunyuan 2.0 async API (`SubmitHunyuanImageJob`) generates 1024×1024 product photo → `rembg` professional background removal → cool grey-blue tint (desat 30%, R×0.85/G×0.92/B×1.18) + 50% lighten → subject placed at right-center of 1920×1080 transparent canvas → 24 McKinsey-style cubic Bézier ribbon curves with silk-fold twist at center → full-bleed RGBA PNG embedded as bottom layer. `_METAPHOR_MAP` maps 24 industry keywords to realistic product descriptions (GPU, capsules, bank card, solar panel, etc.). Prompt enforces: real product photography, sharp edges, white background, studio lighting. `__init__.py` exports `generate_cover_image`. Dependencies: `tencentcloud-sdk-python`, `rembg`, `pillow`, `numpy`. |
 | 2.0.5 | 2026-03-21 | **#15 Staircase Evolution v3**: PNG icon support (auto-detect `.png` paths, overlay on navy circle with 0.08" inset). Single-line detail_rows = no bullet; multi-line = bullet. Icon library (6 icons in `assets/icons/`). New example: `staircase_civilization.py`. Unified release: merged v2.0.4 engine + v2.1 SKILL.md rewrite + #14→#71 cleanup. |
 | 2.0.4 | 2026-03-19 | **#14 Three-Pillar RETIRED**: Removed `three_pillar` method from engine.py and its documentation from SKILL.md. All former #14 use cases now served by **#71 Table+Insight Panel** (`table_insight`). Updated Layout Diversity table, Opening Slide Priority Rule, and recommended slide structure. |
 | 2.0.3 | 2026-03-19 | **3 Template Updates — Category M: Editorial Narrative**: (1) **#20 Before/After rewrite** (v2.0.1) — replaced BG_GRAY+NAVY color blocks with clean white-bg + black vertical divider + black circle `>` arrow + structured data rows (dict: label/brand/val/extra) + formula cards (dict: title/desc/cases with underline), new params: `corner_label`, `bottom_bar`, `left_summary`, `right_summary`, `right_summary_color`; (2) **#71 Table+Insight Panel** (NEW) — left data table (~60%) + middle CHEVRON shape icon (0.7") + right gray-bg (#F2F2F2) insight panel (~32%) with "启示：" title + `•` bullet points, supports `**bold**` markup in cells, self-adaptive row height; (3) **#72 Multi-Bar Panel Chart** (NEW) — 2-3 side-by-side bar panels with auto-numbered titles, CAGR trend arrows following actual bar-top slopes (RIGHT_ARROW shape, ~1.5px shaft, ±0.27" offset), per-bar value labels, green/red CAGR coloring. **OPENING SLIDE PRIORITY RULE** added: Slides 2-5 strongly prefer #71, #8, #14, #25. New Category M in layout-catalog.md. Total patterns: **72**. |

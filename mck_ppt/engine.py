@@ -54,35 +54,65 @@ class MckEngine:
     # STRUCTURE LAYOUTS (#1, #5, #6, #7, #36)
     # ═══════════════════════════════════════════
 
-    def cover(self, title, subtitle='', author='', date=''):
-        """#1 Cover Slide — title, subtitle, author, date, accent line."""
+    def cover(self, title, subtitle='', author='', date='', cover_image=None):
+        """#1 Cover Slide — title, subtitle, author, date, accent line.
+
+        Parameters
+        ----------
+        cover_image : str or None
+            - None  : 不插入图片（默认，保持原有布局）
+            - 'auto': 调用腾讯混元 API 自动生成封面图
+            - 路径   : 直接使用指定的图片文件
+        """
         s = self._ns()
+
+        # ── 确定是否有封面图片 ────────────────────────────────
+        img_path = None
+        if cover_image == 'auto':
+            from .cover_image import generate_cover_image
+            img_path = generate_cover_image(title)
+        elif cover_image and os.path.isfile(cover_image):
+            img_path = cover_image
+
+        # ── 图片全幅垫底（先添加，后续所有元素在其上方） ────
+        if img_path:
+            s.shapes.add_picture(img_path, 0, 0, SW, SH)
+
+        # ── 顶部 navy 细线 ───────────────────────────────────
         add_rect(s, 0, 0, SW, Inches(0.05), NAVY)
-        # Calculate title height dynamically based on line count
+
+        # ── 布局参数：有图片时文字收左 ───────────────────────
+        if img_path:
+            text_left = Inches(0.9)
+            text_width = Inches(7.2)
+        else:
+            text_left = Inches(1)
+            text_width = Inches(11)
+
+        # ── 标题 ──────────────────────────────────────────────
         lines = title.split('\n') if isinstance(title, str) else title
         n_lines = len(lines) if isinstance(lines, list) else title.count('\n') + 1
-        title_h = Inches(0.8 + 0.65 * max(n_lines - 1, 0))  # ~0.65" per extra line
-        add_text(s, Inches(1), Inches(1.2), Inches(11), title_h,
+        title_h = Inches(0.8 + 0.62 * max(n_lines - 1, 0))
+        add_text(s, text_left, Inches(1.15), text_width, title_h,
                  title, font_size=COVER_TITLE_SIZE, font_name=FONT_HEADER,
                  font_color=NAVY, bold=True)
-        # Position subtitle below title with margin
-        sub_y = Inches(1.2) + title_h + Inches(0.3)
+        sub_y = Inches(1.15) + title_h + Inches(0.24)
         if subtitle:
-            add_text(s, Inches(1), sub_y, Inches(11), Inches(0.8),
-                     subtitle, font_size=Pt(24), font_color=DARK_GRAY)
-            sub_y += Inches(1.0)
+            add_text(s, text_left, sub_y, text_width, Inches(0.62),
+                     subtitle, font_size=Pt(22), font_color=DARK_GRAY)
+            sub_y += Inches(0.95)
         else:
             sub_y += Inches(0.2)
-        # Author and date follow subtitle
-        y = sub_y + Inches(0.3)
+        y = sub_y + Inches(0.28)
         if author:
-            add_text(s, Inches(1), y, Inches(11), Inches(0.5),
+            add_text(s, text_left, y, text_width, Inches(0.34),
                      author, font_size=BODY_SIZE, font_color=MED_GRAY)
-            y += Inches(0.8)
+            y += Inches(0.67)
         if date:
-            add_text(s, Inches(1), y, Inches(11), Inches(0.5),
+            add_text(s, text_left, y, text_width, Inches(0.34),
                      date, font_size=BODY_SIZE, font_color=MED_GRAY)
-        add_hline(s, Inches(1), Inches(6.8), Inches(4), NAVY, Pt(2))
+        add_hline(s, text_left, Inches(6.8), Inches(4.6), NAVY, Pt(2))
+
         return s
 
     def section_divider(self, section_label, title, subtitle=''):
@@ -474,28 +504,36 @@ class MckEngine:
         s = self._ns()
         add_action_title(s, title)
         grid_l = LM + Inches(1.8)
-        grid_t = Inches(1.5)
+        grid_t = Inches(1.45)
         cell_w = Inches(4.5)
-        cell_h = Inches(2.2)
+        cell_h = Inches(2.0)
+        cell_gap = Inches(0.15)
         if axis_labels:
-            add_text(s, LM, grid_t + cell_h - Inches(0.3), Inches(1.6), Inches(0.8),
+            add_text(s, LM, grid_t + cell_h - Inches(0.25), Inches(1.6), Inches(0.7),
                      axis_labels[1], font_size=BODY_SIZE, font_color=NAVY,
                      bold=True, alignment=PP_ALIGN.CENTER)
-            add_text(s, grid_l + cell_w - Inches(0.5), grid_t + 2 * cell_h + Inches(0.15),
-                     Inches(3.5), Inches(0.4),
+            add_text(s, grid_l + cell_w - Inches(0.45), grid_t + 2 * cell_h + cell_gap + Inches(0.03),
+                     Inches(3.6), Inches(0.28),
                      axis_labels[0], font_size=BODY_SIZE, font_color=NAVY,
                      bold=True, alignment=PP_ALIGN.CENTER)
         for qi, (label, bg, desc) in enumerate(quadrants):
             row, col = qi // 2, qi % 2
-            qx = grid_l + col * (cell_w + Inches(0.15))
-            qy = grid_t + row * (cell_h + Inches(0.15))
+            qx = grid_l + col * (cell_w + cell_gap)
+            qy = grid_t + row * (cell_h + cell_gap)
             add_rect(s, qx, qy, cell_w, cell_h, bg)
-            add_text(s, qx + Inches(0.2), qy + Inches(0.1), cell_w - Inches(0.4), Inches(0.35),
+            add_text(s, qx + Inches(0.2), qy + Inches(0.1), cell_w - Inches(0.4), Inches(0.32),
                      label, font_size=BODY_SIZE, font_color=NAVY, bold=True)
-            add_text(s, qx + Inches(0.2), qy + Inches(0.5), cell_w - Inches(0.4), cell_h - Inches(0.6),
-                     desc, font_size=SMALL_SIZE, font_color=DARK_GRAY)
+            add_text(s, qx + Inches(0.2), qy + Inches(0.46), cell_w - Inches(0.4), cell_h - Inches(0.56),
+                     desc, font_size=Pt(11), font_color=DARK_GRAY)
         if bottom_bar:
-            add_bottom_bar(s, bottom_bar[0], bottom_bar[1], y=Inches(5.8) if not axis_labels else Inches(6.2))
+            bar_y = Inches(6.26)
+            add_rect(s, LM, bar_y, CW, Inches(0.56), BG_GRAY)
+            add_text(s, LM + Inches(0.28), bar_y, Inches(1.5), Inches(0.56),
+                     bottom_bar[0], font_size=BODY_SIZE, font_color=NAVY,
+                     bold=True, anchor=MSO_ANCHOR.MIDDLE)
+            add_text(s, LM + Inches(1.95), bar_y, CW - Inches(2.2), Inches(0.56),
+                     bottom_bar[1], font_size=Pt(13), font_color=DARK_GRAY,
+                     anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
         return s
 
@@ -1946,31 +1984,33 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        cx = LM + Inches(3.0); cy = Inches(3.6); outer_r = Inches(1.6)
+        cx = LM + Inches(3.05); cy = Inches(3.58); outer_r = Inches(1.58)
+        thin_ring_adj = 5200
+        add_block_arc(s, cx, cy, outer_r, 0, 359.8, LINE_GRAY, inner_ratio=thin_ring_adj)
         dsa = 0
         for pct, color, _ in segments:
             sweep = pct * 360
-            add_block_arc(s, cx, cy, outer_r, dsa, sweep, color)
+            add_block_arc(s, cx, cy, outer_r, dsa, sweep, color, inner_ratio=thin_ring_adj)
             dsa += sweep
         if center_label:
-            add_text(s, cx - Inches(0.7), cy - Inches(0.3), Inches(1.4), Inches(0.6),
-                     center_label, font_size=Pt(24), font_color=WHITE, bold=True,
+            add_text(s, cx - Inches(0.75), cy - Inches(0.28), Inches(1.5), Inches(0.45),
+                     center_label, font_size=Pt(24), font_color=NAVY, bold=True,
                      alignment=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE,
                      font_name=FONT_HEADER)
         if center_sub:
-            add_text(s, cx - Inches(0.7), cy + Inches(0.2), Inches(1.4), Inches(0.3),
-                     center_sub, font_size=SMALL_SIZE, font_color=WHITE,
+            add_text(s, cx - Inches(0.9), cy + Inches(0.12), Inches(1.8), Inches(0.26),
+                     center_sub, font_size=SMALL_SIZE, font_color=MED_GRAY,
                      alignment=PP_ALIGN.CENTER)
-        lgx = legend_x or (LM + Inches(7.0))
+        lgx = legend_x or (LM + Inches(6.4))
         for i, (pct, color, label) in enumerate(segments):
-            ly = Inches(1.8) + i * Inches(0.8)
-            add_rect(s, lgx, ly + Inches(0.05), Inches(0.3), Inches(0.3), color)
-            add_text(s, lgx + Inches(0.45), ly, Inches(3.0), Inches(0.4),
+            ly = Inches(1.85) + i * Inches(0.78)
+            add_rect(s, lgx, ly + Inches(0.04), Inches(0.28), Inches(0.28), color)
+            add_text(s, lgx + Inches(0.42), ly, Inches(3.2), Inches(0.34),
                      f'{label}  {int(pct * 100)}%',
-                     font_size=EMPHASIS_SIZE, font_color=DARK_GRAY, bold=True)
+                     font_size=Pt(15), font_color=DARK_GRAY, bold=True)
         if summary:
-            add_rect(s, lgx, Inches(5.3), Inches(4.5), Inches(0.8), BG_GRAY)
-            add_text(s, lgx + Inches(0.2), Inches(5.3), Inches(4.1), Inches(0.8),
+            add_rect(s, lgx, Inches(5.32), Inches(4.85), Inches(0.76), BG_GRAY)
+            add_text(s, lgx + Inches(0.18), Inches(5.32), Inches(4.45), Inches(0.76),
                      summary, font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
