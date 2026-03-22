@@ -207,6 +207,7 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v2.2.0** | 2026-03-23 | AI cover image pipeline via Tencent Hunyuan 2.0 + rembg; `eng.cover(..., cover_image='auto')`; cover text area widened for image mode; donut chart updated to a true thin-ring geometry with larger inner hole; `matrix_2x2` bottom judgment bar spacing fixed to avoid axis overlap |
 | **v2.0.5** | 2026-03-21 | Unified release: #14→#71, v2.1 SKILL.md rewrite, PNG icon support for #15, icon library (6 icons), narrative detail_rows |
 | **v2.0.4** | 2026-03-19 | New `table_insight()` layout (#71), retire `three_pillar` (#14) |
 | **v2.0.2** | 2026-03-19 | Adaptive row height for `data_table` / `vertical_steps` (overflow prevention) |
