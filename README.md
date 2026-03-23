@@ -1,6 +1,6 @@
 <div align="center">
 
-# McKinsey PPT Design Skill
+# MCK PPT Design Skill
 
 **AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · icon library · Python runtime**
 
