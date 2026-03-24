@@ -2,7 +2,7 @@
 
 # MCK PPT Design Skill
 
-**AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · icon library · Python runtime**
+**AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · post-generation QA pipeline · icon library · Python runtime**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
@@ -91,7 +91,18 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 │  ├── constants.py — Colors, typography, grid constants  │
 │  └── __init__.py — Clean public API                     │
 ├─────────────────────────────────────────────────────────┤
-│  Tier 3: Post-Processing Pipeline              [NEW]    │
+│  Tier 3: Review + Auto-fix Pipeline           [v2.3]    │
+│  ├── review.py — Dual QA + AutoFixPipeline              │
+│  │   ├── NarrativeReviewer (content density, lang mix)  │
+│  │   ├── AutoFixPipeline (priority-chain overflow fix)  │
+│  │   └── Peer font harmonization (same-level uniform)   │
+│  ├── qa.py — Layout QA (overflow, overlap, collision)   │
+│  │   ├── text_overflow + body_overflow                  │
+│  │   ├── text_line_collision (text vs separator lines)  │
+│  │   └── peer_font_inconsistency (same-Y alignment)    │
+│  └── Gate: 0 ERROR = PASS, otherwise iterate & fix      │
+├─────────────────────────────────────────────────────────┤
+│  Tier 4: Post-Processing Pipeline                       │
 │  ├── Three-layer file corruption defense                │
 │  ├── Full XML sanitization (p:style, shadow, 3D)        │
 │  └── CJK font injection (KaiTi for East Asian text)     │
@@ -102,13 +113,15 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 
 **Tier 2** [NEW] is a complete Python library. Instead of the AI writing `add_shape()` from scratch, it calls `eng.cover()`, `eng.toc()`, `eng.donut_chart()` — one method per layout pattern, 2,745 lines of production-tested code.
 
-**Tier 3** [NEW] automatically prevents the #1 cause of "file needs repair" errors in AI-generated PPTs.
+**Tier 3** [v2.3] is the post-generation quality gate. Every generated .pptx is automatically reviewed for text overflow, shape collision, and peer font inconsistency. The AutoFixPipeline iterates through a priority chain (remove redundancy → compress sentences → restructure → micro-adjust font size) until 0 ERROR, then harmonizes peer font groups. No manual QA needed.
+
+**Tier 4** automatically prevents the #1 cause of "file needs repair" errors in AI-generated PPTs.
 
 ---
 
 ## 🛡️ Production Guard Rails
 
-9 rules hard-won from 50+ production generations:
+12 rules hard-won from 50+ production generations:
 
 | # | Rule | What It Prevents |
 |---|------|------------------|
@@ -121,10 +134,70 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 | 7 | Check overflow on long content | Text truncation in fixed-height boxes |
 | 8 | Dynamic sizing for variable-count | 3 items vs 7 items need different spacing |
 | 9 | Mandatory BLOCK_ARC for circular charts | Rect-block bloat (v1.x legacy problem) |
+| 10 | **Peer font consistency check** [v2.3] | Same-row shapes with different font sizes after autofix |
+| 11 | **Text-line collision check** [v2.3] | Text overlapping separator lines in dense layouts |
+| 12 | **Post-generation QA gate** [v2.3] | 0 ERROR mandatory before delivery — no silent defects |
 
 ---
 
-## 🚀 Quick Start
+## 🔍 v2.3 — Post-Generation Review + Auto-fix Pipeline
+
+> v2.3 adds a **mandatory quality gate** that runs after every PPT generation. The core philosophy: **generate first, converge later — QA doesn't pass, don't deliver.**
+
+### The Problem v2.3 Solves
+
+MckEngine's 70 layout methods each handle "put content into shapes", but nobody checked whether the content actually fits. A title 1 character too long → text overflow. An autofix that shrinks font per-shape → peer inconsistency (same row, 5 different font sizes). These defects are invisible in code but obvious when you open the PPT.
+
+### Four-Stage Pipeline
+
+```
+Generate → Dual QA → Auto-fix (iterate) → Peer Harmonize → Final Gate
+```
+
+**Stage 1: Generate** — MckEngine runs normally. No content trimming, no prediction.
+
+**Stage 2: Dual QA** — Layout QA (overflow, overlap, collision, whitespace, fonts) + Narrative QA (text density, title length, language mix) run in parallel. Read-only — detect only, don't modify.
+
+**Stage 3: Auto-fix** — For each text overflow ERROR, try fixes in strict priority order:
+1. Remove redundancy (weak hedging, filler phrases)
+2. Compress sentences ("因为A所以B" → "A→B")
+3. Restructure (trim excess semicolon-separated clauses)
+4. Font micro-adjust (shrink 1pt/round, floor: title≥20pt, body≥11pt, footnote≥9pt)
+
+**Never changes layout** — only text content and font sizes. Iterates until 0 ERROR or max rounds.
+
+**Stage 4: Peer Harmonize + Gate** — Unify same-Y-position peer groups to `min(sizes)`. Final QA: 0 ERROR = ✅ PASS.
+
+### Usage
+
+```python
+from mck_ppt import MckEngine
+from mck_ppt.review import autofix
+
+eng = MckEngine(total_slides=3)
+eng.cover(title='My Title', subtitle='Sub')
+# ... add slides ...
+eng.save('output/deck.pptx')
+
+# One line — review + fix + gate
+result = autofix('output/deck.pptx', max_rounds=5)
+result.print_summary()  # ✅ PASS or ❌ FAIL
+```
+
+### New QA Rules in v2.3
+
+| Rule | Severity | What It Catches |
+|------|----------|-----------------|
+| `peer_font_inconsistency` | ERROR | Same-row shapes with different font sizes (e.g. 18/12/17/14/13pt after per-shape autofix) |
+| `text_line_collision` | ERROR/WARN | Text content overlapping or nearly touching separator lines |
+| `density` | WARNING | Text exceeding character-per-box-height limits |
+| `title_long` | WARNING | Action titles exceeding 45 characters |
+
+### Key Bug Fix: `_estimate_text_height`
+
+Fixed a 2-line bug that caused ~27% height overestimation: the function only checked `run.font.size` (which returns `None` for inherited fonts), now falls back to `para.font.size`. This single fix eliminated massive false-positive overflow reports.
+
+---
 
 ```bash
 pip install python-pptx lxml
@@ -174,13 +247,16 @@ eng.save('output/deck.pptx')
 
 ```
 ├── SKILL.md                 # Design specification (290KB, 6100 lines)
-├── mck_ppt/                 # Python runtime engine (160KB)     [NEW v2.0]
-│   ├── __init__.py          # Public API
+├── mck_ppt/                 # Python runtime engine (180KB)
+│   ├── __init__.py          # Public API (v2.3.0)
 │   ├── engine.py            # 70 layout methods (2,359 lines)
 │   ├── core.py              # Drawing primitives + XML cleanup (295 lines)
-│   └── constants.py         # Colors, typography, grid (78 lines)
+│   ├── constants.py         # Colors, typography, grid (78 lines)
+│   ├── qa.py                # Layout QA engine (770 lines)     [Enhanced v2.3]
+│   ├── review.py            # Review + auto-fix pipeline       [NEW v2.3]
+│   └── cover_image.py       # AI cover image generation        [v2.2]
 ├── assets/
-│   └── icons/               # Pre-built PNG icons (200×200px)   [NEW v2.0.5]
+│   └── icons/               # Pre-built PNG icons (200×200px)  [v2.0.5]
 │       ├── icon_person_bust.png
 │       ├── icon_shield_check.png
 │       ├── icon_people_group.png
@@ -190,11 +266,11 @@ eng.save('output/deck.pptx')
 ├── CHANGELOG.md
 ├── examples/
 │   ├── minimal_example.py
-│   ├── staircase_civilization.py    [NEW v2.0.5]
+│   ├── staircase_civilization.py    [v2.0.5]
 │   └── requirements.txt
 ├── scripts/
 │   ├── minimal_example.py
-│   ├── generate_icons.py            [NEW v2.0.5]
+│   ├── generate_icons.py            [v2.0.5]
 │   └── requirements.txt
 └── references/
     ├── color-palette.md
@@ -207,6 +283,8 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v2.3.1** | 2026-03-24 | Dynamic row height for `numbered_list_panel` (fills panel height evenly, eliminates blank space); new QA rule `text_line_collision` (detects text overlapping separator lines with horizontal overlap validation) |
+| **v2.3.0** | 2026-03-24 | **Post-generation review + auto-fix pipeline**: `review.py` with NarrativeReviewer, AutoFixPipeline (priority-chain: redundancy → compress → restructure → font adjust), peer font harmonization; fix `_estimate_text_height` paragraph-level font inheritance bug (27% overestimate); new QA rule `peer_font_inconsistency`; gate: 0 ERROR = PASS. Tested: 14 errors → 0, score 17 → 86 |
 | **v2.2.0** | 2026-03-23 | AI cover image pipeline via Tencent Hunyuan 2.0 + rembg; `eng.cover(..., cover_image='auto')`; cover text area widened for image mode; donut chart updated to a true thin-ring geometry with larger inner hole; `matrix_2x2` bottom judgment bar spacing fixed to avoid axis overlap |
 | **v2.0.5** | 2026-03-21 | Unified release: #14→#71, v2.1 SKILL.md rewrite, PNG icon support for #15, icon library (6 icons), narrative detail_rows |
 | **v2.0.4** | 2026-03-19 | New `table_insight()` layout (#71), retire `three_pillar` (#14) |
