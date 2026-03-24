@@ -9,10 +9,11 @@ Usage:
 """
 from .engine import MckEngine
 from .constants import *
+from .review import SlideReviewer, AutoFixPipeline, review, autofix
 
 
 def generate_cover_image(*args, **kwargs):
     from .cover_image import generate_cover_image as _generate_cover_image
     return _generate_cover_image(*args, **kwargs)
 
-__version__ = '1.0.0'
+__version__ = '2.3.0'

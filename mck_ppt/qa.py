@@ -215,12 +215,17 @@ def _estimate_text_height(tf, box_width_emu: int) -> int:
     """
     total_height = 0
     for para in tf.paragraphs:
-        # Get font size for this paragraph
-        font_size_pt = 14  # default
+        # Get font size for this paragraph — check run level first,
+        # then paragraph level (p.font.size), then default 14pt
+        font_size_pt = 14  # default fallback
+        found = False
         for run in para.runs:
             if run.font.size:
                 font_size_pt = run.font.size.pt
+                found = True
                 break
+        if not found and para.font.size:
+            font_size_pt = para.font.size.pt
 
         # Estimate line height (font size * line spacing factor)
         line_height_emu = int(font_size_pt * 1.4 * 12700)  # pt → EMU with ~1.4x spacing
@@ -298,6 +303,7 @@ class PptQA:
         self._check_whitespace(num, shapes)
         self._check_shape_overlap(num, shapes)
         self._check_fonts(num, shapes)
+        self._check_peer_font_consistency(num, shapes)
         self._check_connectors(num, slide)
 
     # ── Check 1: Body Overflow ────────────────────────────────────────
@@ -571,7 +577,116 @@ class PptQA:
                             details={"font_size_pt": size.pt, "text_preview": text[:40]},
                         ))
 
-    # ── Check 6: Connector Usage (Guard Rail #1) ─────────────────────
+    # ── Check 6: Peer Font Consistency ──────────────────────────────
+    PEER_Y_TOLERANCE = Emu(18288)  # 0.02" — shapes within this Y range are peers
+
+    def _check_peer_font_consistency(self, num: int, shapes):
+        """Check that shapes at the same Y position (peer group) share
+        consistent font size, family, and bold style.
+
+        Peer groups are text shapes whose top positions match within a
+        small tolerance.  Typical cases: card titles in meet_the_team,
+        column headers in table layouts, numbered list items at the
+        same row, etc.
+
+        Any inconsistency within a peer group is an ERROR because it
+        indicates the autofix (or generation) broke visual uniformity.
+        """
+        # Collect text shapes with resolved font info
+        entries = []  # (top_emu, shape_name, font_size_pt, font_name, bold, text)
+        for s in shapes:
+            if not s.has_text_frame or not s.text_frame.text.strip():
+                continue
+            if s.top is None:
+                continue
+            # Resolve effective font from first non-empty paragraph
+            for para in s.text_frame.paragraphs:
+                if not para.text.strip():
+                    continue
+                size_pt = None
+                fname = None
+                bold = None
+                # Run-level first, then paragraph-level
+                for run in para.runs:
+                    if run.font.size:
+                        size_pt = run.font.size.pt
+                    if run.font.name:
+                        fname = run.font.name
+                    if run.font.bold is not None:
+                        bold = run.font.bold
+                    if size_pt:
+                        break
+                if size_pt is None and para.font.size:
+                    size_pt = para.font.size.pt
+                if fname is None and para.font.name:
+                    fname = para.font.name
+                if bold is None and para.font.bold is not None:
+                    bold = para.font.bold
+                if size_pt is not None:
+                    entries.append((s.top, getattr(s, 'name', ''),
+                                    size_pt, fname, bold,
+                                    s.text_frame.text.strip()[:30]))
+                break  # only first paragraph
+
+        if len(entries) < 2:
+            return
+
+        # Group by Y position (within tolerance)
+        entries.sort(key=lambda e: e[0])
+        groups: list[list] = []
+        for entry in entries:
+            placed = False
+            for g in groups:
+                if abs(entry[0] - g[0][0]) <= self.PEER_Y_TOLERANCE:
+                    g.append(entry)
+                    placed = True
+                    break
+            if not placed:
+                groups.append([entry])
+
+        # Check consistency within each group of 3+ peers
+        for g in groups:
+            if len(g) < 3:
+                continue  # only flag groups with ≥3 items (card rows etc.)
+
+            sizes = set(e[2] for e in g)
+            fonts = set(e[3] for e in g if e[3])
+
+            if len(sizes) > 1:
+                names = [e[1] for e in g]
+                size_list = [(e[1], e[2]) for e in g]
+                self.issues.append(QAIssue(
+                    slide_num=num,
+                    severity=Severity.ERROR,
+                    category="peer_font_inconsistency",
+                    message=(f"Peer group at y≈{g[0][0]/914400:.2f}\" has "
+                             f"inconsistent font sizes: "
+                             f"{', '.join(f'{n}={s}pt' for n, s in size_list)}"),
+                    shape_name=" / ".join(names),
+                    details={
+                        "sizes": {e[1]: e[2] for e in g},
+                        "texts": {e[1]: e[5] for e in g},
+                    },
+                ))
+
+            if len(fonts) > 1:
+                names = [e[1] for e in g]
+                font_list = [(e[1], e[3]) for e in g]
+                self.issues.append(QAIssue(
+                    slide_num=num,
+                    severity=Severity.ERROR,
+                    category="peer_font_inconsistency",
+                    message=(f"Peer group at y≈{g[0][0]/914400:.2f}\" has "
+                             f"inconsistent font families: "
+                             f"{', '.join(f'{n}={f}' for n, f in font_list)}"),
+                    shape_name=" / ".join(names),
+                    details={
+                        "fonts": {e[1]: e[3] for e in g},
+                        "texts": {e[1]: e[5] for e in g},
+                    },
+                ))
+
+    # ── Check 7: Connector Usage (Guard Rail #1) ─────────────────────
     def _check_connectors(self, num: int, slide):
         """Check for connector shapes that can cause file corruption."""
         xml = slide._element.xml
