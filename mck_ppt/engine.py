@@ -2875,15 +2875,28 @@ class MckEngine:
         add_action_title(s, title)
         nlw = Inches(7.5)
         nty = Inches(1.3)
+
+        # Dynamic row height: fill the available vertical space evenly
+        n_items = len(items)
+        avail_h = Inches(4.8)  # match panel height
+        row_h = avail_h / max(n_items, 1)
+        # Clamp: min 0.85", max 1.8"
+        row_h = max(Inches(0.85), min(row_h, Inches(1.8)))
+        # Title takes ~0.35", rest is for description
+        title_h = Inches(0.3)
+        desc_h = row_h - title_h - Inches(0.15)  # 0.15" gap + separator
+
         for i, (ititle, desc) in enumerate(items):
-            ry = nty + i * Inches(0.85)
+            ry = nty + i * row_h
             add_oval(s, LM, ry + Inches(0.05), str(i + 1), bg=NAVY)
-            add_text(s, LM + Inches(0.6), ry, nlw - Inches(0.6), Inches(0.3),
+            add_text(s, LM + Inches(0.6), ry, nlw - Inches(0.6), title_h,
                      ititle, font_size=Pt(15), font_color=NAVY, bold=True)
-            add_text(s, LM + Inches(0.6), ry + Inches(0.35), nlw - Inches(0.6), Inches(0.4),
+            add_text(s, LM + Inches(0.6), ry + title_h + Inches(0.05),
+                     nlw - Inches(0.6), desc_h,
                      desc, font_size=BODY_SIZE, font_color=DARK_GRAY)
             if i < len(items) - 1:
-                add_hline(s, LM + Inches(0.6), ry + Inches(0.8),
+                sep_y = ry + row_h - Inches(0.05)
+                add_hline(s, LM + Inches(0.6), sep_y,
                           nlw - Inches(0.8), LINE_GRAY, Pt(0.25))
         if panel:
             nrx = LM + nlw + Inches(0.3); nrw = CW - nlw - Inches(0.3)

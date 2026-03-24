@@ -29,6 +29,7 @@ from collections import defaultdict
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
+from pptx.oxml.ns import qn
 from lxml import etree
 
 # ── Slide constants (must match constants.py) ──────────────────────────
@@ -300,6 +301,7 @@ class PptQA:
         shapes = list(slide.shapes)
         self._check_body_overflow(num, shapes)
         self._check_text_overflow(num, shapes)
+        self._check_text_line_collision(num, shapes)
         self._check_whitespace(num, shapes)
         self._check_shape_overlap(num, shapes)
         self._check_fonts(num, shapes)
@@ -577,7 +579,81 @@ class PptQA:
                             details={"font_size_pt": size.pt, "text_preview": text[:40]},
                         ))
 
-    # ── Check 6: Peer Font Consistency ──────────────────────────────
+    # ── Check 6a: Text-Line Collision ────────────────────────────────
+    TEXT_LINE_GAP_MIN = Emu(27432)  # 0.03" — minimum gap between text bottom and hline
+
+    def _check_text_line_collision(self, num: int, shapes):
+        """Check if text content visually collides with separator lines.
+
+        Separator lines are thin rectangles (height ≤ 3pt).  If a text
+        shape's estimated text bottom is within TEXT_LINE_GAP_MIN of
+        a line's top edge, the text appears to "touch" or "overlap" the
+        line — a common defect in dense layouts.
+        """
+        text_shapes = []
+        line_shapes = []
+        for s in shapes:
+            if not hasattr(s, 'left') or s.left is None:
+                continue
+            if s.has_text_frame and s.text_frame.text.strip():
+                text_shapes.append(s)
+            # Identify thin rectangles (separator lines): height ≤ 3pt (38100 EMU)
+            elif hasattr(s, 'height') and s.height is not None and s.height <= Emu(38100):
+                if s.width is not None and s.width > Emu(914400):  # wider than 1"
+                    line_shapes.append(s)
+
+        for ts in text_shapes:
+            if ts.height is None or ts.width is None:
+                continue
+            # Skip decorative elements (circle badges, single-char labels)
+            if len(ts.text_frame.text.strip()) <= 2:
+                continue
+            # Skip very small shapes (badges, icons)
+            if ts.height < Emu(228600) and ts.width < Emu(228600):  # < 0.25"
+                continue
+            # Skip vertically-centered shapes — text won't overflow downward
+            try:
+                bodyPr = ts.text_frame._txBody.find(qn('a:bodyPr'))
+                if bodyPr is not None and bodyPr.get('anchor') in ('ctr', 'b'):
+                    continue
+            except Exception:
+                pass
+            est_text_h = _estimate_text_height(ts.text_frame, ts.width)
+            text_bottom = ts.top + min(est_text_h, ts.height + Emu(45720))  # allow slight internal overflow
+
+            for ls in line_shapes:
+                line_top = ls.top
+                if line_top is None or ls.left is None:
+                    continue
+                # Only check lines BELOW the text box (within reasonable range)
+                if line_top < ts.top:
+                    continue
+                # Must horizontally overlap — skip lines in different columns
+                ts_left = ts.left
+                ts_right = ts.left + ts.width
+                ls_left = ls.left
+                ls_right = ls.left + ls.width
+                h_overlap = min(ts_right, ls_right) - max(ts_left, ls_left)
+                if h_overlap < Emu(457200):  # less than 0.5" horizontal overlap = different region
+                    continue
+                gap = line_top - text_bottom
+                if gap < self.TEXT_LINE_GAP_MIN and gap > -Emu(182880):  # collision zone: -0.2" to +0.03"
+                    self.issues.append(QAIssue(
+                        slide_num=num,
+                        severity=Severity.ERROR if gap < 0 else Severity.WARNING,
+                        category="text_line_collision",
+                        message=(f"Text {'overlaps' if gap < 0 else 'nearly touches'} "
+                                 f"separator line (gap: {gap/914400:.3f}\")"),
+                        shape_name=getattr(ts, 'name', ''),
+                        details={
+                            "text_bottom": text_bottom,
+                            "line_top": line_top,
+                            "gap_emu": gap,
+                            "text_preview": ts.text_frame.text[:50],
+                        },
+                    ))
+
+    # ── Check 6b: Peer Font Consistency ──────────────────────────────
     PEER_Y_TOLERANCE = Emu(18288)  # 0.02" — shapes within this Y range are peers
 
     def _check_peer_font_consistency(self, num: int, shapes):
