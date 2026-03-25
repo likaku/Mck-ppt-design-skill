@@ -99,7 +99,11 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 │  ├── qa.py — Layout QA (overflow, overlap, collision)   │
 │  │   ├── text_overflow + body_overflow                  │
 │  │   ├── text_line_collision (text vs separator lines)  │
+│  │   ├── chart_legend_overflow (legend right bound)     │
 │  │   └── peer_font_inconsistency (same-Y alignment)    │
+│  ├── deck_builder.py — Storyline orchestrator  [v2.3.2] │
+│  │   ├── build(storyline) → auto QA → cleanup           │
+│  │   └── storylines/ — reusable theme templates          │
 │  └── Gate: 0 ERROR = PASS, otherwise iterate & fix      │
 ├─────────────────────────────────────────────────────────┤
 │  Tier 4: Post-Processing Pipeline                       │
@@ -121,7 +125,7 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 
 ## 🛡️ Production Guard Rails
 
-12 rules hard-won from 50+ production generations:
+13 rules hard-won from 50+ production generations:
 
 | # | Rule | What It Prevents |
 |---|------|------------------|
@@ -137,6 +141,7 @@ add_block_arc(slide, cx, cy, outer_r, start_deg=200, sweep_deg=160, fill_color=B
 | 10 | **Peer font consistency check** [v2.3] | Same-row shapes with different font sizes after autofix |
 | 11 | **Text-line collision check** [v2.3] | Text overlapping separator lines in dense layouts |
 | 12 | **Post-generation QA gate** [v2.3] | 0 ERROR mandatory before delivery — no silent defects |
+| 13 | **Chart legend overflow check** [v2.3.2] | Legend/label elements extending beyond content area right boundary |
 
 ---
 
@@ -248,13 +253,17 @@ eng.save('output/deck.pptx')
 ```
 ├── SKILL.md                 # Design specification (290KB, 6100 lines)
 ├── mck_ppt/                 # Python runtime engine (180KB)
-│   ├── __init__.py          # Public API (v2.3.0)
+│   ├── __init__.py          # Public API (v2.3.2)
 │   ├── engine.py            # 70 layout methods (2,359 lines)
 │   ├── core.py              # Drawing primitives + XML cleanup (295 lines)
 │   ├── constants.py         # Colors, typography, grid (78 lines)
-│   ├── qa.py                # Layout QA engine (770 lines)     [Enhanced v2.3]
+│   ├── qa.py                # Layout QA engine (820 lines)     [Enhanced v2.3.2]
 │   ├── review.py            # Review + auto-fix pipeline       [NEW v2.3]
-│   └── cover_image.py       # AI cover image generation        [v2.2]
+│   ├── deck_builder.py      # Storyline-driven deck generator  [NEW v2.3.2]
+│   ├── cover_image.py       # AI cover image generation        [v2.2]
+│   └── storylines/          # Pre-built storyline templates     [NEW v2.3.2]
+│       ├── __init__.py
+│       └── ai_enterprise.py # 33-slide AI enterprise demo (Chinese)
 ├── assets/
 │   └── icons/               # Pre-built PNG icons (200×200px)  [v2.0.5]
 │       ├── icon_person_bust.png
@@ -283,6 +292,7 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v2.3.2** | 2026-03-25 | **DeckBuilder**: storyline-driven deck generator (`deck_builder.py`) — accepts storyline list, auto-dispatches to MckEngine methods, built-in QA validation; **stacked_bar fix**: adaptive legend spacing prevents right-side overflow, chart area repositioned for visual balance; **new QA rule** `chart_legend_overflow` (detects legend/label exceeding content area, excludes page numbers); **storylines/ai_enterprise.py**: 33-slide Chinese AI enterprise applications demo using 20+ layout types |
 | **v2.3.1** | 2026-03-24 | Dynamic row height for `numbered_list_panel` (fills panel height evenly, eliminates blank space); new QA rule `text_line_collision` (detects text overlapping separator lines with horizontal overlap validation) |
 | **v2.3.0** | 2026-03-24 | **Post-generation review + auto-fix pipeline**: `review.py` with NarrativeReviewer, AutoFixPipeline (priority-chain: redundancy → compress → restructure → font adjust), peer font harmonization; fix `_estimate_text_height` paragraph-level font inheritance bug (27% overestimate); new QA rule `peer_font_inconsistency`; gate: 0 ERROR = PASS. Tested: 14 errors → 0, score 17 → 86 |
 | **v2.2.0** | 2026-03-23 | AI cover image pipeline via Tencent Hunyuan 2.0 + rembg; `eng.cover(..., cover_image='auto')`; cover text area widened for image mode; donut chart updated to a true thin-ring geometry with larger inner hole; `matrix_2x2` bottom judgment bar spacing fixed to avoid axis overlap |
