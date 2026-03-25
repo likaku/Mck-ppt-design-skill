@@ -1741,16 +1741,20 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        cl = LM + Inches(0.8); cb = Inches(5.0); ct = Inches(1.6); ch = cb - ct
+        cl = LM + Inches(0.8); cb = Inches(5.4); ct = Inches(2.0); ch = cb - ct
         cr = Inches(11.5); cww = cr - cl; np_ = len(periods)
         bw = Inches(1.2); sbs = cww / np_
-        # Sub-title + legend
+        # Sub-title + legend (adaptive spacing to prevent overflow)
+        legend_y = Inches(1.55)
         add_text(s, cl, Inches(1.2), Inches(5.0), Inches(0.3),
                  title, font_size=Pt(13), font_color=DARK_GRAY, bold=True)
+        n_series = len(series)
+        legend_total_w = cr - LM - Inches(5.0)
+        legend_spacing = legend_total_w / max(n_series, 1)
         for ci, (sname, scolor) in enumerate(series):
-            lx = LM + Inches(8.0) + Inches(2.2) * ci
-            add_rect(s, lx, Inches(1.25), Inches(0.2), Inches(0.2), scolor)
-            add_text(s, lx + Inches(0.3), Inches(1.2), Inches(1.6), Inches(0.3),
+            lx = LM + Inches(5.2) + legend_spacing * ci
+            add_rect(s, lx, legend_y + Inches(0.05), Inches(0.2), Inches(0.2), scolor)
+            add_text(s, lx + Inches(0.3), legend_y, min(Inches(1.6), legend_spacing - Inches(0.4)), Inches(0.3),
                      sname, font_size=SMALL_SIZE, font_color=DARK_GRAY)
         # Y-axis
         for tk in [0, 25, 50, 75, 100]:

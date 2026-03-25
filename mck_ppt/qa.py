@@ -306,6 +306,7 @@ class PptQA:
         self._check_shape_overlap(num, shapes)
         self._check_fonts(num, shapes)
         self._check_peer_font_consistency(num, shapes)
+        self._check_chart_legend_overflow(num, shapes)
         self._check_connectors(num, slide)
 
     # ── Check 1: Body Overflow ────────────────────────────────────────
@@ -760,6 +761,56 @@ class PptQA:
                         "fonts": {e[1]: e[3] for e in g},
                         "texts": {e[1]: e[5] for e in g},
                     },
+                ))
+
+    # ── Check: Chart Legend / Small Shape Cluster Overflow ───────────
+    def _check_chart_legend_overflow(self, num: int, shapes):
+        """Check if chart legends or small label clusters overflow the content area.
+
+        Detects groups of small, horizontally-aligned shapes (typical of chart
+        legends) where the rightmost element exceeds the content right boundary.
+        Also catches any small text label whose right edge exceeds the slide width.
+        """
+        content_right = CONTENT_AREA_RIGHT
+
+        # Collect small text shapes that look like legend items
+        # (height <= 0.5", width <= 2.5", vertically aligned within 0.3")
+        # Exclude page number shapes (pattern: "N/N" at bottom-right)
+        import re
+        page_num_re = re.compile(r'^\d+/\d+$')
+        small_texts = []
+        for shape in shapes:
+            if not hasattr(shape, "left") or shape.left is None:
+                continue
+            if not shape.has_text_frame:
+                continue
+            text = shape.text_frame.text.strip()
+            if not text:
+                continue
+            # Skip page numbers
+            if page_num_re.match(text):
+                continue
+            w = (shape.width or 0) / 914400
+            h = (shape.height or 0) / 914400
+            top = (shape.top or 0) / 914400
+            # Skip shapes in the footer area (source line, page number region)
+            if top > 6.8:
+                continue
+            if h <= 0.5 and w <= 2.5 and len(text) <= 20:
+                left, top_emu, right, bottom = _bbox(shape)
+                small_texts.append((shape, left, top_emu, right, text))
+
+        # Check each small text — if right edge exceeds content area, flag it
+        for shape, left, top, right, text in small_texts:
+            if right > content_right + OVERFLOW_TOLERANCE:
+                overflow = (right - content_right) / 914400
+                self.issues.append(QAIssue(
+                    slide_num=num,
+                    severity=Severity.ERROR,
+                    category="chart_legend_overflow",
+                    message=f"Legend/label '{text}' overflows content area RIGHT by {overflow:.2f}\"",
+                    shape_name=getattr(shape, "name", ""),
+                    details={"right_edge_in": right / 914400, "content_right_in": content_right / 914400},
                 ))
 
     # ── Check 7: Connector Usage (Guard Rail #1) ─────────────────────
