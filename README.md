@@ -281,9 +281,15 @@ With this capability, the precision and usability of existing templates will imp
 
 Building a self-evolving design system is hard. Three fundamental problems remain unsolved:
 
-#### 1. The PPTX Ceiling
+#### 1. The PPTX Stack Was Built for Humans, Not AI
 
-PowerPoint's `.pptx` format is inherently limited. It's a 20-year-old XML format designed for static slides, not for programmatic design. Certain visual effects — gradients, complex animations, responsive layouts — are either impossible or require ugly XML hacks. **The format itself is a constraint on what AI can create.** We're exploring whether HTML/CSS-based outputs (see [Mck HTML Design](https://github.com/likaku/mck-html-design-skill)) could eventually break through this ceiling.
+The constraint isn't PowerPoint the product — it's the entire stack underneath.
+
+**The `python-pptx` library is limited.** It exposes a fraction of what PPTX XML can do. Many visual effects (morph transitions, SmartArt, advanced gradients) simply have no API. We constantly work around library limitations with raw XML manipulation — which is fragile and hard to maintain.
+
+**The PPTX XML format itself is human-oriented.** Its architecture — deeply nested XML, theme inheritance, implicit style cascading — was designed for a human clicking buttons in a GUI, not for an AI generating programmatic output. Every "simple" operation (draw a line, set a font) requires navigating layers of XML namespaces, style overrides, and undocumented fallback behaviors. The 13 guard rails in this project exist precisely because the format fights AI at every turn.
+
+**The implication:** PPTX may not be the long-term endgame for AI-generated presentations. We're actively iterating on HTML/CSS-based outputs (see [Mck HTML Design](https://github.com/likaku/mck-html-design-skill)) — a format that is natively programmatic, infinitely flexible, and designed for exactly this kind of generation. The future likely involves **format migration**, not format optimization.
 
 #### 2. Content × Template Matching
 
@@ -434,7 +440,7 @@ v3.0 将在作者（人类）和 AI Builder 之间增加一个**适应层（Adap
 
 ### 三个待深入的方向
 
-1. **PPTX 格式天花板** —— `.pptx` 是 20 年前的 XML 格式，对程序化设计有天然局限。某些视觉效果要么不可能，要么需要丑陋的 XML hack。格式本身限制了 AI 的创造力。
+1. **PPTX 技术栈是为人设计的，不是为 AI 设计的** —— 问题不在 PPT 这个产品本身，而在于底层：`python-pptx` 库只暴露了 PPTX XML 能力的一小部分，大量视觉效果没有 API；而 PPTX 的 XML 格式本身（深度嵌套、主题继承、隐式样式级联）是为人类点击 GUI 按钮设计的，不适合 AI 程序化输出。我们的 13 条 guard rails 就是因为这个格式在处处对抗 AI。未来可能更多在 HTML 或其他格式上迭代。
 2. **内容×模板深度匹配** —— 同一段内容可能适合 `vertical_steps`、`numbered_list_panel` 或 `four_column`，取决于信息密度、层级和视觉意图。语义结构和视觉结构的深度匹配需要进一步 deep dive。
 3. **设计创造力** —— 当前系统擅长在既定模式内复现咨询级设计，但无法基于一个品牌的 style 自己创造新布局。**风格条件化的生成式设计**是终极前沿。
 
