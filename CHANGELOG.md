@@ -1,5 +1,7 @@
 # Changelog
 
+> **Mck-ppt-design-skill — Copyright © 2024-2026 Kaku Li.** Apache 2.0 License. See [NOTICE](NOTICE).
+
 All notable changes to this project will be documented in this file.
 
 ## [2.0.5] - 2026-03-21

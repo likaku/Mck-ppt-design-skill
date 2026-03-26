@@ -1,3 +1,8 @@
+# Copyright 2024-2026 Kaku Li (https://github.com/likaku)
+# Licensed under the Apache License, Version 2.0 — see LICENSE and NOTICE.
+# Part of "Mck-ppt-design-skill" (McKinsey PPT Design Framework).
+# NOTICE: This file must be retained in all copies or substantial portions.
+#
 """Cover Image Generator — 腾讯混元 API + rembg 抠图 + 冷灰蓝 + McKinsey 几何弧线.
 
 输出: 1920×1080 RGBA PNG，主体抠图透明底，几何弧线铺满画面，用作 PPT 全幅垫底。

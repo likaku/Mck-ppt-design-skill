@@ -18,6 +18,8 @@ description: >-
 
 # McKinsey PPT Design Framework
 
+> **Copyright © 2024-2026 Kaku Li (https://github.com/likaku).** Licensed under Apache 2.0. See [NOTICE](NOTICE).
+
 > **Version**: 2.2.0 · **License**: Apache-2.0 · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: python3, pip

@@ -4,6 +4,11 @@
 
 **AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · post-generation QA pipeline · icon library · Python runtime**
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Copyright](https://img.shields.io/badge/©-Kaku%20Li%202024--2026-navy)](https://github.com/likaku)
+
+> **Copyright © 2024-2026 Kaku Li.** Licensed under [Apache 2.0](LICENSE). See [NOTICE](NOTICE) for details.
+
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![python-pptx](https://img.shields.io/badge/python--pptx-0.6.21+-orange.svg)](https://python-pptx.readthedocs.io)
