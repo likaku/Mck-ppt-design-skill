@@ -22,23 +22,25 @@
 
 ## Community
 
-<table>
-<tr>
-    <td align="center" width="50%" valign="top">
-      <strong>WeChat Group / 微信交流群</strong><br/><br/>
-<img width="180" alt="Clipboard_Screenshot_1774582397" src="https://github.com/user-attachments/assets/d3741166-552a-47bc-9103-6c1ea863e07d" />
-
-    </td>
-    <td align="center" width="50%" valign="top">
-      <strong>Discord</strong><br/><br/>
-      <a href="https://discord.gg/SaFybFAT">
-        <img src="https://img.shields.io/badge/Discord-Join_Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
-      </a>
-      <br/><br/>
-      <span>Click above to join</span>
-    </td>
-  </tr>
-</table>
+<table width="100%">
+    <tr>
+      <td align="center" width="50%" valign="top">
+        <p><strong>WeChat Group / 微信交流群</strong></p>
+        <img src="https://github.com/user-attachments/assets/d3741166-552a-47bc-9103-6c1ea863e07d" width="160" alt="WeChat QR Code" />
+        <br/>
+        <sub style="color: gray;">扫描二维码加入社群</sub>
+      </td>
+      <td align="center" width="50%" valign="top">
+        <p><strong>Discord Server</strong></p>
+        <br/>
+        <a href="https://discord.gg/SaFybFAT">
+          <img src="https://img.shields.io/badge/Discord-Join_Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+        </a>
+        <br/><br/>
+        <p>Click above to join our global community</p>
+      </td>
+    </tr>
+  </table>
 
 ---
 
