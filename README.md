@@ -26,7 +26,8 @@
 <tr>
     <td align="center" width="50%" valign="top">
       <strong>WeChat Group / 微信交流群</strong><br/><br/>
-<img width="180" alt="Clipboard_Screenshot_1773906668" src="https://github.com/user-attachments/assets/b9d24976-91fc-4d1d-91b6-b14b7e910da2" />
+<img width="180" alt="Clipboard_Screenshot_1774582397" src="https://github.com/user-attachments/assets/d3741166-552a-47bc-9103-6c1ea863e07d" />
+
     </td>
     <td align="center" width="50%" valign="top">
       <strong>Discord</strong><br/><br/>
