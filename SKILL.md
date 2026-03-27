@@ -11,7 +11,8 @@ description: >-
   consistent typography, zero file-corruption issues, BLOCK_ARC native shapes
   for circular charts (donut, pie, gauge), production-hardened guard rails
   for spacing, overflow, legend consistency, title style uniformity,
-  dynamic sizing for variable-count layouts, chart rendering, and
+  dynamic sizing for variable-count layouts, horizontal item overflow
+  protection, chart rendering, and
   AI-generated cover images via Tencent Hunyuan 2.0 with professional cutout,
   cool grey-blue tint, and McKinsey-style Bézier ribbon decoration.
 ---
@@ -35,7 +36,7 @@ This skill encodes the complete design specification for **professional business
 - **Chinese + English font handling** (KaiTi / Georgia / Arial)
 - **Image placeholder system** for image-containing layouts (v1.8)
 - **BLOCK_ARC native shapes for charts** — donut, pie, gauge rendered with 3-4 shapes instead of hundreds of blocks, 60-80% smaller files (v2.0)
-- **Production Guard Rails** — 9 mandatory rules including spacing/overflow protection, legend color consistency, title style uniformity, axis label centering, dynamic sizing, BLOCK_ARC chart rendering (v1.9+v2.0)
+- **Production Guard Rails** — 10 mandatory rules including spacing/overflow protection, legend color consistency, title style uniformity, axis label centering, dynamic sizing, BLOCK_ARC chart rendering, horizontal item overflow protection (v1.9+v2.0+v2.3)
 - **Code Efficiency guidelines** — variable reuse patterns, constant extraction, loop optimization for faster generation (v1.9)
 - **AI-generated cover images** — Tencent Hunyuan 2.0 text-to-image → rembg professional cutout → cool grey-blue tint + 50% lighten → McKinsey-style Bézier ribbon curves → transparent RGBA PNG full-bleed background (v2.2)
 
@@ -779,6 +780,43 @@ for pct, color in gauge_segs:
 - Drawing a white circle on top of a filled circle to "fake" a donut — fragile, misaligns on resize
 - Using `math.cos/sin` + `add_rect()` loops for arcs — always use `BLOCK_ARC` instead
 
+#### Rule 10: Horizontal Item Count Overflow Protection (v2.3)
+
+**Problem observed**: Layouts that place N items **horizontally** across the slide (Process Chevron, Metric Cards, Icon Grid, Four-Column) compute `gap = (CW - item_w * N) / (N - 1)`. When N is large enough that `item_w * N > CW`, the gap becomes **negative**, producing shapes with negative widths. PowerPoint reports "file needs repair" and silently deletes the corrupt shapes.
+
+**Root cause example** (Process Chevron with 5+ steps):
+```python
+# ❌ BROKEN: fixed step_w with high N
+step_w = Inches(2.6)       # fixed width
+n = 5                       # 5 steps
+gap = (CW - step_w * n) / (n - 1)
+#   = (11.733 - 13.0) / 4 = -0.317"  ← NEGATIVE!
+# Arrow text box width = gap - 0.1" = -0.417" ← FILE CORRUPTION
+```
+
+**MANDATORY**: For any horizontal-item layout, **compute `item_w` dynamically** from the available content width, reserving a minimum gap:
+
+```python
+# ✅ CORRECT: dynamic item_w with floor gap
+MIN_GAP = Inches(0.35)             # minimum inter-item gap
+PREFERRED_W = Inches(2.6)          # ideal item width
+max_item_w = (CW - MIN_GAP * max(n - 1, 1)) / max(n, 1)
+item_w = min(PREFERRED_W, max_item_w)   # shrink if needed
+gap = (CW - item_w * n) / max(n - 1, 1) # now guaranteed ≥ MIN_GAP
+```
+
+**Affected methods** (all already fixed in engine.py v2.3):
+- `process_chevron()` — step boxes + arrow gaps
+- `metric_cards()` — card columns
+- `icon_grid()` — icon columns
+- `four_column()` — text columns
+
+**Additional safeguards**:
+- When items shrink significantly (`item_w < Inches(2.0)`), reduce font sizes by one tier (sub-header → body, body → small) to prevent text overflow inside narrower boxes.
+- Arrow/connector elements between items must use `max(gap - margin, Inches(0.2))` for their width — never raw `gap - margin` which may be tiny or negative.
+
+**Validation formula**: `item_w * n + gap * (n - 1) ≈ CW` and `gap ≥ MIN_GAP` and `item_w > 0`.
+
 ### Mandatory Slide Elements
 
 EVERY content slide (except Cover and Closing) MUST include ALL of these:
@@ -1242,7 +1280,7 @@ eng.pyramid(
 
 #### 16. Process Chevron (流程箭头页)
 
-**适用场景**: 线性流程展示（3-5步），如实施路径、业务流程、方法论步骤。
+**适用场景**: 线性流程展示（2-7步），如实施路径、业务流程、方法论步骤。推荐3-5步效果最佳；6-7步时方框和字体会自动缩小（Guard Rail Rule 10）。
 
 ```
 ┌─────────────────────────────────────────┐
@@ -3892,6 +3930,7 @@ print(f'Created: {outpath} ({os.path.getsize(outpath):,} bytes)')
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.3.0 | 2026-03-27 | **Guard Rail Rule 10 — Horizontal Item Overflow Protection**: Fixed `process_chevron()` negative-gap crash when N≥5 steps (step_w×N > CW → negative arrow width → PowerPoint "file needs repair"). Now computes `step_w` dynamically: `min(PREFERRED, (CW - MIN_GAP*(N-1))/N)`. Adaptive font sizing (sub-header→body→small) when boxes shrink. Arrow width floor at 0.2". Documented as Rule 10 in Production Guard Rails with root-cause analysis, validation formula, and affected-methods list. Updated Process Chevron spec: 2–7 steps supported (was 3–5). |
 | 2.2.0 | 2026-03-22 | **AI Cover Image Generation**: New `mck_ppt/cover_image.py` module. `eng.cover()` gains `cover_image` parameter (`None`/`'auto'`/`'path.png'`). When `'auto'`: Tencent Hunyuan 2.0 async API (`SubmitHunyuanImageJob`) generates 1024×1024 product photo → `rembg` professional background removal → cool grey-blue tint (desat 30%, R×0.85/G×0.92/B×1.18) + 50% lighten → subject placed at right-center of 1920×1080 transparent canvas → 24 McKinsey-style cubic Bézier ribbon curves with silk-fold twist at center → full-bleed RGBA PNG embedded as bottom layer. `_METAPHOR_MAP` maps 24 industry keywords to realistic product descriptions (GPU, capsules, bank card, solar panel, etc.). Prompt enforces: real product photography, sharp edges, white background, studio lighting. `__init__.py` exports `generate_cover_image`. Dependencies: `tencentcloud-sdk-python`, `rembg`, `pillow`, `numpy`. |
 | 2.0.5 | 2026-03-21 | **#15 Staircase Evolution v3**: PNG icon support (auto-detect `.png` paths, overlay on navy circle with 0.08" inset). Single-line detail_rows = no bullet; multi-line = bullet. Icon library (6 icons in `assets/icons/`). New example: `staircase_civilization.py`. Unified release: merged v2.0.4 engine + v2.1 SKILL.md rewrite + #14→#71 cleanup. |
 | 2.0.4 | 2026-03-19 | **#14 Three-Pillar RETIRED**: Removed `three_pillar` method from engine.py and its documentation from SKILL.md. All former #14 use cases now served by **#71 Table+Insight Panel** (`table_insight`). Updated Layout Diversity table, Opening Slide Priority Rule, and recommended slide structure. |

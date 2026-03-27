@@ -726,12 +726,21 @@ class MckEngine:
     def process_chevron(self, title, steps, source='', bottom_bar=None):
         """#16 Process Chevron — horizontal step flow with arrows.
         steps: list of (label, step_title, description).
+        Supports 2–7 steps with dynamic sizing (Guard Rail Rule 10).
         """
         s = self._ns()
         add_action_title(s, title)
         n = len(steps)
-        step_w = Inches(2.6)
+        # ── Guard Rail Rule 10: dynamic step_w to prevent negative gap ──
+        MIN_GAP = Inches(0.35)          # minimum arrow gap
+        ARROW_ZONE = Inches(0.4)        # width reserved for "→" glyph
+        PREFERRED_W = Inches(2.6)       # ideal step box width
+        max_step_w = (CW - MIN_GAP * max(n - 1, 1)) / max(n, 1)
+        step_w = min(PREFERRED_W, max_step_w)
         gap = (CW - step_w * n) / max(n - 1, 1)
+        # adaptive font: shrink sub-header when boxes are narrow
+        sub_font = SUB_HEADER_SIZE if step_w >= Inches(2.0) else BODY_SIZE
+        desc_font = BODY_SIZE if step_w >= Inches(1.8) else SMALL_SIZE
         for i, (label, stitle, desc) in enumerate(steps):
             sx = LM + (step_w + gap) * i
             is_last = (i == n - 1)
@@ -742,12 +751,13 @@ class MckEngine:
                      bg=WHITE if is_last else NAVY,
                      fg=NAVY if is_last else WHITE)
             add_text(s, sx + Inches(0.65), Inches(1.55), step_w - Inches(0.8), Inches(0.9),
-                     stitle, font_size=SUB_HEADER_SIZE, font_color=tc,
+                     stitle, font_size=sub_font, font_color=tc,
                      bold=True, anchor=MSO_ANCHOR.MIDDLE)
             add_text(s, sx + Inches(0.1), Inches(2.7), step_w - Inches(0.2), Inches(2.0),
-                     desc, font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER)
+                     desc, font_size=desc_font, alignment=PP_ALIGN.CENTER)
             if i < n - 1:
-                add_text(s, sx + step_w + Inches(0.05), Inches(1.7), gap - Inches(0.1), Inches(0.5),
+                arrow_w = max(gap - Inches(0.1), Inches(0.2))
+                add_text(s, sx + step_w + Inches(0.05), Inches(1.7), arrow_w, Inches(0.5),
                          '→', font_size=Pt(24), font_color=NAVY, bold=True,
                          alignment=PP_ALIGN.CENTER)
         if bottom_bar:
