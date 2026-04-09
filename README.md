@@ -2,7 +2,7 @@
 
 # MCK PPT Design Skill
 
-**AI-native PowerPoint design system — 70 layouts · BLOCK_ARC chart engine · post-generation QA pipeline · icon library · Python runtime**
+**AI-native PowerPoint design system — 65 layouts · BLOCK_ARC chart engine · post-generation QA pipeline · icon library · Python runtime**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Copyright](https://img.shields.io/badge/©-Kaku%20Li%202024--2026-navy)](https://github.com/likaku)
@@ -94,7 +94,7 @@ What stays on GPU:
 |---|------|------|
 | **Compute split** | ~100% GPU (all tokens) | ~20% GPU (decisions) + ~80% CPU (execution) |
 | **Chart rendering** | `add_rect()` block stacking (100–2,800 shapes/chart) | `BLOCK_ARC` native arcs (3–4 shapes/chart) |
-| **Code generation** | AI writes raw `add_shape()` / coordinate math per slide | AI calls `eng.donut_chart()`, `eng.cover()` etc. — 70 high-level methods |
+| **Code generation** | AI writes raw `add_shape()` / coordinate math per slide | AI calls `eng.donut_chart()`, `eng.cover()` etc. — 65 high-level methods |
 | **Rounds per 30-slide deck** | 10–15 (trial-and-error) | 3–4 (deterministic) |
 | **Output tokens per deck** | 40,000–60,000 | 9,000–12,000 |
 | **Chart generation time** | ~2 min (GPU inference) | <1 sec (CPU execution) |
@@ -108,13 +108,13 @@ What stays on GPU:
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Tier 1: SKILL.md (Design Specification)                │
-│  ├── 70 layout patterns with exact coordinates          │
+│  ├── 65 layout patterns with exact coordinates          │
 │  ├── Color system + typography hierarchy                │
 │  ├── 9 production guard rails                           │
 │  └── BLOCK_ARC chart rendering spec                     │
 ├─────────────────────────────────────────────────────────┤
 │  Tier 2: mck_ppt/ (Python Runtime Engine)      [NEW]    │
-│  ├── engine.py — 70 high-level layout methods           │
+│  ├── engine.py — 65 high-level layout methods           │
 │  ├── core.py — Drawing primitives + XML cleanup         │
 │  ├── constants.py — Colors, typography, grid constants  │
 │  └── __init__.py — Clean public API                     │
@@ -179,7 +179,7 @@ What stays on GPU:
 
 ### The Problem v2.3 Solves
 
-MckEngine's 70 layout methods each handle "put content into shapes", but nobody checked whether the content actually fits. A title 1 character too long → text overflow. An autofix that shrinks font per-shape → peer inconsistency (same row, 5 different font sizes). These defects are invisible in code but obvious when you open the PPT.
+MckEngine's 65 layout methods each handle "put content into shapes", but nobody checked whether the content actually fits. A title 1 character too long → text overflow. An autofix that shrinks font per-shape → peer inconsistency (same row, 5 different font sizes). These defects are invisible in code but obvious when you open the PPT.
 
 ### Four-Stage Pipeline
 
@@ -269,7 +269,7 @@ v3.0 introduces a new **Adaptation Layer** that sits between the human author an
 ├ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┤
 │                                                                 │
 │   AI Builder (MckEngine + SKILL.md)                             │
-│   ├── Executes layout methods (70 patterns)                     │
+│   ├── Executes layout methods (65 patterns)                     │
 │   ├── Renders charts, tables, diagrams                          │
 │   └── Applies QA + auto-fix pipeline                            │
 │                                                                 │
@@ -301,7 +301,7 @@ The constraint isn't PowerPoint the product — it's the entire stack underneath
 
 #### 2. Content × Template Matching
 
-Given arbitrary content and a library of 70+ templates, how do you select the right layout? This is not a simple classification problem. The same bullet list might work as a `vertical_steps`, `numbered_list_panel`, or `four_column` depending on the content density, hierarchy, and visual intent. **Deep matching between semantic structure and visual structure** requires understanding that goes beyond pattern matching — it needs design intuition. This is a deep dive we're actively exploring.
+Given arbitrary content and a library of 65+ templates, how do you select the right layout? This is not a simple classification problem. The same bullet list might work as a `vertical_steps`, `numbered_list_panel`, or `four_column` depending on the content density, hierarchy, and visual intent. **Deep matching between semantic structure and visual structure** requires understanding that goes beyond pattern matching — it needs design intuition. This is a deep dive we're actively exploring.
 
 #### 3. Design Creativity
 
@@ -359,7 +359,7 @@ eng.save('output/deck.pptx')
 ├── SKILL.md                 # Design specification (290KB, 6100 lines)
 ├── mck_ppt/                 # Python runtime engine (180KB)
 │   ├── __init__.py          # Public API (v2.3.2)
-│   ├── engine.py            # 70 layout methods (2,359 lines)
+│   ├── engine.py            # 65 layout methods
 │   ├── core.py              # Drawing primitives + XML cleanup (295 lines)
 │   ├── constants.py         # Colors, typography, grid (78 lines)
 │   ├── qa.py                # Layout QA engine (820 lines)     [Enhanced v2.3.2]
@@ -397,6 +397,7 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v2.0.6** | 2026-04-09 | Layout formatting polish, chart bottom-alignment, unified color palette (NAVY + BG_GRAY), retired 5 legacy layouts (Venn, Cycle, Funnel, Pie, Gauge) |
 | **v2.3.2** | 2026-03-25 | **DeckBuilder**: storyline-driven deck generator (`deck_builder.py`) — accepts storyline list, auto-dispatches to MckEngine methods, built-in QA validation; **stacked_bar fix**: adaptive legend spacing prevents right-side overflow, chart area repositioned for visual balance; **new QA rule** `chart_legend_overflow` (detects legend/label exceeding content area, excludes page numbers); **storylines/ai_enterprise.py**: 33-slide Chinese AI enterprise applications demo using 20+ layout types |
 | **v2.3.1** | 2026-03-24 | Dynamic row height for `numbered_list_panel` (fills panel height evenly, eliminates blank space); new QA rule `text_line_collision` (detects text overlapping separator lines with horizontal overlap validation) |
 | **v2.3.0** | 2026-03-24 | **Post-generation review + auto-fix pipeline**: `review.py` with NarrativeReviewer, AutoFixPipeline (priority-chain: redundancy → compress → restructure → font adjust), peer font harmonization; fix `_estimate_text_height` paragraph-level font inheritance bug (27% overestimate); new QA rule `peer_font_inconsistency`; gate: 0 ERROR = PASS. Tested: 14 errors → 0, score 17 → 86 |
@@ -465,7 +466,7 @@ v1.x 用几百个 `add_rect()` 小方块堆叠渲染甜甜圈/饼图/仪表盘�
 | | v1.x | v2.0 |
 |---|------|------|
 | 图表渲染 | `add_rect()` 堆叠（100–2,800 形状/图表） | `BLOCK_ARC` 原生弧（3–4 形状/图表） |
-| 代码生成 | AI 手写 `add_shape()` + 坐标计算 | AI 调用 `eng.donut_chart()` 等 70 个高级方法 |
+| 代码生成 | AI 手写 `add_shape()` + 坐标计算 | AI 调用 `eng.donut_chart()` 等 65 个高级方法 |
 | 30 页 PPT 交互轮数 | 10–15 轮 | 3–4 轮 |
 | 输出 tokens | 40,000–60,000 | 9,000–12,000 |
 | 图表生成时间 | ~2 分钟 | <1 秒 |

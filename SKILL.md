@@ -29,7 +29,7 @@ description: >-
 
 This skill encodes the complete design specification for **professional business presentations** — a consultant-grade PowerPoint framework based on McKinsey design principles. It includes:
 
-- **70 layout patterns** across 12 categories (structure, data, framework, comparison, narrative, timeline, team, charts, **images**, **advanced viz**, **dashboards**, **visual storytelling**)
+- **65 layout patterns** across 12 categories (structure, data, framework, comparison, narrative, timeline, team, charts, **images**, **advanced viz**, **dashboards**, **visual storytelling**)
 - **Color system** and strict typography hierarchy
 - **Python-pptx code patterns** ready to copy and customize
 - **Three-layer defense** against file corruption (zero `p:style` leaks)

@@ -4,6 +4,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.6] - 2026-04-09
+
+### Changed
+- **Layout formatting polish**: Chart layouts (grouped_bar, stacked_bar, horizontal_bar, waterfall, line_chart, pareto, stacked_area) now use bottom-aligned summary bars and expanded chart areas for better visual balance.
+- **Color consistency**: Metric Cards (#12) and Matrix 2x2 (#13) default to unified NAVY + BG_GRAY palette instead of multi-color ACCENT_PAIRS.
+- **Stakeholder Map (#59)**: Circle labels now show sequential numbers (1, 2, 3...) instead of name initials.
+- **Temple (#18)**: Pillar colors default to unified NAVY.
+- **Scorecard (#23)**: Progress bar height increased for better visibility.
+
+### Removed
+- **Retired 5 layouts**: Venn (#17), Cycle (#31), Funnel (#32), Pie (#64), Gauge (#55) — marked as RETIRED in engine docstrings and removed from showcase.
+
 ## [2.0.5] - 2026-03-21
 
 ### Added

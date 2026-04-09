@@ -255,7 +255,7 @@ class MckEngine:
                 letter, ctitle, desc, accent, light = card
             else:
                 letter, ctitle, desc = card[:3]
-                accent, light = ACCENT_PAIRS[i % len(ACCENT_PAIRS)]
+                accent, light = NAVY, BG_GRAY
             cx = LM + (card_w + card_g) * i
             add_rect(s, cx, CONTENT_TOP + Inches(0.1), card_w, Inches(4.8), light)
             add_rect(s, cx, CONTENT_TOP + Inches(0.1), card_w, Inches(0.06), accent)
@@ -268,7 +268,7 @@ class MckEngine:
                       card_w - Inches(0.8), LINE_GRAY)
             add_text(s, cx + Inches(0.2), CONTENT_TOP + Inches(1.6), card_w - Inches(0.4), Inches(2.5),
                      desc if isinstance(desc, list) else desc,
-                     font_size=BODY_SIZE, alignment=PP_ALIGN.CENTER, line_spacing=Pt(8))
+                     font_size=BODY_SIZE, alignment=PP_ALIGN.LEFT, line_spacing=Pt(8))
         self._footer(s, source)
         return s
 
@@ -487,9 +487,9 @@ class MckEngine:
             add_text(s, LM, ry, Inches(4.0), Inches(0.5), name, font_size=BODY_SIZE)
             add_text(s, Inches(5.0), ry, Inches(1.5), Inches(0.5), score,
                      font_size=BODY_SIZE, font_color=NAVY, bold=True)
-            add_rect(s, Inches(7.0), ry + Inches(0.1), bar_max, Inches(0.3), BG_GRAY)
+            add_rect(s, Inches(7.0), ry + Inches(0.05), bar_max, Inches(0.4), BG_GRAY)
             bar_color = NAVY if pct >= 0.7 else ACCENT_ORANGE if pct >= 0.5 else ACCENT_RED
-            add_rect(s, Inches(7.0), ry + Inches(0.1), Inches(5.0 * pct), Inches(0.3), bar_color)
+            add_rect(s, Inches(7.0), ry + Inches(0.05), Inches(5.0 * pct), Inches(0.4), bar_color)
             ry += Inches(0.55)
             add_hline(s, LM, ry, CW, LINE_GRAY)
             ry += Inches(0.1)
@@ -780,7 +780,7 @@ class MckEngine:
         # Pillars
         n = len(pillar_names)
         if pillar_colors is None:
-            pillar_colors = [pair[0] for pair in ACCENT_PAIRS[:n]]
+            pillar_colors = [NAVY] * n
         ppw = (CW - Inches(0.2) * (n - 1)) / n
         ppg = Inches(0.2)
         for i, (name, color) in enumerate(zip(pillar_names, pillar_colors)):
@@ -1314,7 +1314,8 @@ class MckEngine:
     # ═══════════════════════════════════════════
 
     def venn(self, title, circles, overlap_label='', right_text=None, source=''):
-        """#17 Venn Diagram — overlapping rectangles for 2-3 sets.
+        """#17 Venn Diagram — ⚠️ RETIRED (已废弃).
+        This layout has been retired per design review.
         circles: list of (label, points:list[str], x, y, w, h) positioned rects.
         overlap_label: text for overlap zone.
         right_text: list[str] explanation on the right side.
@@ -1381,7 +1382,8 @@ class MckEngine:
         return s
 
     def funnel(self, title, stages, source=''):
-        """#32 Funnel — top-down narrowing bars.
+        """#32 Funnel — ⚠️ RETIRED (已废弃).
+        This layout has been retired per design review.
         stages: list of (name, count_label, pct_float).
         """
         s = self._ns()
@@ -1695,7 +1697,11 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        cl = LM + Inches(0.8); cb = Inches(5.0); ct = Inches(1.6); ch = cb - ct
+        # Layout: summary sinks to bottom, chart fills space above
+        sum_h = Inches(0.7)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)
+        cb = sum_y - Inches(0.4) if summary else SOURCE_Y - Inches(0.3)
+        cl = LM + Inches(0.8); ct = Inches(1.6); ch = cb - ct
         cr = Inches(11.5); cww = cr - cl
         if max_val is None:
             max_val = max(max(row) for row in data) * 1.15
@@ -1738,11 +1744,11 @@ class MckEngine:
                      cat, font_size=BODY_SIZE, font_color=DARK_GRAY,
                      alignment=PP_ALIGN.CENTER)
         if summary:
-            add_rect(s, LM, Inches(6.0), CW, Inches(0.8), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, Inches(1.5), sum_h,
                      summary[0], font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
-            add_text(s, LM + Inches(2.0), Inches(6.0), CW - Inches(2.3), Inches(0.8),
+            add_text(s, LM + Inches(2.0), sum_y, CW - Inches(2.3), sum_h,
                      summary[1], font_size=BODY_SIZE, font_color=DARK_GRAY,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -1756,7 +1762,11 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        cl = LM + Inches(0.8); cb = Inches(5.4); ct = Inches(2.0); ch = cb - ct
+        # Layout: summary sinks to bottom, chart fills space above
+        sum_h = Inches(0.7)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)
+        cb = sum_y - Inches(0.4) if summary else SOURCE_Y - Inches(0.3)
+        cl = LM + Inches(0.8); ct = Inches(2.0); ch = cb - ct
         cr = Inches(11.5); cww = cr - cl; np_ = len(periods)
         bw = Inches(1.2); sbs = cww / np_
         # Sub-title + legend (adaptive spacing to prevent overflow)
@@ -1797,11 +1807,11 @@ class MckEngine:
                      period, font_size=BODY_SIZE, font_color=DARK_GRAY,
                      alignment=PP_ALIGN.CENTER)
         if summary:
-            add_rect(s, LM, Inches(6.0), CW, Inches(0.8), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(6.0), Inches(1.5), Inches(0.8),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, Inches(1.5), sum_h,
                      summary[0], font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
-            add_text(s, LM + Inches(2.0), Inches(6.0), CW - Inches(2.3), Inches(0.8),
+            add_text(s, LM + Inches(2.0), sum_y, CW - Inches(2.3), sum_h,
                      summary[1], font_size=BODY_SIZE, font_color=DARK_GRAY,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -1831,11 +1841,13 @@ class MckEngine:
             if i < len(items) - 1:
                 add_hline(s, LM, ry + rh, bar_mw + Inches(2.5), LINE_GRAY, Pt(0.25))
         if summary:
-            add_rect(s, LM, Inches(5.8), CW, Inches(0.9), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(5.8), Inches(1.5), Inches(0.9),
+            sum_h = Inches(0.7)
+            sum_y = SOURCE_Y - sum_h - Inches(0.05)
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, Inches(1.5), sum_h,
                      summary[0], font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
-            add_text(s, LM + Inches(2.0), Inches(5.8), CW - Inches(2.3), Inches(0.9),
+            add_text(s, LM + Inches(2.0), sum_y, CW - Inches(2.3), sum_h,
                      summary[1], font_size=BODY_SIZE, font_color=DARK_GRAY,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -2051,7 +2063,11 @@ class MckEngine:
                 add_rect(s, lx, Inches(1.25), Inches(0.2), Inches(0.2), lc)
                 add_text(s, lx + Inches(0.25), Inches(1.2), Inches(0.8), Inches(0.3),
                          ln, font_size=Pt(11), font_color=DARK_GRAY)
-        cl = LM + Inches(0.3); cb = Inches(5.0); ct = Inches(2.3); ch = cb - ct
+        # Layout: summary sinks to bottom, chart fills space above
+        sum_h = Inches(0.6)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)  # summary flush to source
+        cb = sum_y - Inches(0.4) if summary else SOURCE_Y - Inches(0.3)
+        cl = LM + Inches(0.3); ct = Inches(3.1); ch = cb - ct
         if max_val is None:
             max_val = max(abs(v) for _, v, _ in items) * 1.3
         bw = Inches(1.2); gp = Inches(0.4)
@@ -2074,12 +2090,12 @@ class MckEngine:
             add_text(s, bx, bt - Inches(0.35), bw, Inches(0.3), vs,
                      font_size=BODY_SIZE, font_color=DARK_GRAY, bold=True,
                      alignment=PP_ALIGN.CENTER, font_name=FONT_HEADER)
-            add_text(s, bx, cb + Inches(0.05), bw, Inches(0.5), label,
+            add_text(s, bx, cb + Inches(0.05), bw, Inches(0.3), label,
                      font_size=Pt(11), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
         add_hline(s, cl, cb, Inches(11.5), LINE_GRAY, Pt(0.5))
         if summary:
-            add_rect(s, LM, Inches(6.2), CW, Inches(0.6), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(6.2), CW - Inches(0.6), Inches(0.6),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, CW - Inches(0.6), sum_h,
                      summary, font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -2092,8 +2108,12 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
+        # Layout: summary sinks to bottom, chart fills space above
+        sum_h = Inches(0.6)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)
+        cb_val = sum_y - Inches(0.4) if summary else SOURCE_Y - Inches(0.3)
         cl = LM + Inches(0.8); cr = LM + CW - Inches(1.5); cw_ = cr - cl
-        ct = Inches(1.6); cb = Inches(5.2); ch = cb - ct
+        ct = Inches(2.5); cb = cb_val; ch = cb - ct
         # Sub-title + legend
         add_text(s, cl, Inches(1.2), Inches(5.0), Inches(0.3),
                  title, font_size=Pt(13), font_color=DARK_GRAY, bold=True)
@@ -2124,8 +2144,8 @@ class MckEngine:
             add_rect(s, x1, sy, sw_, sh_, NAVY)
         add_hline(s, cl, cb, cw_, BLACK, Pt(0.5))
         if summary:
-            add_rect(s, LM, Inches(5.7), CW, Inches(0.7), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(5.7), CW - Inches(0.6), Inches(0.7),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, CW - Inches(0.6), sum_h,
                      summary, font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -2140,7 +2160,11 @@ class MckEngine:
         total = sum(v for _, v in items)
         if max_val is None:
             max_val = max(v for _, v in items) * 1.15
-        cl = LM + Inches(1.0); cb = Inches(5.5); ct = Inches(1.8); ch = cb - ct
+        # Layout: summary sinks to bottom
+        sum_h = Inches(0.6)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)
+        cb = sum_y - Inches(0.4) if summary else SOURCE_Y - Inches(0.3)
+        cl = LM + Inches(1.0); ct = Inches(2.7); ch = cb - ct
         cw_ = Inches(9.0)
         n = len(items); gap = Inches(0.15)
         bw = (cw_ - gap * (n - 1)) / n
@@ -2159,8 +2183,8 @@ class MckEngine:
                      font_size=Pt(10), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
         add_hline(s, cl, cb, cw_, BLACK, Pt(0.5))
         if summary:
-            add_rect(s, LM, Inches(6.0), CW, Inches(0.6), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(6.0), CW - Inches(0.6), Inches(0.6),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, CW - Inches(0.6), sum_h,
                      summary, font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -2312,7 +2336,8 @@ class MckEngine:
         return s
 
     def gauge(self, title, score, benchmarks=None, source=''):
-        """#55 Gauge — semicircle rainbow arc with center score.
+        """#55 Gauge — ⚠️ RETIRED (已废弃).
+        This layout has been retired per design review.
         score: int 0-100.
         benchmarks: list of (label, value_str, color) shown below gauge.
         """
@@ -2457,7 +2482,11 @@ class MckEngine:
         """
         s = self._ns()
         add_action_title(s, title)
-        cl = LM + Inches(1.0); cb = Inches(5.3); ct = Inches(1.6)
+        # Layout: summary sinks to bottom, chart fills space above
+        sum_h = Inches(0.7)
+        sum_y = SOURCE_Y - sum_h - Inches(0.05)
+        cb = sum_y - Inches(0.35) if summary else SOURCE_Y - Inches(0.3)
+        cl = LM + Inches(1.0); ct = Inches(2.5)
         cw_ = Inches(9.5); ch = cb - ct
         if max_val is None:
             max_val = max(sum(sd[1][yi] for sd in series_data)
@@ -2498,11 +2527,11 @@ class MckEngine:
                      font_size=Pt(10), font_color=MED_GRAY, alignment=PP_ALIGN.CENTER)
         add_hline(s, cl, cb, cw_, BLACK, Pt(0.5))
         if summary:
-            add_rect(s, LM, Inches(5.7), CW, Inches(0.8), BG_GRAY)
-            add_text(s, LM + Inches(0.3), Inches(5.7), Inches(1.5), Inches(0.8),
+            add_rect(s, LM, sum_y, CW, sum_h, BG_GRAY)
+            add_text(s, LM + Inches(0.3), sum_y, Inches(1.5), sum_h,
                      '趋势分析', font_size=BODY_SIZE, font_color=NAVY, bold=True,
                      anchor=MSO_ANCHOR.MIDDLE)
-            add_text(s, LM + Inches(2.0), Inches(5.7), CW - Inches(2.3), Inches(0.8),
+            add_text(s, LM + Inches(2.0), sum_y, CW - Inches(2.3), sum_h,
                      summary, font_size=BODY_SIZE, font_color=DARK_GRAY,
                      anchor=MSO_ANCHOR.MIDDLE)
         self._footer(s, source)
@@ -2651,7 +2680,7 @@ class MckEngine:
                      f'{lcn} ({len_})', font_size=Pt(13), font_color=NAVY, bold=True)
             for ni, name in enumerate(members):
                 add_oval(s, qx + Inches(0.2), qy + Inches(0.55) + ni * Inches(0.4),
-                         name[0], size=Inches(0.3), bg=NAVY)
+                         str(ni + 1), size=Inches(0.3), bg=NAVY)
                 add_text(s, qx + Inches(0.6), qy + Inches(0.5) + ni * Inches(0.4),
                          Inches(2.5), Inches(0.35), name,
                          font_size=BODY_SIZE, font_color=DARK_GRAY)
