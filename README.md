@@ -397,7 +397,7 @@ eng.save('output/deck.pptx')
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| **v2.0.6** | 2026-04-09 | Layout formatting polish, chart bottom-alignment, unified color palette (NAVY + BG_GRAY), retired 5 legacy layouts (Venn, Cycle, Funnel, Pie, Gauge) |
+| **v2.3.3** | 2026-04-09 | Layout formatting polish, chart bottom-alignment, unified color palette (NAVY + BG_GRAY), retired 5 legacy layouts (Venn, Cycle, Funnel, Pie, Gauge) |
 | **v2.3.2** | 2026-03-25 | **DeckBuilder**: storyline-driven deck generator (`deck_builder.py`) — accepts storyline list, auto-dispatches to MckEngine methods, built-in QA validation; **stacked_bar fix**: adaptive legend spacing prevents right-side overflow, chart area repositioned for visual balance; **new QA rule** `chart_legend_overflow` (detects legend/label exceeding content area, excludes page numbers); **storylines/ai_enterprise.py**: 33-slide Chinese AI enterprise applications demo using 20+ layout types |
 | **v2.3.1** | 2026-03-24 | Dynamic row height for `numbered_list_panel` (fills panel height evenly, eliminates blank space); new QA rule `text_line_collision` (detects text overlapping separator lines with horizontal overlap validation) |
 | **v2.3.0** | 2026-03-24 | **Post-generation review + auto-fix pipeline**: `review.py` with NarrativeReviewer, AutoFixPipeline (priority-chain: redundancy → compress → restructure → font adjust), peer font harmonization; fix `_estimate_text_height` paragraph-level font inheritance bug (27% overestimate); new QA rule `peer_font_inconsistency`; gate: 0 ERROR = PASS. Tested: 14 errors → 0, score 17 → 86 |

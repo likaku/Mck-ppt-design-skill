@@ -4,7 +4,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.0.6] - 2026-04-09
+## [2.3.3] - 2026-04-09
 
 ### Changed
 - **Layout formatting polish**: Chart layouts (grouped_bar, stacked_bar, horizontal_bar, waterfall, line_chart, pareto, stacked_area) now use bottom-aligned summary bars and expanded chart areas for better visual balance.
