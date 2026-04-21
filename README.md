@@ -26,7 +26,7 @@
     <tr>
       <td align="center" width="50%" valign="top">
         <p><strong>WeChat Group / 微信交流群</strong></p>
-          <img width="160" alt="Clipboard_Screenshot_1776163240" src="https://github.com/user-attachments/assets/98b31125-3dcb-487d-b8af-9a73b3809a21" />
+          <img width="160" alt="Clipboard_Screenshot_1776746070" src="https://github.com/user-attachments/assets/71373a9b-7611-46e0-801f-6105446dde54" />
         <br/>
         <sub style="color: gray;">扫描二维码加入社群</sub>
       </td>
