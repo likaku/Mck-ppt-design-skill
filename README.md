@@ -316,10 +316,7 @@ v2.0 extracts that deterministic work into Python: `eng.donut()` → 20 AI token
 <table width="100%">
   <tr>
     <td align="center" width="50%" valign="top">
-      <p><strong>WeChat Group / 微信交流群</strong></p>
-      <img width="160" alt="WeChat QR" src="https://github.com/user-attachments/assets/71373a9b-7611-46e0-801f-6105446dde54" />
-      <br/>
-      <sub>扫描二维码加入社群</sub>
+      <p><strong>WeChat Group is now over 200 people, please add my wechat account to join the group: Kashinmoto</strong></p>
     </td>
     <td align="center" width="50%" valign="top">
       <p><strong>Discord Server</strong></p>
