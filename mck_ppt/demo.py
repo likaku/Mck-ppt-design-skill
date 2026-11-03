@@ -16,7 +16,7 @@ def demo_storyline():
     """A 13-slide mini consulting deck: every slide uses a different layout."""
     return [
         {'type': 'cover', 'data': dict(
-            title='Retail is shifting from stores to relationships',
+            title='Retail is shifting to relationships',
             subtitle='Board strategy review', author='Strategy Office', date='2026')},
         {'type': 'toc', 'data': dict(title='Agenda', items=[
             ('1', 'Where we are', 'Performance and market position'),

@@ -4,6 +4,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2026-11-03
+
+### Added
+- README rebuilt: hero banner, prompt-to-deck GIF, six real output slides, comparison of the two build modes, Mermaid flow, collapsible limitations and FAQ, star-history chart.
+- `examples/freeform_showcase.py`: the six README slides, drawn with python-pptx primitives and native charts (clustered column, stacked-column waterfall). Passes `gate_check.py`.
+- `docs/img/` (hero, GIF, showcase slides) and `docs/gallery/` (13 rendered slides from `python -m mck_ppt demo`); `docs/GALLERY.md` now shows images.
+
+### Changed
+- Install instructions use `pip install "git+https://github.com/likaku/Mck-ppt-design-skill.git"` until the package is on PyPI; Claude Code and WorkBuddy use a plain `git clone` into the skills directory.
+- README claims aligned with what was verified: "62 layouts" (no longer "tested"), the gate is described as catching overflow, bounds, font and legend problems but not every visual flaw, and CJK wording no longer names fonts that were not checked.
+- Removed the CI and Release badges, the Discussions link and the two install commands that were not yet verified.
+- `docs/social-preview.png` rebuilt from real output slides.
+
+### Fixed
+- `python -m mck_ppt demo`: the cover title wrapped onto the subtitle. The title is shorter now; the underlying cover layout still does not handle long titles and `gate_check.py` does not flag it.
+
+### Known issues
+- `run_qa_tests.py` still reports layout errors (peer font size, right-edge overflow, long text, legend overflow).
+- The cover layout overlaps its subtitle when the title wraps.
+- `horizontal_bar` always appends "%" to values.
+
 ## [2.4.0] - 2026-11-03
 
 ### Added

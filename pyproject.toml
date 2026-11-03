@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mck-ppt"
-version = "2.4.0"
+version = "2.4.1"
 description = "Consulting-style, fully editable PowerPoint decks for AI agents: 62 layouts, native shapes, built-in QA gates (python-pptx)."
 readme = "README.md"
 license = { text = "Apache-2.0" }

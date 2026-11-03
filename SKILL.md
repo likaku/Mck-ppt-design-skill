@@ -19,7 +19,7 @@ description: >-
 
 # McKinsey PPT Design — Harness Framework
 
-> **Version**: 2.4.0 · **Engine**: MckEngine (python-pptx) · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 2.4.1 · **Engine**: MckEngine (python-pptx) · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: `pip install python-pptx lxml`
 

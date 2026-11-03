@@ -1,8 +1,31 @@
 # Layout gallery
 
-> Back to [README](../README.md). 62 active layouts. Generated from the engine by `python -m mck_ppt layouts --json`.
+> Back to [README](../README.md)
 
-Preview images: run `python -m mck_ppt demo -o mck_demo.pptx && python scripts/render_preview.py mck_demo.pptx docs/gallery` to render the 13-slide sample deck to `docs/gallery/slide-NN.png`.
+## Free-composition examples
+
+Drawn with primitives and native charts (`examples/freeform_showcase.py`). Illustrative data.
+
+| | | |
+|---|---|---|
+| ![](img/showcase-1-cover.png) | ![](img/showcase-2-summary.png) | ![](img/showcase-3-chart.png) |
+| ![](img/showcase-4-waterfall.png) | ![](img/showcase-5-matrix.png) | ![](img/showcase-6-roadmap.png) |
+
+## Layout-method demo (`python -m mck_ppt demo`)
+
+These 13 slides use the fixed layout methods. They are consistent and fast, but plainer than the examples above; some are sparse (see known limitations in the README).
+
+| | | |
+|---|---|---|
+| ![](gallery/demo-01.png) | ![](gallery/demo-02.png) | ![](gallery/demo-03.png) |
+| ![](gallery/demo-04.png) | ![](gallery/demo-05.png) | ![](gallery/demo-06.png) |
+| ![](gallery/demo-07.png) | ![](gallery/demo-08.png) | ![](gallery/demo-09.png) |
+| ![](gallery/demo-10.png) | ![](gallery/demo-11.png) | ![](gallery/demo-12.png) |
+| ![](gallery/demo-13.png) |  |  |
+
+## All layout methods
+
+62 active layouts. Generated from the engine by `python -m mck_ppt layouts --json`.
 
 ## Structure
 

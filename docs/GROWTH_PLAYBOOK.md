@@ -15,7 +15,7 @@ What the audit of this repo found:
 | 3 | Install only documented for WorkBuddy | Excludes the Claude Code and Cursor audience, the largest | Yes: 4 install routes (verify two, see section 3) |
 | 4 | Layout count inconsistent: 67 / 70 / 55 across README, SKILL.md, repo description | Looks careless; reviewers distrust numbers | Yes: 62 active layouts everywhere (repo description: run `scripts/gh_setup.sh`) |
 | 5 | README's own A/B table showed the Harness deck scoring lower (92 vs 95) | Undercuts the headline claim | Moved to `docs/HARNESS.md` |
-| 6 | `docs/screenshots/` empty; no gallery; layouts only described in prose | No proof for 62 layouts | Partly: `docs/GALLERY.md` and `render_preview.py` added; images still to render (section 3) |
+| 6 | `docs/screenshots/` empty; no gallery; layouts only described in prose | No proof for 62 layouts | Yes (v2.4.1): rendered gallery, six showcase slides, hero banner and GIF in `docs/img/` |
 | 7 | No `.github/` (CI, issue templates), no Discussions, version stuck at 2.3.0 in code | Reads as a personal dump, not a maintained project | Yes |
 | 8 | `run_qa_tests.py` reported 41 errors; one cause was a wrong `waterfall` fixture | A visitor running tests sees failure | Waterfall fixed; the rest are real layout or fixture issues to triage |
 | 9 | Chinese audience (the likeliest early adopters) had one collapsed `<details>` block | Chinese readers are the natural base | Yes: `README.zh-CN.md` |
@@ -28,8 +28,10 @@ Do not compete on "most layouts" or "prettiest HTML". Compete on three provable 
 
 ## 3. Do this week (ordered by effect per hour)
 
-1. **Render the gallery (2 h).** Install LibreOffice and poppler, run `python -m mck_ppt demo` then `python scripts/render_preview.py mck_demo.pptx docs/gallery`. Commit the PNGs. Then render all 62 layouts from `run_qa_tests.py` the same way and embed 6 to 8 of the best in the README top table (replace the hosted images if these look better).
-2. **Record a 20 to 30 second GIF (1 h).** Left: one Chinese prompt typed into the agent. Right: the finished 15-page deck scrolling in PowerPoint. Put it directly under the title. This single asset typically moves README conversion more than any text.
+1. **Done in v2.4.1:** gallery, hero and GIF. Remaining: render all 62 layouts, not only the 13-slide demo.
+1. ~~**Render the gallery (2 h).**~~ Install LibreOffice and poppler, run `python -m mck_ppt demo` then `python scripts/render_preview.py mck_demo.pptx docs/gallery`. Commit the PNGs. Then render all 62 layouts from `run_qa_tests.py` the same way and embed 6 to 8 of the best in the README top table (replace the hosted images if these look better).
+2. **Replace the recreated GIF with a screen recording (1 h) when you can.** The v2.4.1 GIF recreates the terminal; a real recording is more credible.
+2. ~~**Record a 20 to 30 second GIF (1 h).**~~ Left: one Chinese prompt typed into the agent. Right: the finished 15-page deck scrolling in PowerPoint. Put it directly under the title. This single asset typically moves README conversion more than any text.
 3. **Run `scripts/gh_setup.sh` (5 min)** for description, topics and Discussions; upload `docs/social-preview.png` in Settings. The social preview is what appears when the link is pasted into WeChat, X, Slack.
 4. **Verify the two unverified install routes** before announcing: `/plugin marketplace add` with `.claude-plugin/marketplace.json` (the `skills: ["./"]` field depends on the Claude Code version) and `npx skills add likaku/Mck-ppt-design-skill`. If either fails, delete that row from both READMEs.
 5. **Publish to PyPI (30 min):** `python -m build && twine upload dist/*`. The name `mck-ppt` was free on 2026-11-03.

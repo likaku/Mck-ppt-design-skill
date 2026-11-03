@@ -6,7 +6,7 @@
       "name": "mck-ppt-design",
       "source": "./",
       "description": "Consulting-style, editable PowerPoint decks: 62 layouts, native shapes, built-in QA gates.",
-      "version": "2.4.0",
+      "version": "2.4.1",
       "skills": ["./"],
       "strict": false
     }
