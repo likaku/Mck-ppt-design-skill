@@ -1,0 +1,11 @@
+name: Layout request
+description: Ask for a slide type the engine does not have yet
+labels: [layout-request]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What should the slide show?, description: Describe the message, not the shapes }
+    validations: { required: true }
+  - type: textarea
+    id: ref
+    attributes: { label: Reference image or link }

@@ -183,7 +183,7 @@ def build_all_tests(eng: MckEngine, stress: bool = False):
     # ── Advanced Charts ──
     # donut: segments = (pct_float, color, label)
     _run("donut", eng.donut, title="Revenue Mix", segments=[(0.35, NAVY, "Product A"), (0.25, ACCENT_BLUE, "Product B"), (0.20, ACCENT_GREEN, "Product C"), (0.20, BG_GRAY, "Other")], center_label="$4.2B", center_sub="Total Revenue", source="Finance")
-    _run("waterfall", eng.waterfall, title="Bridge Analysis", items=[("Q1 Base", 100, NAVY), ("Price", 15, ACCENT_GREEN), ("Volume", 25, ACCENT_GREEN), ("FX", -8, ACCENT_RED), ("Costs", -12, ACCENT_RED), ("Q1 Total", 120, NAVY)], source="FP&A")
+    _run("waterfall", eng.waterfall, title="Bridge Analysis", items=[("Q1 Base", 100, "base"), ("Price", 15, "up"), ("Volume", 25, "up"), ("FX", -8, "down"), ("Costs", -12, "down"), ("Q1 Total", 120, "base")], source="FP&A")
     _run("line_chart", eng.line_chart, title="Monthly Trend", x_labels=["Jan", "Feb", "Mar", "Apr", "May", "Jun"], y_labels=["0", "25", "50", "75", "100"], values=[20, 35, 45, 60, 72, 88], legend_label="Revenue ($M)", source="Finance")
     _run("pareto", eng.pareto, title="Issue Analysis", items=[("System Errors", 45), ("User Errors", 30), ("Network Issues", 15), ("Hardware", 7), ("Other", 3)], source="Ops")
     # kpi_tracker: kpis = (name, pct_float, detail, status_key)

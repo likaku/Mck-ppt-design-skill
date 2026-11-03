@@ -21,4 +21,4 @@ def generate_cover_image(*args, **kwargs):
     from .cover_image import generate_cover_image as _generate_cover_image
     return _generate_cover_image(*args, **kwargs)
 
-__version__ = '2.3.0'
+__version__ = '2.4.0'

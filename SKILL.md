@@ -5,8 +5,8 @@ description: >-
   using MckEngine (python-pptx wrapper) with McKinsey-style design. Use when
   user asks to create slides, pitch decks, business presentations, strategy
   decks, quarterly reviews, board meeting slides, or any professional PPTX.
-  AI calls eng.cover(), eng.donut(), eng.timeline() etc — 67 high-level methods
-  across 12 categories (structure, data, framework, comparison, narrative,
+  AI calls eng.cover(), eng.donut(), eng.timeline() etc — 62 active layout methods
+  across 8 categories (structure, data, framework, comparison, narrative,
   timeline, team, charts, images, advanced viz, dashboards, visual storytelling),
   consistent typography, zero file-corruption issues, BLOCK_ARC native shapes
   for circular charts (donut, pie, gauge), production-hardened guard rails
@@ -19,7 +19,7 @@ description: >-
 
 # McKinsey PPT Design — Harness Framework
 
-> **Version**: 2.3.3-harness-v2 · **Engine**: MckEngine (python-pptx) · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
+> **Version**: 2.4.0 · **Engine**: MckEngine (python-pptx) · **Author**: [likaku](https://github.com/likaku/Mck-ppt-design-skill)
 >
 > **Required tools**: Read, Write, Bash · **Requires**: `pip install python-pptx lxml`
 
@@ -79,7 +79,7 @@ description: >-
 3. **按需加载上下文**：每个阶段只读对应文件，不要全量加载旧版 SKILL.md 里的内容
 4. **门禁必须机读化**：S3 和 S4 门禁必须执行对应的 gate_check 脚本，读 JSON 结果，不得口头判断
 5. **Self-Refinement 必做**：每次修正 pattern-level 问题后，写入 `experiences/` 对应文件
-6. **引擎路径固定**：`sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))`
+6. **引擎导入**：已 `pip install mck-ppt` 则直接 `from mck_ppt import MckEngine`；否则把本 skill 目录加入 `sys.path`（WorkBuddy 默认 `~/.workbuddy/skills/mck-ppt-design`，Claude Code 默认 `~/.claude/skills/mck-ppt-design`）。不确定时先跑 `python -m mck_ppt demo` 验证环境
 
 ---
 
@@ -282,6 +282,7 @@ for proj in projects:
 
 ```python
 import sys, os
+# pip install mck-ppt 后可省略下面两行；skill 目录按实际安装位置调整
 sys.path.insert(0, os.path.expanduser('~/.workbuddy/skills/mck-ppt-design'))
 from mck_ppt import MckEngine
 from mck_ppt.constants import *

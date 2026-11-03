@@ -41,3 +41,8 @@ user-config/assets/
 !user-config/themes/.gitkeep
 !user-config/assets/.gitkeep
 !user-config/README.md
+
+# generated
+qa_output/
+mck_demo.pptx
+qa.json

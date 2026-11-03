@@ -4,6 +4,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2026-11-03
+
+### Added
+- `python -m mck_ppt demo`: builds a 13-slide sample deck with no API key and no network; passes built-in QA. CI runs it on every push.
+- `python -m mck_ppt layouts [--json]`: lists the 62 active layouts by category with signatures.
+- `pyproject.toml`: `pip install mck-ppt` and a `mck-ppt` console script. The AI cover image dependencies moved to the optional extra `mck-ppt[cover-image]`.
+- `.claude-plugin/marketplace.json` for `/plugin marketplace add`.
+- GitHub scaffolding: CI and release workflows, bug / layout-request / showcase issue templates, PR template, CONTRIBUTING.
+- `scripts/render_preview.py` renders any .pptx to one PNG per slide; `docs/GALLERY.md`; `docs/social-preview.png` (1280x640).
+- `README.zh-CN.md` as a standalone Chinese README; `docs/GROWTH_PLAYBOOK.md`.
+
+### Changed
+- README cut from about 21 KB to about 9 KB and reordered: result image, value, 60-second try, install per agent, comparison. Harness details and architecture moved to `docs/HARNESS.md` and `docs/ARCHITECTURE.md`.
+- Corrected the layout count to 62 active layouts (67 methods minus 5 retired); the earlier "67 / 70" figures counted retired layouts.
+- `mck_ppt.__version__` aligned to the release version (was stuck at 2.3.0).
+- `SKILL.md` no longer hard-codes `~/.workbuddy/skills/...` as the only engine path.
+
+### Fixed
+- `run_qa_tests.py` called `waterfall` with colors instead of `'base' | 'up' | 'down'`, which produced a shape below the slide and a false QA failure.
+
 ## [2.3.3] - 2026-04-09
 
 ### Changed

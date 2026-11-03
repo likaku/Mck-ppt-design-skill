@@ -1,0 +1,14 @@
+{
+  "name": "mck-ppt",
+  "owner": { "name": "Kaku Li" },
+  "plugins": [
+    {
+      "name": "mck-ppt-design",
+      "source": "./",
+      "description": "Consulting-style, editable PowerPoint decks: 62 layouts, native shapes, built-in QA gates.",
+      "version": "2.4.0",
+      "skills": ["./"],
+      "strict": false
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+name: Show your deck
+description: Share a deck you built with this skill (we may feature it in the README)
+labels: [showcase]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What did you build and with which agent? }
+    validations: { required: true }
+  - type: textarea
+    id: img
+    attributes: { label: Screenshots (no confidential content), description: Drag images here }

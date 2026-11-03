@@ -1,0 +1,18 @@
+name: Bug report
+description: A layout overflows, a file will not open, or the engine raises an error
+labels: [bug]
+body:
+  - type: input
+    id: layout
+    attributes: { label: Layout method (e.g. process_chevron), placeholder: process_chevron }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Minimal code that reproduces it, render: python }
+    validations: { required: true }
+  - type: textarea
+    id: shot
+    attributes: { label: Screenshot or error output, description: Drag an image here }
+  - type: input
+    id: env
+    attributes: { label: Viewer and version, placeholder: PowerPoint 365 / WPS / Keynote / LibreOffice }
